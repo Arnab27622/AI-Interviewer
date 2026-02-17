@@ -7,7 +7,7 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
-        const sessionId = req.session.id;
+        const sessionId = req.params.id || 'unknown';
         const filename = `${sessionId}-${Date.now()}${ext}`;
         cb(null, filename);
     },

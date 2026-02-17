@@ -4,7 +4,7 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
-// import userRoutes from "./routes/userRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 // import sessionRoutes from "./routes/sessionRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 
@@ -49,10 +49,10 @@ app.get("/", (req, res) => {
 });
 
 
-// app.use("/api/users", userRoutes);
+app.use("/api/user", userRoutes);
 // app.use("/api/sessions", sessionRoutes);
 
-app.use(notFound); 
+app.use(notFound);
 app.use(errorHandler);
 
 io.on("connection", (socket) => {

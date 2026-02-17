@@ -1,5 +1,5 @@
 import asyncHandler from "express-async-handler";
-import User from "../models/userModel.js";
+import User from "../models/User.js";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
 
@@ -117,7 +117,7 @@ const googleLogin = asyncHandler(async (req, res) => {
                 name: user.name,
                 email: user.email,
                 preferredRole: user.preferredRole,
-                token: generateToken(newUser._id),
+                token: generateToken(user._id),
             });
         } else {
             res.status(400);
@@ -126,4 +126,46 @@ const googleLogin = asyncHandler(async (req, res) => {
     }
 });
 
-export { registerUser, loginUser, googleLogin };
+const getUserProfile = asyncHandler(async (req, res) => {
+    if (req.user) {
+        res.status(200).json({
+            _id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            preferredRole: req.user.preferredRole,
+        });
+    } else {
+        res.status(401);
+        throw new Error("User not found");
+    }
+});
+
+const updateUserProfile = asyncHandler(async (req, res) => {
+    if (req.user) {
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            res.status(401);
+            throw new Error("User not found");
+        }
+        user.name = req.body.name || user.name;
+        user.email = req.body.email || user.email;
+        user.preferredRole = req.body.preferredRole || user.preferredRole;
+
+        if (req.body.password) {
+            user.password = req.body.password;
+        }
+
+        await user.save();
+        res.status(200).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            preferredRole: user.preferredRole,
+        });
+    } else {
+        res.status(401);
+        throw new Error("User not found");
+    }
+});
+
+export { registerUser, loginUser, googleLogin, getUserProfile, updateUserProfile };
