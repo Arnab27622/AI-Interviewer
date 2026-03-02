@@ -147,11 +147,12 @@ const updateUserProfile = asyncHandler(async (req, res) => {
             res.status(401);
             throw new Error("User not found");
         }
-        user.name = req.body.name || user.name;
-        user.email = req.body.email || user.email;
-        user.preferredRole = req.body.preferredRole || user.preferredRole;
 
-        if (req.body.password) {
+        user.name = req.body?.name || user.name;
+        user.email = req.body?.email || user.email;
+        user.preferredRole = req.body?.preferredRole || user.preferredRole;
+
+        if (req.body?.password) {
             user.password = req.body.password;
         }
 

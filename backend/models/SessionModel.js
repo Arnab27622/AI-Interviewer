@@ -1,0 +1,98 @@
+import mongoose from "mongoose";
+
+const questionSchema = new mongoose.Schema({
+    questionText: {
+        type: String,
+        required: true,
+    },
+    questionType: {
+        type: String,
+        enum: ["oral", "coding"],
+        required: true,
+    },
+    idealAnswer: {
+        type: String,
+        required: true,
+        default: "Pending"
+    },
+    userAnswerText: {
+        type: String,
+        default: ""
+    },
+    userSubmittedCode: {
+        type: String,
+        default: ""
+    },
+    isSubmitted: {
+        type: Boolean,
+        default: false
+    },
+    isEvaluated: {
+        type: Boolean,
+        default: false
+    },
+    technicalScore: {
+        type: Number,
+        required: true,
+    },
+    confidenceScore: {
+        type: Number,
+        required: true,
+    },
+    aiFeedback: {
+        type: String,
+        required: true,
+    }
+}, { timestamps: true });
+
+const sessionSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+        index: true,
+    },
+    role: {
+        type: String,
+        required: true,
+    },
+    level: {
+        type: String,
+        required: true,
+    },
+    interviewType: {
+        type: String,
+        enum: ["oral-only", "coding-mix"],
+        required: true,
+    },
+    status: {
+        type: String,
+        enum: ["pending", "in-progress", "completed", "cancelled", "failed"],
+        default: "pending",
+    },
+    overallScore: {
+        type: Number,
+        default: 0,
+    },
+    avgTechnical: {
+        type: Number,
+        default: 0
+    },
+    avgConfidence: {
+        type: Number,
+        default: 0
+    },
+    questions: [questionSchema],
+    startTime: {
+        type: Date,
+        default: Date.now
+    },
+    endTime: {
+        type: Date,
+        default: Date.now
+    }
+}, { timestamps: true });
+
+const Session = mongoose.model("Session", sessionSchema);
+
+export default Session;
