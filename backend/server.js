@@ -50,7 +50,7 @@ app.get("/", (req, res) => {
 
 
 app.use("/api/user", userRoutes);
-// app.use("/api/sessions", sessionRoutes);
+app.use("/api/sessions", sessionRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
