@@ -221,12 +221,8 @@ async def generate_questions(req: QuestionRequest):
                     }
                 ]
             },
-            "contents": [
-                {"parts": [{"text": user_prompt}]}
-            ],
-            "generationConfig": {
-                "maxOutputTokens": 5000
-            }
+            "contents": [{"parts": [{"text": user_prompt}]}],
+            "generationConfig": {"maxOutputTokens": 5000},
         }
 
         resp = requests.post(url, json=body, headers=headers)
@@ -244,15 +240,17 @@ async def generate_questions(req: QuestionRequest):
 
         questions = [q.strip() for q in text_output.split("\n") if q.strip()]
 
-        return QuestionResponse(question=questions[:req.count], model_used=MODEL_NAME)
+        return QuestionResponse(question=questions[: req.count], model_used=MODEL_NAME)
 
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/transcribe")
 async def transcribe_audio(file: UploadFile = File(...)):
+    tmp_path = None
     try:
         if not WHISPER_MODEL:
             raise HTTPException(status_code=500, detail="Whisper model not loaded")
@@ -262,15 +260,25 @@ async def transcribe_audio(file: UploadFile = File(...)):
         audio_segment = audio_segment.set_channels(1)
         audio_segment = audio_segment.set_frame_rate(16000)
 
+        # Write to temp file and close it before Whisper reads it
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
             audio_segment.export(tmp.name, format="wav")
-            result = WHISPER_MODEL.transcribe(tmp.name)
-            os.unlink(tmp.name)
+            tmp_path = tmp.name
+        # File is now closed — safe for Whisper to open on Windows
 
-        return {"text": result["text"]}
+        result = WHISPER_MODEL.transcribe(tmp_path, fp16=False)
 
+        return {"transcription": result["text"].strip()}
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Always clean up, regardless of success or failure
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=PORT)
