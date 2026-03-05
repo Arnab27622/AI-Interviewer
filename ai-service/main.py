@@ -134,8 +134,7 @@ import whisper
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
-import audioop
+from typing import Optional
 from pydub import AudioSegment
 
 load_dotenv()
@@ -143,7 +142,6 @@ load_dotenv()
 PORT = int(os.getenv("PORT", 8000))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME")
-
 
 app = FastAPI(title="AI Interviewer Microservice", version="1.0.0")
 
@@ -179,6 +177,59 @@ class QuestionResponse(BaseModel):
     model_used: str
 
 
+class EvaluationRequest(BaseModel):
+    question: str
+    question_type: str
+    role: str = "Full-Stack Developer"
+    level: Optional[str] = None
+    user_answer: Optional[str] = None
+    user_code: Optional[str] = None
+
+
+class EvaluationResponse(BaseModel):
+    technical_score: float
+    confidence_score: float
+    ai_feedback: str
+    ideal_answer: str
+
+
+def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False) -> str:
+    """Shared helper to call the Gemini API and return raw text output."""
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent"
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY,
+    }
+    body = {
+        "system_instruction": {"parts": [{"text": system_prompt}]},
+        "contents": [{"parts": [{"text": user_prompt}]}],
+        "generationConfig": {
+            "maxOutputTokens": 5000,
+            **({"responseMimeType": "application/json"} if as_json else {}),
+        },
+    }
+
+    resp = requests.post(url, json=body, headers=headers)
+    if not resp.ok:
+        raise HTTPException(status_code=500, detail=resp.json())
+
+    data = resp.json()
+    text_output = ""
+    for candidate in data.get("candidates", []):
+        for part in candidate.get("content", {}).get("parts", []):
+            text_output += part.get("text", "")
+
+    return text_output
+
+
+def to_float(val, default: float = 0.0) -> float:
+    """Safely coerce a value to float, handling formats like '8/10' or '8.5'."""
+    try:
+        return float(str(val).split("/")[0].strip())
+    except (ValueError, TypeError):
+        return default
+
+
 @app.get("/")
 async def root():
     return {"message": "AI Interviewer Microservice is running"}
@@ -189,8 +240,7 @@ async def generate_questions(req: QuestionRequest):
     try:
         if req.interview_type == "coding-mix":
             coding_count = int(req.count * 0.2)
-            oral_count = int(req.count) - coding_count
-
+            oral_count = req.count - coding_count
             instruction = (
                 f"The first {coding_count} questions should be coding questions requiring you to write code. "
                 f"The next {oral_count} questions should be conceptual questions."
@@ -198,46 +248,16 @@ async def generate_questions(req: QuestionRequest):
         else:
             instruction = "All questions should be conceptual questions. No runnable coding questions."
 
+        system_prompt = (
+            "You are an expert interviewer. Only output interview questions "
+            "exactly one per line, no explanations, no numbering."
+        )
         user_prompt = (
             f"Generate exactly {req.count} interview questions for a {req.level} {req.role}. "
             f"{instruction}. Just output questions, one per line, with no other text."
         )
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_NAME}:generateContent"
-
-        headers = {
-            "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY,
-        }
-
-        body = {
-            "system_instruction": {
-                "parts": [
-                    {
-                        "text": (
-                            "You are an expert interviewer. Only output interview questions "
-                            "exactly one per line, no explanations, no numbering."
-                        )
-                    }
-                ]
-            },
-            "contents": [{"parts": [{"text": user_prompt}]}],
-            "generationConfig": {"maxOutputTokens": 5000},
-        }
-
-        resp = requests.post(url, json=body, headers=headers)
-
-        if not resp.ok:
-            error_detail = resp.json()
-            raise HTTPException(status_code=500, detail=error_detail)
-
-        data = resp.json()
-
-        text_output = ""
-        for candidate in data.get("candidates", []):
-            for part in candidate.get("content", {}).get("parts", []):
-                text_output += part.get("text", "")
-
+        text_output = call_gemini(system_prompt, user_prompt)
         questions = [q.strip() for q in text_output.split("\n") if q.strip()]
 
         return QuestionResponse(question=questions[: req.count], model_used=MODEL_NAME)
@@ -257,17 +277,13 @@ async def transcribe_audio(file: UploadFile = File(...)):
 
         audio_data = await file.read()
         audio_segment = AudioSegment.from_file(io.BytesIO(audio_data))
-        audio_segment = audio_segment.set_channels(1)
-        audio_segment = audio_segment.set_frame_rate(16000)
+        audio_segment = audio_segment.set_channels(1).set_frame_rate(16000)
 
-        # Write to temp file and close it before Whisper reads it
         with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
             audio_segment.export(tmp.name, format="wav")
             tmp_path = tmp.name
-        # File is now closed — safe for Whisper to open on Windows
 
         result = WHISPER_MODEL.transcribe(tmp_path, fp16=False)
-
         return {"transcription": result["text"].strip()}
 
     except HTTPException:
@@ -275,9 +291,70 @@ async def transcribe_audio(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        # Always clean up, regardless of success or failure
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
+
+
+@app.post("/evaluate", response_model=EvaluationResponse)
+async def evaluate_answer(req: EvaluationRequest):
+    if req.question_type == "coding":
+        if not req.user_code or not req.user_code.strip():
+            raise HTTPException(status_code=422, detail="user_code is required for coding questions.")
+        system_prompt = (
+            "You are a strict technical interviewer. Evaluate the candidate's code for logic and efficiency. "
+            "Respond ONLY in this JSON format with no extra text:\n"
+            '{"technical_score": <0-100>, "confidence_score": <0-100>, '
+            '"ai_feedback": "<feedback>", "ideal_answer": "<ideal code>"}'
+        )
+        user_prompt = (
+            f"Question: {req.question}\n"
+            f"Candidate Code:\n{req.user_code}\n"
+            "Evaluate and respond in the required JSON format."
+        )
+    else:
+        if not req.user_answer or not req.user_answer.strip():
+            raise HTTPException(status_code=422, detail="user_answer is required for non-coding questions.")
+        system_prompt = (
+            "You are a strict interviewer. Evaluate the candidate's answer for clarity, correctness, and completeness. "
+            "Ignore filler words, hesitations, and any code blocks. "
+            "Respond ONLY in this JSON format with no extra text:\n"
+            '{"technical_score": <0-100>, "confidence_score": <0-100>, '
+            '"ai_feedback": "<feedback>", "ideal_answer": "<ideal answer>"}'
+        )
+        user_prompt = (
+            f"Question: {req.question}\n"
+            f"Candidate Answer:\n{req.user_answer}\n"
+            "Evaluate and respond in the required JSON format."
+        )
+
+    try:
+        text_output = call_gemini(system_prompt, user_prompt, as_json=True)
+
+        cleaned = (
+            text_output.strip()
+            .removeprefix("```json")
+            .removeprefix("```")
+            .removesuffix("```")
+            .strip()
+        )
+        parsed = json.loads(cleaned)
+
+        return EvaluationResponse(
+            technical_score=to_float(parsed.get("technical_score")),
+            confidence_score=to_float(parsed.get("confidence_score")),
+            ai_feedback=parsed.get("ai_feedback", ""),
+            ideal_answer=parsed.get("ideal_answer", ""),
+        )
+
+    except HTTPException:
+        raise
+    except json.JSONDecodeError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to parse model response as JSON: {e}. Raw output: {text_output!r}",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
