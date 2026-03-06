@@ -4,6 +4,5 @@ pydantic
 python-dotenv
 openai-whisper
 pydub
-ollama
 ffmpeg-python
 python-multipart
