@@ -8,12 +8,12 @@ import mongoose from "mongoose";
 
 const API_SERVICE_URL = "http://localhost:8000";
 
-const pushSocketUpdate = (io, userId, sessionId, status, message, sessionData = null) => {
+const pushSocketUpdate = (io, userId, sessionId, status, message, session = null) => {
     io.to(userId.toString()).emit("sessionUpdate", {
         sessionId,
         status,
         message,
-        sessionData
+        session
     });
 }
 
