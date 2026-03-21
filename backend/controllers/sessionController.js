@@ -43,7 +43,7 @@ const createSession = asyncHandler(async (req, res) => {
 
     (async () => {
         try {
-            pushSocketUpdate(io, userId, session._id, "processing...", `Generating ${count} questions for ${role} role ${level} level interview ...`);
+            pushSocketUpdate(io, userId, session._id, "AI_GENERATING", `Generating ${count} questions for ${role} role ${level} level interview ...`);
 
             const aiResponse = await fetch(`${API_SERVICE_URL}/generate-questions`, {
                 method: "POST",
@@ -219,7 +219,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
 
         if (audioFilePath) {
             try {
-                pushSocketUpdate(io, userId, sessionId, "ai-processing", `Transcribing question ${questionIndex + 1}...`);
+                pushSocketUpdate(io, userId, sessionId, "AI_TRANSCRIBING", `Transcribing question ${questionIndex + 1}...`);
 
                 const formData = new FormData();
                 formData.append("file", fs.createReadStream(audioFilePath));
@@ -248,7 +248,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
             }
 
             try {
-                pushSocketUpdate(io, userId, sessionId, "ai-processing", `Evaluating question ${questionIndex + 1}...`);
+                pushSocketUpdate(io, userId, sessionId, "AI_EVALUATING", `Evaluating question ${questionIndex + 1}...`);
 
                 const response = await fetch(`${API_SERVICE_URL}/evaluate`, {
                     method: "POST",

@@ -1,6 +1,6 @@
 import express from "express";
 import { createSession, getSession, getSessionById, deleteSession, submitAnswer, endSession } from "../controllers/sessionController.js";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect } from "../middleware/auth.js";
 import { uploadSingleAudio } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
