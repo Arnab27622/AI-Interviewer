@@ -1,5 +1,6 @@
 const Dashboard = () => {
     return (<>
+    dashboard
     </>
     )
 }

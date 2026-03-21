@@ -1,5 +1,6 @@
 const Register = () => {
     return (<>
+    register
     </>
     )
 }
