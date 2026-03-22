@@ -33,6 +33,7 @@ interface Session {
 interface SessionState {
     sessions: Session[];
     activeSession: Session | null;
+    isGenerating: boolean;
     isError: boolean;
     message: string;
     isLoading: boolean;

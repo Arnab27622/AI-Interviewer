@@ -66,7 +66,7 @@ const createSession = asyncHandler(async (req, res) => {
             const aiData = await aiResponse.json();
             const codingCount = interviewType === 'coding-mix' ? Math.floor(count * 0.2) : 0;
 
-            const questions = aiData.questions.map((qText, index) => ({
+            const questions = (aiData.questions || aiData.question || []).map((qText, index) => ({
                 questionText: qText,
                 questionType: index < codingCount ? "coding" : "oral",
                 isEvaluated: false,
@@ -82,12 +82,12 @@ const createSession = asyncHandler(async (req, res) => {
             session.startTime = new Date();
             await session.save();
 
-            pushSocketUpdate(io, userId, session._id, "Questions ready...", "Starting Interview...");
+            pushSocketUpdate(io, userId, session._id, "QUESTIONS_READY", "Starting Interview...", session);
         } catch (error) {
             console.error("Error in createSession:", error.message);
             session.status = "failed";
             await session.save();
-            pushSocketUpdate(io, userId, session._id, "error", "Failed to generate questions", {
+            pushSocketUpdate(io, userId, session._id, "GENERATION_FAILED", "Failed to generate questions", {
                 error: error.message,
             });
         }
@@ -103,7 +103,7 @@ const getSession = asyncHandler(async (req, res) => {
 
     const session = await Session.find({
         user: userId,
-    }).select("-questions");
+    }).sort({ createdAt: -1 }).select("-questions");
 
     if (!session) {
         return res.status(404).json({ message: "Session not found" });
@@ -316,7 +316,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
 
 const submitAnswer = asyncHandler(async (req, res) => {
     const userId = req.user.id;
-    const { sessionId } = req.body;
+    const { sessionId } = req.params;
     const { questionIndex, code } = req.body;
 
     const session = await Session.findOne({

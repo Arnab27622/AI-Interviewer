@@ -8,8 +8,8 @@ const router = express.Router();
 router.use(protect);
 
 router.route("/").post(createSession).get(getSession);
-router.route("/:Id").get(getSessionById).delete(deleteSession);
-router.route("/:Id/submit").post(uploadSingleAudio, submitAnswer);
-router.route("/:Id/end").post(endSession);
+router.route("/:sessionId").get(getSessionById).delete(deleteSession);
+router.route("/:sessionId/submit-answer").post(uploadSingleAudio, submitAnswer);
+router.route("/:sessionId/end").post(endSession);
 
 export default router;

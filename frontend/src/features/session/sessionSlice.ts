@@ -3,7 +3,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import axios, { AxiosError } from "axios";
 import type { SessionState, Session, SocketUpdatePayload } from "../../types/session";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/sessions/`;
+const API_URL = `${import.meta.env.VITE_API_URL}/sessions`;
 
 const api = axios.create({
     baseURL: API_URL,
@@ -35,12 +35,13 @@ api.interceptors.response.use(
 const initialState: SessionState = {
     sessions: [],
     activeSession: null,
+    isGenerating: false,
     isError: false,
     message: "",
     isLoading: false,
 };
 
-export const getSession = createAsyncThunk<Session[], string, { rejectValue: string }>(
+export const getSession = createAsyncThunk<Session[], void, { rejectValue: string }>(
     "session/getAll",
     async (_, thunkAPI) => {
         try {
@@ -132,6 +133,11 @@ export const sessionSlice = createSlice({
         socketUpdateSession: (state, action: PayloadAction<SocketUpdatePayload>) => {
             const { sessionId, status, message, session } = action.payload;
             state.message = message;
+            
+            if (!Array.isArray(state.sessions)) {
+                state.sessions = [];
+            }
+            
             if (!session && state.activeSession && state.activeSession?._id === sessionId) {
                 const qMatch = message.match(/Q\d+/);
                 if (qMatch) {
@@ -141,6 +147,20 @@ export const sessionSlice = createSlice({
                     }
                 }
             }
+
+            // Handle generation status updates
+            const upperStatus = (status || "").toUpperCase();
+            const isFinished = upperStatus.includes("READY") || upperStatus.includes("FAILED") || upperStatus.includes("ERROR") || upperStatus.includes("COMPLETED");
+            const hasError = upperStatus.includes("FAILED") || upperStatus.includes("ERROR");
+
+            if (isFinished) {
+                state.isGenerating = false;
+                if (hasError) {
+                    state.isError = true;
+                    state.message = message || "Operation failed";
+                }
+            }
+
             if (session) {
                 if (state.activeSession && state.activeSession._id === sessionId) {
                     state.activeSession = session;
@@ -148,7 +168,7 @@ export const sessionSlice = createSlice({
                 const index = state.sessions.findIndex((s) => s._id === sessionId);
                 if (index !== -1) {
                     state.sessions[index] = session;
-                } else if (status === "session completed") {
+                } else if (upperStatus.includes("READY") || upperStatus.includes("COMPLETED")) {
                     state.sessions.unshift(session);
                 }
             }
@@ -164,7 +184,13 @@ export const sessionSlice = createSlice({
             })
             .addCase(getSession.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.sessions = action.payload;
+                const payload = action.payload as unknown;
+                // Handle both { session: [] } and direct []
+                if (payload && typeof payload === 'object' && 'session' in payload && Array.isArray(payload.session)) {
+                    state.sessions = payload.session as Session[];
+                } else {
+                    state.sessions = Array.isArray(action.payload) ? action.payload : [];
+                }
             })
             .addCase(getSession.rejected, (state, action) => {
                 state.isLoading = false;
@@ -176,7 +202,15 @@ export const sessionSlice = createSlice({
             })
             .addCase(createSession.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.sessions.push(action.payload);
+                state.isGenerating = true;
+                if (!Array.isArray(state.sessions)) {
+                    state.sessions = [];
+                }
+                const payload = action.payload as unknown;
+                // Only push if it looks like a full session object
+                if (payload && typeof payload === 'object' && ('_id' in payload || 'role' in payload)) {
+                    state.sessions.unshift(payload as Session);
+                }
             })
             .addCase(createSession.rejected, (state, action) => {
                 state.isLoading = false;
@@ -200,7 +234,8 @@ export const sessionSlice = createSlice({
             })
             .addCase(deleteSession.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.sessions = state.sessions.filter((session) => session._id !== action.payload._id);
+                const sessions = Array.isArray(state.sessions) ? state.sessions : [];
+                state.sessions = sessions.filter((session) => session._id !== action.payload._id);
             })
             .addCase(deleteSession.rejected, (state, action) => {
                 state.isLoading = false;

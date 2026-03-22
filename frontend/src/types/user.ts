@@ -5,6 +5,7 @@ interface User {
     email: string;
     avatar: string;
     token: string;
+    preferredRole?: string;
 }
 
 interface AuthState {

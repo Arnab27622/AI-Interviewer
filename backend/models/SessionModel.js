@@ -33,15 +33,15 @@ const questionSchema = new mongoose.Schema({
     },
     technicalScore: {
         type: Number,
-        required: true,
+        default: 0,
     },
     confidenceScore: {
         type: Number,
-        required: true,
+        default: 0,
     },
     aiFeedback: {
         type: String,
-        required: true,
+        default: "",
     }
 }, { timestamps: true });
 
