@@ -3,7 +3,7 @@ import axios from "axios";
 // import authService from "./authService";
 import type { AuthState, User } from "../../types/user";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/users/`;
+const API_URL = `${import.meta.env.VITE_API_URL}/user/`;
 
 const storedUser = localStorage.getItem("user");
 const user = storedUser ? JSON.parse(storedUser) : null;
@@ -79,8 +79,13 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
     "auth/logout",
     async (_, thunkAPI) => {
         try {
-            await axios.post(`${API_URL}logout`);
+            // Backend might not have a logout endpoint, so clear localStorage first
             localStorage.removeItem("user");
+            try {
+                await axios.post(`${API_URL}logout`);
+            } catch {
+                // Ignore API error on logout if endpoint doesn't exist
+            }
         } catch (error: unknown) {
             const message =
                 axios.isAxiosError(error)
@@ -189,7 +194,7 @@ const authSlice = createSlice({
             })
             .addCase(logout.fulfilled, (state) => {
                 state.isLoading = false;
-                state.isSuccess = true;
+                state.isSuccess = false; // Prevent triggering success effects on mount
                 state.user = null;
             })
             .addCase(logout.rejected, (state, action) => {
