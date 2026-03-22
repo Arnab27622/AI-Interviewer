@@ -60,7 +60,7 @@ export const googleLogin = createAsyncThunk<User, string, { rejectValue: string 
     "auth/googleLogin",
     async (token, thunkAPI) => {
         try {
-            const response = await axios.post<User>(`${API_URL}google-login`, { token });
+            const response = await axios.post<User>(`${API_URL}google`, { token });
             if (response.data) {
                 localStorage.setItem("user", JSON.stringify(response.data));
             }

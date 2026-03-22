@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import type { ChangeEvent, SyntheticEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { register, reset } from "../features/auth/authSlice";
+import { googleLogin, register, reset } from "../features/auth/authSlice";
 import type { AppDispatch, RootState } from "../app/store";
 import { toast } from "react-toastify";
 import type { User } from "../types/user";
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -68,6 +69,14 @@ const Register = () => {
         }
     };
 
+    const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
+        if (credentialResponse.credential) {
+            dispatch(googleLogin(credentialResponse.credential));
+        } else {
+            toast.error("Google Login Failed");
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -102,6 +111,26 @@ const Register = () => {
                 </div>
                 <button type="submit" className="w-full p-3.5 bg-teal-600 text-white font-bold rounded-xl shadow-lg shadow-teal-100 hover:bg-teal-700 transition-all active:scale-[0.98] cursor-pointer">Register</button>
             </form>
+
+            <div className="my-8 flex items-center">
+                <div className="grow border-t border-gray-200"></div>
+                <div className="mx-4 text-gray-400 text-[13px] font-black tracking-widest uppercase">OR</div>
+                <div className="grow border-t border-gray-200"></div>
+            </div>
+            
+            <div className="w-full flex items-center justify-center">
+                <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => {
+                        toast.error("Google Login Failed");
+                    }}
+                    theme="outline"
+                    shape="circle"
+                    size="large"
+                    text="continue_with"
+                />
+            </div>
+
             <div className="mt-7 text-center">
                 <p className="text-sm text-gray-600">
                     Already have an account? <Link to="/login" className="text-teal-500 font-bold hover:underline">Log in</Link>

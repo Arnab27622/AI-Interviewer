@@ -3,12 +3,6 @@ import User from "../models/User.js";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
 
-const client = new OAuth2Client(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    // process.env.GOOGLE_REDIRECT_URI
-);
-
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "3d" });
 };
@@ -75,6 +69,11 @@ const googleLogin = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error("Please provide token");
     }
+
+    const client = new OAuth2Client(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET
+    );
 
     const ticket = await client.verifyIdToken({
         idToken: token,
