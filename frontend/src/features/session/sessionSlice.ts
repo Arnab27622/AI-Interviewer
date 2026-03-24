@@ -235,7 +235,10 @@ export const sessionSlice = createSlice({
             .addCase(deleteSession.fulfilled, (state, action) => {
                 state.isLoading = false;
                 const sessions = Array.isArray(state.sessions) ? state.sessions : [];
-                state.sessions = sessions.filter((session) => session._id !== action.payload._id);
+                // Handle different response formats (id or _id)
+                const payload = action.payload as { id?: string; _id?: string };
+                const deletedId = payload.id || payload._id;
+                state.sessions = sessions.filter((session) => session._id !== deletedId);
             })
             .addCase(deleteSession.rejected, (state, action) => {
                 state.isLoading = false;
