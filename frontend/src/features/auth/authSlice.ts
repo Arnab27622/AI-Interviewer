@@ -15,6 +15,7 @@ const initialState: AuthState = {
     isSuccess: false,
     isLoading: false,
     token: null,
+    isProfileLoading: false,
     isAuthenticated: false,
 };
 
@@ -149,11 +150,13 @@ const authSlice = createSlice({
             })
             .addCase(updateProfile.pending, (state) => {
                 state.isLoading = true;
+                state.isProfileLoading = true;
             })
             .addCase(updateProfile.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isSuccess = true;
                 state.user = action.payload;
+                state.isProfileLoading = false;
             })
             .addCase(updateProfile.rejected, (state, action) => {
                 state.isLoading = false;
