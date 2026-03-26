@@ -133,11 +133,11 @@ export const sessionSlice = createSlice({
         socketUpdateSession: (state, action: PayloadAction<SocketUpdatePayload>) => {
             const { sessionId, status, message, session } = action.payload;
             state.message = message;
-            
+
             if (!Array.isArray(state.sessions)) {
                 state.sessions = [];
             }
-            
+
             if (!session && state.activeSession && state.activeSession?._id === sessionId) {
                 const qMatch = message.match(/Q\d+/);
                 if (qMatch) {
@@ -245,12 +245,15 @@ export const sessionSlice = createSlice({
                 state.isError = true;
                 state.message = action.payload || "Failed to delete session";
             })
-            .addCase(submitAnswer.pending, (state) => {
-                state.isLoading = true;
+            .addCase(submitAnswer.pending, () => {
+                // state.isLoading = true;
             })
             .addCase(submitAnswer.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.activeSession = action.payload;
+
+                if (action.payload && Array.isArray(action.payload.questions)) {
+                    state.activeSession = action.payload;
+                }
             })
             .addCase(submitAnswer.rejected, (state, action) => {
                 state.isLoading = false;

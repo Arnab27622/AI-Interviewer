@@ -48,8 +48,10 @@ const Dashboard = () => {
     const viewSession = (session: Session) => {
         if (session.status === 'completed') {
             navigate(`/review/${session._id}`)
-        } else {
+        } else if (session.status === 'in-progress') {
             navigate(`/interview/${session._id}`)
+        } else {
+            toast.info("Session not ready yet")
         }
     }
 
