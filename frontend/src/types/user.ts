@@ -16,6 +16,7 @@ interface AuthState {
     message: string;
     isSuccess: boolean;
     isLoading: boolean;
+    isProfileLoading: boolean;
 }
 
 export type { User, AuthState };

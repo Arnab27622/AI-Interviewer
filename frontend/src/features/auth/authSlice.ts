@@ -14,9 +14,9 @@ const initialState: AuthState = {
     message: "",
     isSuccess: false,
     isLoading: false,
-    token: null,
+    token: user?.token ?? null,
     isProfileLoading: false,
-    isAuthenticated: false,
+    isAuthenticated: !!user,
 };
 
 export const register = createAsyncThunk<User, User, { rejectValue: string }>(
@@ -108,7 +108,9 @@ export const updateProfile = createAsyncThunk<User, User, { rejectValue: string;
                 },
             });
             if (response.data) {
-                localStorage.setItem("user", JSON.stringify(response.data));
+                const updatedUser: User = { ...response.data, token: token || "" };
+                localStorage.setItem("user", JSON.stringify(updatedUser));
+                return updatedUser;
             }
             return response.data;
         } catch (error: unknown) {
@@ -130,6 +132,7 @@ const authSlice = createSlice({
             state.isSuccess = false;
             state.isError = false;
             state.message = "";
+            state.isProfileLoading = false;
         },
     },
     extraReducers: (builder) => {
@@ -141,6 +144,7 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.isSuccess = true;
                 state.user = action.payload;
+                state.isAuthenticated = true;
             })
             .addCase(register.rejected, (state, action) => {
                 state.isLoading = false;
@@ -162,7 +166,7 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload ?? "An error occurred";
-                state.user = null;
+                state.isProfileLoading = false;
             })
             .addCase(login.pending, (state) => {
                 state.isLoading = true;
@@ -171,6 +175,7 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.isSuccess = true;
                 state.user = action.payload;
+                state.isAuthenticated = true;
             })
             .addCase(login.rejected, (state, action) => {
                 state.isLoading = false;
@@ -185,6 +190,7 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.isSuccess = true;
                 state.user = action.payload;
+                state.isAuthenticated = true;
             })
             .addCase(googleLogin.rejected, (state, action) => {
                 state.isLoading = false;
@@ -199,6 +205,7 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.isSuccess = false; // Prevent triggering success effects on mount
                 state.user = null;
+                state.isAuthenticated = false;
             })
             .addCase(logout.rejected, (state, action) => {
                 state.isLoading = false;

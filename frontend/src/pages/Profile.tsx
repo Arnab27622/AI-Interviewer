@@ -3,8 +3,15 @@ import { useSelector, useDispatch } from "react-redux"
 import { toast } from "react-toastify"
 import { updateProfile, reset } from "../features/auth/authSlice"
 import { ROLES } from "../types/misc"
+import type { RootState, AppDispatch } from "../app/store"
 
-function FormField({ label, children, muted }) {
+interface FormFieldProps {
+    label: string;
+    children: React.ReactNode;
+    muted?: boolean;
+}
+
+function FormField({ label, children, muted }: FormFieldProps) {
     return (
         <div className={`space-y-1.5 ${muted ? 'opacity-60' : ''}`}>
             <label className="ml-1 text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest">{label}</label>
@@ -33,8 +40,8 @@ function SelectArrow() {
 }
 
 const Profile = () => {
-    const dispatch = useDispatch();
-    const { user, isError, isSuccess, message, isProfileLoading } = useSelector((state: { auth: AuthState }) => state.auth);
+    const dispatch = useDispatch<AppDispatch>();
+    const { user, isError, isSuccess, message, isProfileLoading } = useSelector((state: RootState) => state.auth);
 
     const [formData, setFormData] = useState({
         name: user?.name || "",
@@ -49,15 +56,15 @@ const Profile = () => {
         dispatch(reset());
     }, [isError, isSuccess, message, dispatch]);
 
-    useEffect(() => {
-        if (user) {
-            setFormData({
-                name: user?.name || "",
-                email: user?.email || "",
-                preferredRole: user?.preferredRole || "",
-            });
-        }
-    }, [user]);
+    const [prevUserId, setPrevUserId] = useState(user?.id);
+    if (user?.id !== prevUserId) {
+        setPrevUserId(user?.id);
+        setFormData({
+            name: user?.name || "",
+            email: user?.email || "",
+            preferredRole: user?.preferredRole || "",
+        });
+    }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData((prev) => ({
@@ -68,12 +75,14 @@ const Profile = () => {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (formData.name === user.name && formData.preferredRole === user.preferredRole) {
+        if (!user) return;
+        
+        if (formData.name === user?.name && formData.preferredRole === user?.preferredRole) {
             toast.error("No changes to update");
             return;
         }
 
-        dispatch(updateProfile(formData));
+        dispatch(updateProfile({ ...user, ...formData }));
     };
 
     return (
@@ -86,20 +95,20 @@ const Profile = () => {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <FormField label="Full Name" muted={false}>
-                        <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent rounded-xl sm:rounded-2xl p-3.5 sm-4 font-semibold text-slate-700 text-base transition-all focus:bg-white focus:border-teal-500 outline-none" placeholder="Enter your full name" />
+                        <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent rounded-xl sm:rounded-2xl p-3.5 sm:p-4 font-semibold text-slate-700 text-base transition-all focus:bg-white focus:border-teal-500 outline-none" placeholder="Enter your full name" />
                     </FormField>
 
                     <FormField label="Email" muted={true}>
-                        <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full bg-slate-100 rounded-xl sm:rounded-2xl p-3.5 sm-4 font-semibold text-slate-500 text-base cursor-not-allowed" disabled />
+                        <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full bg-slate-100 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 font-semibold text-slate-500 text-base cursor-not-allowed" disabled />
                     </FormField>
 
                     <FormField label="Preferred Role" muted={false}>
                         <div className="relative">
-                            <select name="preferredRole" value={formData.preferredRole} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent rounded-xl sm:rounded-2xl p-3.5 sm-4 font-semibold text-slate-700 text-base transition-all focus:bg-white focus:border-teal-500 outline-none appearance-none cursor-pointer">
+                            <select name="preferredRole" value={formData.preferredRole} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent rounded-xl sm:rounded-2xl p-3.5 sm:p-4 font-semibold text-slate-700 text-base transition-all focus:bg-white focus:border-teal-500 outline-none appearance-none cursor-pointer">
                                 <option value="">Select your role</option>
-                                {Object.values(ROLES).map((role) => (
+                                {ROLES.map((role) => (
                                     <option key={role} value={role}>
-                                        {role.charAt(0).toUpperCase() + role.slice(1)}
+                                        {role}
                                     </option>
                                 ))}
                             </select>
