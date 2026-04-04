@@ -5,6 +5,7 @@ import { createSession, deleteSession, getSession, reset } from "../features/ses
 import type { RootState, AppDispatch } from "../app/store"
 import { toast } from "react-toastify"
 import SessionCard from "../components/SessionCard"
+import ConfirmModal from "../components/ConfirmModal"
 import type { Session } from "../types/session"
 import { ROLES, LEVELS, TYPES, COUNTS } from "../types/misc"
 
@@ -20,6 +21,11 @@ const Dashboard = () => {
         level: LEVELS[0],
         interviewType: TYPES[1].value,
         count: COUNTS[0],
+    })
+
+    const [modalConfig, setModalConfig] = useState({
+        isOpen: false,
+        sessionId: '',
     })
 
     useEffect(() => {
@@ -57,9 +63,17 @@ const Dashboard = () => {
 
     const handleDelete = (e: React.MouseEvent, sessionId: string) => {
         e.stopPropagation()
-        if (window.confirm("Are you sure you want to delete this session?")) {
-            dispatch(deleteSession(sessionId));
+        setModalConfig({
+            isOpen: true,
+            sessionId: sessionId,
+        })
+    }
+
+    const confirmDelete = () => {
+        if (modalConfig.sessionId) {
+            dispatch(deleteSession(modalConfig.sessionId));
             toast.success("Session deleted successfully");
+            setModalConfig({ isOpen: false, sessionId: '' });
         }
     }
 
@@ -200,6 +214,17 @@ const Dashboard = () => {
                     )}
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={modalConfig.isOpen}
+                title="Delete Session?"
+                message="Are you sure you want to delete this interview session? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Keep Session"
+                onConfirm={confirmDelete}
+                onCancel={() => setModalConfig({ isOpen: false, sessionId: '' })}
+                isDanger={true}
+            />
         </div>
     );
 }
