@@ -7,9 +7,6 @@ const API_URL = `${import.meta.env.VITE_API_URL}/sessions`;
 
 const api = axios.create({
     baseURL: API_URL,
-    headers: {
-        "Content-Type": "application/json",
-    },
 });
 
 api.interceptors.request.use((request) => {
@@ -162,7 +159,8 @@ export const sessionSlice = createSlice({
             }
 
             if (session) {
-                if (state.activeSession && state.activeSession._id === sessionId) {
+                // Update activeSession if it matches the ID, or if we don't have an active session yet
+                if (!state.activeSession || state.activeSession._id === sessionId) {
                     state.activeSession = session;
                 }
                 const index = state.sessions.findIndex((s) => s._id === sessionId);
@@ -222,7 +220,13 @@ export const sessionSlice = createSlice({
             })
             .addCase(getSessionById.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.activeSession = action.payload;
+                const payload = action.payload as { session?: Session };
+                // Handle wrapped { session: { ... } } or direct { ... }
+                if (payload && payload.session) {
+                    state.activeSession = payload.session;
+                } else {
+                    state.activeSession = action.payload as Session;
+                }
             })
             .addCase(getSessionById.rejected, (state, action) => {
                 state.isLoading = false;
@@ -265,7 +269,12 @@ export const sessionSlice = createSlice({
             })
             .addCase(endSession.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.activeSession = action.payload;
+                const payload = action.payload as { session?: Session };
+                if (payload && payload.session) {
+                    state.activeSession = payload.session;
+                } else {
+                    state.activeSession = action.payload as Session;
+                }
             })
             .addCase(endSession.rejected, (state, action) => {
                 state.isLoading = false;

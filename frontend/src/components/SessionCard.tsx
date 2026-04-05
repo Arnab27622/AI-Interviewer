@@ -24,8 +24,18 @@ const SessionCard = ({ session, onClick, onDelete }: SessionCardProps) => {
         if (role.includes('AWS')) return '☁️'
         if (role.includes('Azure')) return '🔷'
         if (role.includes('MERN')) return '🌐'
+        if (role.includes('MEAN')) return '📐'
+        if (role.includes('Android')) return '🤖'
+        if (role.includes('iOS')) return '🍎'
+        if (role.includes('Game')) return '🎮'
+        if (role.includes('Blockchain')) return '⛓️'
+        if (role.includes('Security') || role.includes('Cyber')) return '🛡️'
+        if (role.includes('ML') || role.includes('Machine Learning')) return '🧠'
         if (role.includes('Data')) return '📊'
         if (role.includes('DevOps')) return '🔄'
+        if (role.includes('Frontend')) return '🎨'
+        if (role.includes('Backend')) return '🏗️'
+        if (role.includes('Full Stack')) return '🥞'
         return '💻'
     }
 

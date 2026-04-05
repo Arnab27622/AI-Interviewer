@@ -6,8 +6,8 @@ const storage = multer.diskStorage({
         cb(null, "uploads/");
     },
     filename: function (req, file, cb) {
-        const ext = path.extname(file.originalname);
-        const sessionId = req.params.id || 'unknown';
+        const ext = path.extname(file.originalname) || '.webm';
+        const sessionId = req.params.sessionId || 'unknown';
         const filename = `${sessionId}-${Date.now()}${ext}`;
         cb(null, filename);
     },
@@ -23,6 +23,6 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage: storage, fileFilter: fileFilter, limits: { fileSize: 1024 * 1024 * 10 } });
 
-const uploadSingleAudio = upload.single("audioFile")
+const uploadSingleAudio = upload.single("audio")
 
 export { uploadSingleAudio };

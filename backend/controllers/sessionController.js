@@ -126,7 +126,7 @@ const getSessionById = asyncHandler(async (req, res) => {
     const session = await Session.findOne({
         _id: sessionId,
         user: userId,
-    }).select("-questions");
+    });
 
     if (!session) {
         return res.status(404).json({ message: "Session not found" });
@@ -238,74 +238,74 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
                 const data = await response.json();
                 transcription = data.transcription || "";
             } catch (error) {
-                console.error("Error in evaluating answer:", error.message);
-                pushSocketUpdate(io, userId, sessionId, "error", `Failed to evaluate answer: ${error.message}`);
+                console.error("Error in transcription:", error.message);
+                // We'll continue with empty transcription if it fails
             }
             finally {
                 if (audioFilePath && fs.existsSync(audioFilePath)) {
                     await fs.promises.unlink(audioFilePath);
                 }
             }
+        }
 
-            try {
-                pushSocketUpdate(io, userId, sessionId, "AI_EVALUATING", `Evaluating question ${questionIndex + 1}...`);
+        try {
+            pushSocketUpdate(io, userId, sessionId, "AI_EVALUATING", `Evaluating question ${questionIndex + 1}...`);
 
-                const response = await fetch(`${API_SERVICE_URL}/evaluate`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        question: question.questionText,
-                        question_type: question.questionType,
-                        user_answer: transcription,
-                        user_submitted_code: code || "",
-                        role: session.role,
-                        level: session.level,
-                        interview_type: session.interviewType,
-                    }),
-                });
+            const response = await fetch(`${API_SERVICE_URL}/evaluate`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    question: question.questionText,
+                    question_type: question.questionType,
+                    user_answer: transcription || "No verbal answer provided.",
+                    user_code: codeSubmission || "",
+                    role: session.role,
+                    level: session.level,
+                    interview_type: session.interviewType,
+                }),
+            });
 
-                if (!response.ok) {
-                    const error = await response.text();
-                    throw new Error(`Failed to evaluate answer: ${error}`);
-                }
-
-                const data = await response.json();
-                question.userAnswerText = transcription;
-                question.userSubmittedCode = code || "";
-                question.idealAnswer = data.idealAnswer;
-                question.technicalScore = data.technical_score;
-                question.confidenceScore = data.confidence_score;
-                question.aiFeedback = data.aiFeedback;
-                question.isEvaluated = true;
-                question.isSubmitted = true;
-
-                const allQuestionsEvaluated = session.questions.every((q) => q.isEvaluated);
-
-                if (session.status === "completed" || allQuestionsEvaluated) {
-                    const scoreSummary = await calculateScoreSummary(sessionId);
-                    session.overallScore = scoreSummary.overallScore;
-                    session.metrics.avgTechnical = scoreSummary.avgTechnical;
-                    session.metrics.avgConfidence = scoreSummary.avgConfidence;
-
-                    if (allQuestionsEvaluated) {
-                        session.status = "completed";
-                        session.endTime = session.endTime || Date.now();
-                    }
-                    await session.save();
-
-                    pushSocketUpdate(io, userId, sessionId, "session completed", `Question ${questionIndex + 1} evaluated successfully`);
-                } else {
-                    session.status = "in-progress";
-                    await session.save();
-                    pushSocketUpdate(io, userId, sessionId, "evaluation completed", `Feedback for question ${questionIndex + 1} is ready`, session);
-                }
-
-            } catch (error) {
-                console.error("Error in evaluating answer:", error.message);
-                pushSocketUpdate(io, userId, sessionId, "error", `Failed to evaluate answer: ${error.message}`);
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(`Failed to evaluate answer: ${error}`);
             }
+
+            const data = await response.json();
+            question.userAnswerText = transcription;
+            question.userSubmittedCode = codeSubmission || "";
+            question.idealAnswer = data.ideal_answer;
+            question.technicalScore = data.technical_score;
+            question.confidenceScore = data.confidence_score;
+            question.aiFeedback = data.ai_feedback;
+            question.isEvaluated = true;
+            question.isSubmitted = true;
+
+            const allQuestionsEvaluated = session.questions.every((q) => q.isEvaluated);
+
+            if (session.status === "completed" || allQuestionsEvaluated) {
+                const scoreSummary = await calculateScoreSummary(sessionId);
+                session.overallScore = scoreSummary.overallScore;
+                session.metrics.avgTechnical = scoreSummary.avgTechnical;
+                session.metrics.avgConfidence = scoreSummary.avgConfidence;
+
+                if (allQuestionsEvaluated) {
+                    session.status = "completed";
+                    session.endTime = session.endTime || Date.now();
+                }
+                await session.save();
+
+                pushSocketUpdate(io, userId, sessionId, "session completed", `Question ${questionIndex + 1} evaluated successfully`);
+            } else {
+                session.status = "in-progress";
+                await session.save();
+                pushSocketUpdate(io, userId, sessionId, "evaluation completed", `Feedback for question ${questionIndex + 1} is ready`, session);
+            }
+
+        } catch (error) {
+            console.error("Error in AI evaluation:", error.message);
+            pushSocketUpdate(io, userId, sessionId, "error", `Failed to evaluate answer: ${error.message}`);
         }
 
     } catch (error) {
@@ -391,7 +391,8 @@ const endSession = asyncHandler(async (req, res) => {
 
     res.status(200).json({
         message: "Session ended successfully",
-    }, session);
+        session
+    });
 });
 
 export { createSession, getSession, getSessionById, deleteSession, submitAnswer, endSession };

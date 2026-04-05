@@ -8,13 +8,26 @@ export const ROLES = [
     "QA Engineer",
     "DevOps Engineer",
     "Cloud Engineer",
-    "Security Engineer",
+    "Cyber Security Engineer",
     "Mobile Developer",
     "Frontend Developer",
     "Backend Developer",
     "Full Stack Developer",
+    "Full Stack Python Developer",
+    "Full Stack Java Developer",
     "Machine Learning Engineer",
-    "Data Analyst"
+    "Data Analyst",
+    "Machine Learning Developer",
+    "MERN Stack Developer",
+    "MEAN Stack Developer",
+    "Android Developer",
+    "iOS Developer",
+    "Game Developer",
+    "Embedded Systems Engineer",
+    "Blockchain Developer",
+    "Systems Programmer",
+    "Database Administrator",
+    "Web Developer"
 ]
 
 export const LEVELS = ["Junior", "Mid-level", "Senior", "Architect", "Manager"]
