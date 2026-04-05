@@ -186,7 +186,11 @@ const SessionReview = () => {
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10 pt-6 sm:pt-8 border-t border-r-slate-50">
                                     <div className="space-y-3">
                                         <label className="text-[9px] sm:text-[10px] font-black text-slate-300 uppercase tracking-[0.2rem] block ml-1">AI Analytical Feedback</label>
-                                        <div className="bg-slate-50/50 p-4 sm:p-6 rounded-2xl sm:rounded-4xl text-xs sm:text-sm italic text-slate-600 border-l-4 sm:border-l-[6px] border-teal-500 leading-relaxed">"{q.aiFeedback}"</div>
+                                        <div className="bg-slate-50/50 p-4 sm:p-6 rounded-2xl sm:rounded-4xl text-xs sm:text-sm italic text-slate-600 border-l-4 sm:border-l-[6px] border-teal-500 leading-relaxed">
+                                            <ReactMarkdown>
+                                                {q.aiFeedback}
+                                            </ReactMarkdown>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-3">
