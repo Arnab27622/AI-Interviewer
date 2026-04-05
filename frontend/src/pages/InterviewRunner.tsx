@@ -306,7 +306,7 @@ const InterviewRunner = () => {
                 <h2 className="text-2xl font-medium leading-relaxed mt-2">{currentQuestion?.questionText}</h2>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className={`grid gap-6 ${currentQuestion?.questionType === 'coding' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
                 <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center justify-center min-h-100">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Verbal Answer</h3>
                     {!isRecording && !currentDraft.audio ? (
@@ -333,28 +333,30 @@ const InterviewRunner = () => {
                     )}
                 </div>
 
-                <div className="bg-white p-2 rounded-3xl border border-slate-100 shadow-sm overflow-hidden h-100">
-                    <div className="flex justify-between px-4 py-2 bg-slate-50 border-b border-slate-100">
-                        <span className="text-xs font-bold text-slate-500 uppercase py-2">Code Editor</span>
-                        <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)} disabled={isQuestionLocked} className="text-xs bg-white border border-slate-200 rounded-lg px-2 disabled:bg-slate-100 disabled:text-slate-400">
-                            {SUPPORTED_LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
-                        </select>
+                {currentQuestion?.questionType === 'coding' && (
+                    <div className="bg-white p-2 rounded-3xl border border-slate-100 shadow-sm overflow-hidden h-100">
+                        <div className="flex justify-between px-4 py-2 bg-slate-50 border-b border-slate-100">
+                            <span className="text-xs font-bold text-slate-500 uppercase py-2">Code Editor</span>
+                            <select value={selectedLanguage} onChange={(e) => setSelectedLanguage(e.target.value)} disabled={isQuestionLocked} className="text-xs bg-white border border-slate-200 rounded-lg px-2 disabled:bg-slate-100 disabled:text-slate-400">
+                                {SUPPORTED_LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+                            </select>
+                        </div>
+                        <MonacoEditor
+                            height="100%"
+                            language={selectedLanguage}
+                            theme="vs-dark"
+                            value={currentDraft.code || ''}
+                            onChange={updateDraftCode}
+                            options={{
+                                minimap: { enabled: false },
+                                fontSize: 13,
+                                scrollBeyondLastLine: false,
+                                readOnly: isQuestionLocked,
+                                domReadOnly: isQuestionLocked,
+                            }}
+                        />
                     </div>
-                    <MonacoEditor
-                        height="100%"
-                        language={selectedLanguage}
-                        theme="vs-dark"
-                        value={currentDraft.code || ''}
-                        onChange={updateDraftCode}
-                        options={{
-                            minimap: { enabled: false },
-                            fontSize: 13,
-                            scrollBeyondLastLine: false,
-                            readOnly: isQuestionLocked,
-                            domReadOnly: isQuestionLocked,
-                        }}
-                    />
-                </div>
+                )}
             </div>
 
             {currentQuestion?.isEvaluated && (
