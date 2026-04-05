@@ -211,7 +211,21 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False) -> 
 
     resp = requests.post(url, json=body, headers=headers)
     if not resp.ok:
-        raise HTTPException(status_code=500, detail=resp.json())
+        try:
+            error_data = resp.json()
+            if "error" in error_data and "message" in error_data["error"]:
+                error_msg = error_data["error"]["message"]
+            elif "detail" in error_data:
+                error_msg = str(error_data["detail"])
+            else:
+                error_msg = resp.text
+        except Exception:
+            error_msg = resp.text
+            
+        raise HTTPException(
+            status_code=resp.status_code if resp.status_code != 500 else 500,
+            detail=error_msg
+        )
 
     data = resp.json()
     text_output = ""

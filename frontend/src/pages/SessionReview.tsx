@@ -12,12 +12,18 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 const formatDuration = (start: string | number | Date | undefined, end: string | number | Date | undefined) => {
     if (!start || !end) return 'N/A';
-    const diff = new Date(end).getTime() - new Date(start).getTime();
+    const diff = Math.abs(new Date(end).getTime() - new Date(start).getTime());
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    if (hours > 0) return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
-    return `${minutes}m ${seconds % 60}s`;
+    
+    const h = hours;
+    const m = minutes % 60;
+    const s = seconds % 60;
+
+    if (h > 0) return `${h}h ${m}m ${s}s`;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
 };
 
 const sanitizeQuestionText = (text: string | undefined) => {

@@ -80,7 +80,7 @@ const InterviewRunner = () => {
     const { sessionId } = useParams<{ sessionId: string }>();
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
-    const { activeSession, isLoading, message } = useSelector((state: RootState) => state.session);
+    const { activeSession, isLoading, message, isError: sessionError, message: sessionMessage } = useSelector((state: RootState) => state.session);
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedLanguage, setSelectedLanguage] = useState("javascript");
@@ -97,8 +97,13 @@ const InterviewRunner = () => {
 
     const [drafts, setDrafts] = useState<Record<number, { code?: string; audio?: Blob }>>(() => {
         if (!sessionId) return {};
-        const saved = localStorage.getItem(`drafts_${sessionId}`);
-        return saved ? JSON.parse(saved) : {};
+        const saved = localStorage.getItem(`draft_code_${sessionId}`); 
+        const codes = saved ? JSON.parse(saved) : {};
+        const initialDrafts: Record<number, { code?: string; audio?: Blob }> = {};
+        Object.keys(codes).forEach(key => {
+            initialDrafts[parseInt(key)] = { code: codes[key] };
+        });
+        return initialDrafts;
     });
 
     const [isRecording, setIsRecording] = useState(false);
@@ -111,7 +116,12 @@ const InterviewRunner = () => {
 
     useEffect(() => {
         if (sessionId) {
-            localStorage.setItem(`drafts_${sessionId}`, JSON.stringify(drafts));
+            const codeOnly: Record<number, string> = {};
+            Object.keys(drafts).forEach(key => {
+                const idx = parseInt(key);
+                if (drafts[idx].code) codeOnly[idx] = drafts[idx].code;
+            });
+            localStorage.setItem(`draft_code_${sessionId}`, JSON.stringify(codeOnly));
         }
     }, [drafts, sessionId]);
 
@@ -125,7 +135,25 @@ const InterviewRunner = () => {
 
     const isReduxSubmitted = currentQuestion?.isSubmitted === true;
     const isLocallySubmitted = submittedLocal[currentQuestionIndex] === true;
-    const isQuestionLocked = isReduxSubmitted || isLocallySubmitted;
+    
+    // Check if there's an error message related to evaluation
+    const isEvaluationError = sessionError && sessionMessage.includes("Failed");
+
+    // If an error occurs, we should unlock the question for resubmission
+    useEffect(() => {
+        if (isEvaluationError && isLocallySubmitted) {
+            // Defer state update to avoid cascading render lint warning
+            const timer = setTimeout(() => {
+                setSubmittedLocal(prev => ({
+                    ...prev, [currentQuestionIndex]: false
+                }));
+            }, 0);
+            toast.error(sessionMessage, { toastId: "eval-error" });
+            return () => clearTimeout(timer);
+        }
+    }, [isEvaluationError, isLocallySubmitted, currentQuestionIndex, sessionMessage]);
+
+    const isQuestionLocked = isReduxSubmitted || (isLocallySubmitted && !isEvaluationError);
     const isProcessing = isQuestionLocked && !currentQuestion?.isEvaluated;
 
     const handleNavigation = (index: number) => {

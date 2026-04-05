@@ -41,7 +41,7 @@ function SelectArrow() {
 
 const Profile = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const { user, isError, isSuccess, message, isProfileLoading } = useSelector((state: RootState) => state.auth);
+    const { user, isProfileLoading } = useSelector((state: RootState) => state.auth);
 
     const [formData, setFormData] = useState({
         name: user?.name || "",
@@ -49,12 +49,10 @@ const Profile = () => {
         preferredRole: user?.preferredRole || "",
     });
 
+    // Initial cleanup on mount to clear state from previous pages (e.g. login success)
     useEffect(() => {
-        if (!isError && !isSuccess) return
-        if (isError) toast.error(message);
-        if (isSuccess) toast.success("Profile updated successfully");
         dispatch(reset());
-    }, [isError, isSuccess, message, dispatch]);
+    }, [dispatch]);
 
     const [prevUserId, setPrevUserId] = useState(user?.id);
     if (user?.id !== prevUserId) {
@@ -73,16 +71,23 @@ const Profile = () => {
         }));
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!user) return;
         
         if (formData.name === user?.name && formData.preferredRole === user?.preferredRole) {
-            toast.error("No changes to update");
+            toast.error("No changes to update", { toastId: "no-changes" });
             return;
         }
 
-        dispatch(updateProfile({ ...user, ...formData }));
+        try {
+            await dispatch(updateProfile({ ...user, ...formData })).unwrap();
+            toast.success("Profile updated successfully", { toastId: "profile-success" });
+            dispatch(reset());
+        } catch (error: unknown) {
+            toast.error(typeof error === 'string' ? error : "An error occurred", { toastId: "profile-error" });
+            dispatch(reset());
+        }
     };
 
     return (

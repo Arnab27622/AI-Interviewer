@@ -268,8 +268,14 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
             });
 
             if (!response.ok) {
-                const error = await response.text();
-                throw new Error(`Failed to evaluate answer: ${error}`);
+                let errorMsg = await response.text();
+                try {
+                    const parsed = JSON.parse(errorMsg);
+                    errorMsg = parsed.detail || parsed.message || errorMsg;
+                } catch {
+                    // Use raw text if not JSON
+                }
+                throw new Error(errorMsg);
             }
 
             const data = await response.json();
@@ -305,7 +311,13 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
 
         } catch (error) {
             console.error("Error in AI evaluation:", error.message);
-            pushSocketUpdate(io, userId, sessionId, "error", `Failed to evaluate answer: ${error.message}`);
+            // Re-fetch session to ensure we have the latest state before update
+            const sessionToUpdate = await Session.findById(sessionId);
+            if (sessionToUpdate && sessionToUpdate.questions[questionIndex]) {
+                sessionToUpdate.questions[questionIndex].isSubmitted = false;
+                await sessionToUpdate.save();
+            }
+            pushSocketUpdate(io, userId, sessionId, "error", `Failed to evaluate answer: ${error.message}`, sessionToUpdate);
         }
 
     } catch (error) {

@@ -130,6 +130,12 @@ export const sessionSlice = createSlice({
         socketUpdateSession: (state, action: PayloadAction<SocketUpdatePayload>) => {
             const { sessionId, status, message, session } = action.payload;
             state.message = message;
+            
+            const upperStatus = (status || "").toUpperCase();
+            // Clear error state if we are receiving a progress update
+            if (!upperStatus.includes("ERROR") && !upperStatus.includes("FAILED")) {
+                state.isError = false;
+            }
 
             if (!Array.isArray(state.sessions)) {
                 state.sessions = [];
@@ -139,14 +145,13 @@ export const sessionSlice = createSlice({
                 const qMatch = message.match(/Q\d+/);
                 if (qMatch) {
                     const qIndex = parseInt(qMatch[1]) - 1;
-                    if (status.includes('AI_')) {
+                    if (upperStatus.includes('AI_')) {
                         state.activeSession.questions[qIndex].isSubmitted = true;
                     }
                 }
             }
 
             // Handle generation status updates
-            const upperStatus = (status || "").toUpperCase();
             const isFinished = upperStatus.includes("READY") || upperStatus.includes("FAILED") || upperStatus.includes("ERROR") || upperStatus.includes("COMPLETED");
             const hasError = upperStatus.includes("FAILED") || upperStatus.includes("ERROR");
 
