@@ -296,7 +296,7 @@ const InterviewRunner = () => {
                         ))}
                     </div>
                 </div>
-                <button onClick={handleFinishInterview} disabled={isLoading} className="bg-rose-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-rose-700 disabled:opacity-50">
+                <button onClick={handleFinishInterview} disabled={isLoading} className="bg-rose-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-rose-700 disabled:opacity-50 cursor-pointer">
                     {isLoading ? "Finalizing..." : "Finish Interview"}
                 </button>
             </div>
@@ -310,7 +310,7 @@ const InterviewRunner = () => {
                 <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center justify-center min-h-100">
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Verbal Answer</h3>
                     {!isRecording && !currentDraft.audio ? (
-                        <button onClick={startRecording} disabled={isQuestionLocked} className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-xl hover:scale-105 transition-all disabled:opacity-50">
+                        <button onClick={startRecording} disabled={isQuestionLocked} className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-xl hover:scale-105 transition-all disabled:opacity-50 cursor-pointer">
                             <MicIcon />
                         </button>
                     ) : isRecording ? (
@@ -370,7 +370,7 @@ const InterviewRunner = () => {
             )}
 
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 px-6 md:px-12 flex justify-between items-center z-50">
-                <button onClick={() => handleNavigation(currentQuestionIndex - 1)} disabled={currentQuestionIndex === 0} className="text-slate-500 font-bold text-sm hover:text-slate-800 disabled:opacity-30">
+                <button onClick={() => handleNavigation(currentQuestionIndex - 1)} disabled={currentQuestionIndex === 0} className="text-slate-500 font-bold text-sm hover:text-slate-800 disabled:opacity-30 cursor-pointer">
                     ← Previous
                 </button>
 
@@ -386,7 +386,7 @@ const InterviewRunner = () => {
                     </button>
                 </div>
 
-                <button onClick={() => handleNavigation(currentQuestionIndex + 1)} disabled={currentQuestionIndex === (activeSession?.questions?.length || 0) - 1} className="text-slate-500 font-bold hover:text-slate-800 disabled:opacity-30">
+                <button onClick={() => handleNavigation(currentQuestionIndex + 1)} disabled={currentQuestionIndex === (activeSession?.questions?.length || 0) - 1} className="text-slate-500 font-bold hover:text-slate-800 disabled:opacity-30 cursor-pointer">
                     Next →
                 </button>
             </div>
