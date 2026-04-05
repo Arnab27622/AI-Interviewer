@@ -172,8 +172,12 @@ class QuestionRequest(BaseModel):
     interview_type: str = "coding-mix"
 
 
+class QuestionItem(BaseModel):
+    question: str
+    ideal_answer: str
+
 class QuestionResponse(BaseModel):
-    question: list[str]
+    questions: list[QuestionItem]
     model_used: str
 
 
@@ -263,18 +267,53 @@ async def generate_questions(req: QuestionRequest):
             instruction = "All questions should be conceptual questions. No runnable coding questions."
 
         system_prompt = (
-            "You are an expert interviewer. Only output interview questions "
-            "exactly one per line, no explanations, no numbering."
+            "You are an expert interviewer. Generate interview questions along with their ideal answers. "
+            "Output ONLY a JSON object with a 'questions' key containing an array of objects. "
+            "Each object must have 'question' (the text) and 'ideal_answer' (a comprehensive correct response or code example)."
         )
         user_prompt = (
-            f"Generate exactly {req.count} interview questions for a {req.level} {req.role}. "
-            f"{instruction}. Just output questions, one per line, with no other text."
+            f"Generate exactly {req.count} unique interview questions for a {req.level} {req.role} role. "
+            f"{instruction}. For each question, provide a detailed ideal answer. "
+            "Return ONLY raw JSON."
         )
 
-        text_output = call_gemini(system_prompt, user_prompt)
-        questions = [q.strip() for q in text_output.split("\n") if q.strip()]
+        text_output = call_gemini(system_prompt, user_prompt, as_json=True)
+        
+        try:
+            cleaned = (
+                text_output.strip()
+                .removeprefix("```json")
+                .removeprefix("```")
+                .removesuffix("```")
+                .strip()
+            )
+            parsed = json.loads(cleaned)
+            
+            # Accommodate both {"questions": [...]} and [...]
+            if isinstance(parsed, dict):
+                items = parsed.get("questions", [])
+            elif isinstance(parsed, list):
+                items = parsed
+            else:
+                items = []
 
-        return QuestionResponse(question=questions[: req.count], model_used=MODEL_NAME)
+            # Ensure we match the requested count and format
+            final_questions = []
+            for item in items[:req.count]:
+                final_questions.append(QuestionItem(
+                    question=item.get("question", item.get("text", "")),
+                    ideal_answer=item.get("ideal_answer", item.get("answer", ""))
+                ))
+
+            if not final_questions:
+                # If parsing failed or returned empty
+                raise ValueError("No questions found in JSON response")
+
+            return QuestionResponse(questions=final_questions, model_used=MODEL_NAME)
+        except Exception as e:
+            print(f"JSON parsing error: {e}")
+            print(f"Raw output was: {text_output!r}")
+            raise HTTPException(status_code=500, detail=f"Failed to parse AI response: {str(e)}")
 
     except HTTPException:
         raise

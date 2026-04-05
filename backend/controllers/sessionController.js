@@ -53,28 +53,27 @@ const createSession = asyncHandler(async (req, res) => {
                 body: JSON.stringify({
                     role,
                     level,
-                    interviewType,
+                    interview_type: interviewType,
                     count,
                 }),
             });
 
             if (!aiResponse.ok) {
                 const errorData = await aiResponse.json();
-                throw new Error(`Failed to generate questions: ${aiResponse.status} - ${errorData.error || "Unknown error"}`);
+                const errorMsg = errorData.detail || errorData.error || "Unknown error";
+                console.error("AI Service Error:", errorMsg);
+                throw new Error(`Failed to generate questions: ${aiResponse.status} - ${errorMsg}`);
             }
 
             const aiData = await aiResponse.json();
             const codingCount = interviewType === 'coding-mix' ? Math.floor(count * 0.2) : 0;
 
-            const questions = (aiData.questions || aiData.question || []).map((qText, index) => ({
-                questionText: qText,
+            const questions = (aiData.questions || []).map((qInfo, index) => ({
+                questionText: qInfo.question,
+                idealAnswer: qInfo.ideal_answer,
                 questionType: index < codingCount ? "coding" : "oral",
                 isEvaluated: false,
                 isSubmitted: false,
-                // idealAnswer: q.ideal_answer,
-                // technicalScore: 0,
-                // confidenceScore: 0,
-                // aiFeedback: "",
             }));
 
             session.questions = questions;
