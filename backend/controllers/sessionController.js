@@ -2,7 +2,6 @@ import asyncHandler from "express-async-handler";
 import Session from "../models/SessionModel.js";
 
 import fs from "fs";
-import FormData from "form-data";
 import path from "path";
 import mongoose from "mongoose";
 
@@ -220,13 +219,14 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
             try {
                 pushSocketUpdate(io, userId, sessionId, "AI_TRANSCRIBING", `Transcribing question ${questionIndex + 1}...`);
 
+                const fileBuffer = await fs.promises.readFile(audioFilePath);
+                const fileBlob = new Blob([fileBuffer], { type: 'audio/webm' });
                 const formData = new FormData();
-                formData.append("file", fs.createReadStream(audioFilePath));
+                formData.append("file", fileBlob, "audio.webm");
 
                 const response = await fetch(`${API_SERVICE_URL}/transcribe`, {
                     method: "POST",
-                    body: formData,
-                    headers: formData.getHeaders()
+                    body: formData
                 });
 
                 if (!response.ok) {
