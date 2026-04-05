@@ -10,5 +10,5 @@ export const store = configureStore({
         auth: authReducer,
         session: sessionReducer,
     },
-    devTools: true,
+    devTools: import.meta.env.MODE !== "production",
 });

@@ -18,16 +18,7 @@ api.interceptors.request.use((request) => {
     return request;
 });
 
-api.interceptors.response.use(
-    (response) => response,
-    (error: AxiosError) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem("user");
-            window.location.href = "/login";
-        }
-        return Promise.reject(error);
-    }
-)
+
 
 const initialState: SessionState = {
     sessions: [],
@@ -142,7 +133,7 @@ export const sessionSlice = createSlice({
             }
 
             if (!session && state.activeSession && state.activeSession?._id === sessionId) {
-                const qMatch = message.match(/Q\d+/);
+                const qMatch = message.match(/Q(\d+)/);
                 if (qMatch) {
                     const qIndex = parseInt(qMatch[1]) - 1;
                     if (upperStatus.includes('AI_')) {

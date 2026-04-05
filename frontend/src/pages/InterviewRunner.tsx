@@ -80,7 +80,7 @@ const InterviewRunner = () => {
     const { sessionId } = useParams<{ sessionId: string }>();
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
-    const { activeSession, isLoading, message, isError: sessionError, message: sessionMessage } = useSelector((state: RootState) => state.session);
+    const { activeSession, isLoading, isError: sessionError, message: sessionMessage } = useSelector((state: RootState) => state.session);
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedLanguage, setSelectedLanguage] = useState("javascript");
@@ -113,6 +113,13 @@ const InterviewRunner = () => {
     const audioChunksRef = useRef<Blob[]>([]);
     const streamRef = useRef<MediaStream | null>(null);
     const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    useEffect(() => {
+        return () => {
+            streamRef.current?.getTracks().forEach(track => track.stop());
+            if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+        };
+    }, []);
 
     useEffect(() => {
         if (sessionId) {
@@ -268,9 +275,9 @@ const InterviewRunner = () => {
                 </div>
                 <div className="text-center">
                     <p className="text-slate-800 font-black text-xl italic tracking-tight">Preparing your interview questions...</p>
-                    {message && (
+                    {sessionMessage && (
                         <div className="mt-4 px-4 py-2 bg-blue-50 border border-blue-100 rounded-2xl text-blue-600 text-xs font-mono animate-pulse inline-block">
-                            {message}...
+                            {sessionMessage}...
                         </div>
                     )}
                 </div>
@@ -377,9 +384,9 @@ const InterviewRunner = () => {
                 </button>
 
                 <div className="flex flex-col items-center">
-                    {isProcessing && message && (
+                    {isProcessing && sessionMessage && (
                         <div className="mb-2 text-xs font-mono text-blue-600 bg-blue-50 px-3 py-1 rounded-full animate-pulse border border-blue-100">
-                            {message}...
+                            {sessionMessage}...
                         </div>
                     )}
 

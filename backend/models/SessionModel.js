@@ -91,7 +91,7 @@ const sessionSchema = new mongoose.Schema({
     },
     endTime: {
         type: Date,
-        default: Date.now
+        default: null
     }
 }, { timestamps: true });
 

@@ -25,7 +25,7 @@ const io = new Server(server, {
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true);
-        if (allowOrigin.includes(origin)) {
+        if (allowOrigin === origin || allowOrigin.split(',').map(o => o.trim()).includes(origin)) {
             callback(null, true);
         } else {
             if (process.env.NODE_ENV === "development") {

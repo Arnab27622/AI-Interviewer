@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler";
 import Session from "../models/SessionModel.js";
-import fetch from "node-fetch";
+
 import fs from "fs";
 import FormData from "form-data";
 import path from "path";
@@ -175,8 +175,8 @@ const calculateScoreSummary = async (sessionId) => {
         {
             $group: {
                 _id: "$_id",
-                avgTechnical: { $avg: { $cond: [{ $eq: ['$questions.isEvaluated', true] }, '$questions.technicalScore', 0] } },
-                avgConfidence: { $avg: { $cond: [{ $eq: ['$questions.isEvaluated', true] }, '$questions.confidenceScore', 0] } },
+                avgTechnical: { $avg: { $cond: [{ $eq: ['$questions.isEvaluated', true] }, '$questions.technicalScore', null] } },
+                avgConfidence: { $avg: { $cond: [{ $eq: ['$questions.isEvaluated', true] }, '$questions.confidenceScore', null] } },
                 // totalQuestions: { $sum: 1 },
                 // completedQuestions: { $sum: { $cond: [{ $eq: ['$questions.isEvaluated', true] }, 1, 0] } }
             },
