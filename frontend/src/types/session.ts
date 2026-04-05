@@ -39,7 +39,7 @@ interface SessionState {
     isLoading: boolean;
 }
 
-export type { Session, SessionState };
+export type { Question, Session, SessionState };
 
 export interface SocketUpdatePayload {
     sessionId: string;
