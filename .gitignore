@@ -6,3 +6,4 @@ Recording.wav
 **/.env
 __pycache__/
 CODEBASE_AUDIT_REPORT.md
+REFACTORING_PLAN.md

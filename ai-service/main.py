@@ -1,5 +1,3 @@
-
-
 import requests
 import uvicorn
 import os
