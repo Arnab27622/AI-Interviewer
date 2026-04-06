@@ -5,3 +5,4 @@ Recording.wav
 /backend/uploads*
 **/.env
 __pycache__/
+CODEBASE_AUDIT_REPORT.md

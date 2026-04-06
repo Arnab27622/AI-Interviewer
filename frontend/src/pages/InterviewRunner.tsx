@@ -6,6 +6,7 @@ import { getSessionById, submitAnswer, endSession } from "../features/session/se
 import MonacoEditor from "@monaco-editor/react";
 import { toast } from "react-toastify";
 import MicIcon from "../components/MicIcon";
+import ConfirmModal from "../components/ConfirmModal";
 
 const SUPPORTED_LANGUAGES = [
     { label: 'JavaScript', value: 'javascript' },
@@ -85,6 +86,7 @@ const InterviewRunner = () => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedLanguage, setSelectedLanguage] = useState("javascript");
     const [prevSessionRole, setPrevSessionRole] = useState<string | undefined>(undefined);
+    const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
 
     // Sync selectedLanguage during render to avoid useEffect warning (cascading renders)
     if (activeSession?.role && activeSession.role !== prevSessionRole) {
@@ -251,9 +253,13 @@ const InterviewRunner = () => {
         });
     };
 
-    const handleFinishInterview = async () => {
-        if (!window.confirm("Are you sure you want to finish the interview?")) return;
+    const handleFinishInterview = () => {
+        setIsFinishModalOpen(true);
+    };
+
+    const confirmFinishInterview = async () => {
         if (!sessionId) return;
+        setIsFinishModalOpen(false);
 
         dispatch(endSession(sessionId)).unwrap().then(() => {
             localStorage.removeItem(`drafts_${sessionId}`);
@@ -390,7 +396,7 @@ const InterviewRunner = () => {
                         </div>
                     )}
 
-                    <button onClick={handleSubmitAnswer} disabled={isQuestionLocked} className={`px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-all ${isProcessing ? 'bg-slate-400 cursor-wait' : currentQuestion?.isEvaluated ? 'bg-emerald-500' : isQuestionLocked ? 'bg-slate-400' : 'bg-slate-900 hover:bg-slate-800 active:scale-95'}`}>
+                    <button onClick={handleSubmitAnswer} disabled={isQuestionLocked} className={`px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-all ${isProcessing ? 'bg-slate-400 cursor-wait' : currentQuestion?.isEvaluated ? 'bg-emerald-500' : isQuestionLocked ? 'bg-slate-400' : 'bg-slate-900 hover:bg-slate-800 active:scale-95 cursor-pointer'}`}>
                         {isProcessing ? 'Analyzing...' : currentQuestion?.isEvaluated ? 'Answer Submitted' : isQuestionLocked ? 'Submitted' : 'Submit Answer'}
                     </button>
                 </div>
@@ -399,6 +405,17 @@ const InterviewRunner = () => {
                     Next →
                 </button>
             </div>
+
+            <ConfirmModal
+                isOpen={isFinishModalOpen}
+                title="Finish Interview?"
+                message="Are you sure you want to end this interview session? You won't be able to change your answers after this."
+                confirmText="Finish"
+                cancelText="Keep Going"
+                onConfirm={confirmFinishInterview}
+                onCancel={() => setIsFinishModalOpen(false)}
+                isDanger={false}
+            />
         </div>
     );
 };
