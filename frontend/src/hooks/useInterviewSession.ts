@@ -17,30 +17,42 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
     const [prevSessionRole, setPrevSessionRole] = useState<string | undefined>(undefined);
     const [submittedLocal, setSubmittedLocal] = useState<Record<number, boolean>>({});
     
-    // Sync selectedLanguage during render to avoid useEffect warning (cascading renders)
-    if (activeSession?.role && activeSession.role !== prevSessionRole) {
+    // Initial drafts state from localStorage with safety check
+    const [drafts, setDrafts] = useState<Record<number, { code?: string; audio?: Blob }>>(() => {
+        if (!sessionId) return {};
+        try {
+            const saved = localStorage.getItem(`draft_code_${sessionId}`); 
+            const codes = saved ? JSON.parse(saved) : {};
+            const initialDrafts: Record<number, { code?: string; audio?: Blob }> = {};
+            Object.keys(codes).forEach(key => {
+                const idx = parseInt(key);
+                if (!isNaN(idx)) {
+                    initialDrafts[idx] = { code: codes[key] };
+                }
+            });
+            return initialDrafts;
+        } catch (error) {
+            console.error("Error parsing draft codes from localStorage:", error);
+            return {};
+        }
+    });
+
+    // Sync selectedLanguage during render to avoid cascading renders in useEffect.
+    // This is the recommended React pattern for adjusting state based on props:
+    // https://react.dev/learn/you-might-not-need-an-effect#adjusting-state-when-a-prop-changes
+    if (activeSession && activeSession.role && activeSession.role !== prevSessionRole) {
         setPrevSessionRole(activeSession.role);
         const defaultLang = ROLE_LANGUAGE_MAP[activeSession.role] || "plaintext";
         setSelectedLanguage(defaultLang);
     }
-
-    const [drafts, setDrafts] = useState<Record<number, { code?: string; audio?: Blob }>>(() => {
-        if (!sessionId) return {};
-        const saved = localStorage.getItem(`draft_code_${sessionId}`); 
-        const codes = saved ? JSON.parse(saved) : {};
-        const initialDrafts: Record<number, { code?: string; audio?: Blob }> = {};
-        Object.keys(codes).forEach(key => {
-            initialDrafts[parseInt(key)] = { code: codes[key] };
-        });
-        return initialDrafts;
-    });
 
     useEffect(() => {
         if (sessionId) {
             const codeOnly: Record<number, string> = {};
             Object.keys(drafts).forEach(key => {
                 const idx = parseInt(key);
-                if (drafts[idx].code) codeOnly[idx] = drafts[idx].code;
+                const draft = drafts[idx];
+                if (draft?.code) codeOnly[idx] = draft.code;
             });
             localStorage.setItem(`draft_code_${sessionId}`, JSON.stringify(codeOnly));
         }
@@ -59,13 +71,13 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
 
     useEffect(() => {
         if (isEvaluationError && isLocallySubmitted) {
-            const timer = setTimeout(() => {
+            const timer = window.setTimeout(() => {
                 setSubmittedLocal(prev => ({
                     ...prev, [currentQuestionIndex]: false
                 }));
             }, 0);
             toast.error(sessionMessage, { toastId: "eval-error" });
-            return () => clearTimeout(timer);
+            return () => window.clearTimeout(timer);
         }
     }, [isEvaluationError, isLocallySubmitted, currentQuestionIndex, sessionMessage]);
 

@@ -125,7 +125,9 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
             } catch (error) {
                 console.error("Transcription Error:", error.message);
             } finally {
-                if (fs.existsSync(audioFilePath)) await fs.promises.unlink(audioFilePath);
+                if (fs.existsSync(audioFilePath)) {
+                    await fs.promises.unlink(audioFilePath).catch(err => console.error("Error unlinking file:", err));
+                }
             }
         }
 
@@ -141,38 +143,61 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
             interview_type: session.interviewType,
         });
 
-        question.userAnswerText = transcription;
-        question.userSubmittedCode = codeSubmission || "";
-        question.idealAnswer = evaluation.ideal_answer;
-        question.technicalScore = evaluation.technical_score;
-        question.confidenceScore = evaluation.confidence_score;
-        question.aiFeedback = evaluation.ai_feedback;
-        question.isEvaluated = true;
-        question.isSubmitted = true;
+        // Use Atomic Update to prevent race conditions
+        const updatedSession = await Session.findOneAndUpdate(
+            { _id: sessionId },
+            {
+                $set: {
+                    [`questions.${questionIdx}.userAnswerText`]: transcription,
+                    [`questions.${questionIdx}.userSubmittedCode`]: codeSubmission || "",
+                    [`questions.${questionIdx}.idealAnswer`]: evaluation.ideal_answer,
+                    [`questions.${questionIdx}.technicalScore`]: evaluation.technical_score,
+                    [`questions.${questionIdx}.confidenceScore`]: evaluation.confidence_score,
+                    [`questions.${questionIdx}.aiFeedback`]: evaluation.ai_feedback,
+                    [`questions.${questionIdx}.isEvaluated`]: true,
+                    [`questions.${questionIdx}.isSubmitted`]: true,
+                }
+            },
+            { new: true }
+        );
 
-        const allEvaluated = session.questions.every(q => q.isEvaluated);
-        if (allEvaluated || session.status === "completed") {
+        if (!updatedSession) throw new Error("Failed to update session during evaluation");
+
+        const allEvaluated = updatedSession.questions.every(q => q.isEvaluated);
+        if (allEvaluated || updatedSession.status === "completed") {
             const scores = await Session.calculateScoreSummary(sessionId);
-            session.overallScore = scores.overallScore;
-            Object.assign(session.metrics, { avgTechnical: scores.avgTechnical, avgConfidence: scores.avgConfidence });
             
+            const finalUpdate = {
+                overallScore: scores.overallScore,
+                "metrics.avgTechnical": scores.avgTechnical,
+                "metrics.avgConfidence": scores.avgConfidence,
+            };
+
             if (allEvaluated) {
-                session.status = "completed";
-                session.endTime = session.endTime || Date.now();
+                finalUpdate.status = "completed";
+                finalUpdate.endTime = updatedSession.endTime || Date.now();
             }
-            await session.save();
-            pushSocketUpdate(io, userId, sessionId, "session completed", "Evaluation complete", session);
+
+            const finalSession = await Session.findOneAndUpdate(
+                { _id: sessionId },
+                { $set: finalUpdate },
+                { new: true }
+            );
+
+            pushSocketUpdate(io, userId, sessionId, "session completed", "Evaluation complete", finalSession);
         } else {
-            await session.save();
-            pushSocketUpdate(io, userId, sessionId, "evaluation completed", `Feedback for Q${questionIdx+1} ready`, session);
+            pushSocketUpdate(io, userId, sessionId, "evaluation completed", `Feedback for Q${questionIdx+1} ready`, updatedSession);
         }
     } catch (error) {
         console.error("Evaluation Async Task Error:", error.message);
-        const errSession = await Session.findById(sessionId);
-        if (errSession?.questions[questionIdx]) {
-            errSession.questions[questionIdx].isSubmitted = false;
-            await errSession.save();
-        }
+        
+        // Atomic revert of isSubmitted if possible
+        const errSession = await Session.findOneAndUpdate(
+            { _id: sessionId, [`questions.${questionIdx}.isEvaluated`]: false },
+            { $set: { [`questions.${questionIdx}.isSubmitted`]: false } },
+            { new: true }
+        );
+        
         pushSocketUpdate(io, userId, sessionId, "error", `Evaluation failed: ${error.message}`, errSession);
     }
 };
