@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import ReactMarkdown from "react-markdown";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../app/store";
 import { useParams, Link } from "react-router-dom";
@@ -7,60 +6,11 @@ import { getSessionById } from "../features/session/sessionSlice";
 import type { Question } from "../types/session";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import SessionReviewStats from "../components/SessionReviewStats";
+import FeedbackItem from "../components/FeedbackItem";
+import { formatDuration } from "../utils/formatters";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
-const formatDuration = (start: string | number | Date | undefined, end: string | number | Date | undefined) => {
-    if (!start || !end) return 'N/A';
-    const diff = Math.abs(new Date(end).getTime() - new Date(start).getTime());
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    
-    const h = hours;
-    const m = minutes % 60;
-    const s = seconds % 60;
-
-    if (h > 0) return `${h}h ${m}m ${s}s`;
-    if (m > 0) return `${m}m ${s}s`;
-    return `${s}s`;
-};
-
-const sanitizeQuestionText = (text: string | undefined) => {
-    if (!text) return '';
-    return text.replace(/^\d+[\s. )]+/, '').trim();
-};
-
-const formatIdealAnswer = (text: string | undefined) => {
-    try {
-        if (!text) return 'Pending Evaluation';
-
-        let cleanText = text.trim();
-
-        if (cleanText.startsWith('```json')) {
-            cleanText = cleanText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
-        }
-
-        if (cleanText.startsWith('{') && cleanText.endsWith('}')) {
-            const parsed = JSON.parse(cleanText);
-
-            if (parsed.verbalAnswer || parsed.idealAnswer || parsed.ideal_answer) {
-                return parsed.verbalAnswer || parsed.idealAnswer || parsed.ideal_answer;
-            }
-
-            const explanation = parsed.explanation || parsed.understanding || "";
-            const code = parsed.code || parsed.codeExample || parsed.example || "";
-
-            if (explanation || code) {
-                return `${explanation}\n\n${code}`.trim();
-            }
-        }
-
-        return text;
-    } catch {
-        return text;
-    }
-};
 
 const SessionReview = () => {
     const { sessionId } = useParams<{ sessionId: string }>();
@@ -111,19 +61,12 @@ const SessionReview = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto pb-4 sm:pb-0 no-scrollbar snap-x">
-                {[
-                    { label: 'Overall Result', value: `${overallScore}%`, color: 'teal' },
-                    { label: 'Avg. Technical', value: `${finalMetrics.avgTechnical || 0}%`, color: 'teal' },
-                    { label: 'Avg Confidence', value: `${finalMetrics.avgConfidence || 0}%`, color: 'teal' },
-                    { label: 'Session Time', value: formatDuration(startTime, endTime), color: 'teal' }
-                ].map((stat, i) => (
-                    <div key={i} className={`min-w-40 snap-center bg-white p-6 sm:p-8 rounded-3xl sm:rounded-[2.5rem] shadow-sm border-l-8 ${stat.color === 'teal' ? 'border-teal-500' : 'border-slate-100'}`}>
-                        <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.1rem]">{stat.label}</p>
-                        <p className={`text-2xl sm:text-4xl font-black mt-2 leading-none ${stat.color === 'teal' ? 'text-teal-600' : 'text-slate-800'}`}>{stat.value}</p>
-                    </div>
-                ))}
-            </div>
+            <SessionReviewStats 
+                overallScore={overallScore || 0}
+                avgTechnical={finalMetrics.avgTechnical || 0}
+                avgConfidence={finalMetrics.avgConfidence || 0}
+                duration={formatDuration(startTime, endTime)}
+            />
 
             <div className="bg-white p-6 sm:p-10 rounded-3xl sm:rounded-[3rem] shadow-sm border border-slate-50">
                 <h3 className="text-[10px] font-black text-slate-400 mb-6 uppercase tracking-[0.2rem]">Per-Question Performance</h3>
@@ -140,78 +83,9 @@ const SessionReview = () => {
             </div>
 
             <div className="space-y-6 sm:space-y-10">
-                {
-                    (questions || []).map((q: Question, index: number) => (
-                        <div key={index} className="bg-white rounded-3xl sm:rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden group hover:shadow-lg transition-all duration-500">
-                            <div className="p-6 space-y-6 sm:p-10 sm:space-y-8">
-                                <div className="flex flex-col lg:flex-row justify-between items-start gap-4 sm:gap-6">
-                                    <h4 className="text-lg sm:text-2xl font-bold text-slate-800 flex-1 leading-snug">
-                                        <span className="text-teal-500 mr-2 font-black italic">Q{index + 1}.</span>
-                                        {sanitizeQuestionText(q.questionText)}
-                                    </h4>
-                                    <div className="flex gap-2 shrink-0">
-                                        <div className="px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl border flex items-center gap-2 bg-emerald-50 border-emerald-100">
-                                            <span className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400">Tech</span>
-                                            <span className="text-xs sm:text-sm font-black text-emerald-600">{q.technicalScore}%</span>
-                                        </div>
-
-                                        <div className="px-3 py-1.5 sm:px-5 sm:py-2 rounded-xl sm:rounded-2xl border flex items-center gap-2 bg-blue-50/30 border-blue-50">
-                                            <span className="text-[8px] sm:text-[10px] font-black uppercase text-slate-400">Conf</span>
-                                            <span className="text-xs sm:text-sm font-black text-blue-600">{q.confidenceScore}%</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <label className="text-[9px] sm:text-[10px] font-black text-slate-300 uppercase tracking-[0.2rem] block ml-1">Your Submission</label>
-                                    <div className="bg-slate-50 rounded-xl sm:rounded-4xl border border-slate-100 overflow-hidden">
-                                        {q.userSubmittedCode && q.userSubmittedCode !== 'undefined' && (
-                                            <div className="p-4 sm:p-6 border-b border-slate-200 last:border-0">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Code</span>
-                                                <pre className="text-[11px] sm:text-xs font-mono text-slate-700 whitespace-pre-wrap overflow-x-auto">
-                                                    {q.userSubmittedCode}
-                                                </pre>
-                                            </div>
-                                        )}
-
-                                        {q.userAnswerText && (
-                                            <div className="p-4 sm:p-6">
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Transcript</span>
-                                                <p className="text-xs sm:text-sm text-slate-600 italic leading-relaxed">"{q.userAnswerText}"</p>
-                                            </div>
-                                        )}
-
-                                        {!q.userAnswerText && (!q.userSubmittedCode || q.userSubmittedCode === 'undefined') && (
-                                            <div className="p-6 text-center text-slate-400 text-xs italic">
-                                                No answer recorded.
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10 pt-6 sm:pt-8 border-t border-r-slate-50">
-                                    <div className="space-y-3">
-                                        <label className="text-[9px] sm:text-[10px] font-black text-slate-300 uppercase tracking-[0.2rem] block ml-1">AI Analytical Feedback</label>
-                                        <div className="bg-slate-50/50 p-4 sm:p-6 rounded-2xl sm:rounded-4xl text-xs sm:text-sm italic text-slate-600 border-l-4 sm:border-l-[6px] border-teal-500 leading-relaxed">
-                                            <ReactMarkdown>
-                                                {q.aiFeedback}
-                                            </ReactMarkdown>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <label className="text-[9px] sm:text-[10px] font-black text-slate-300 uppercase tracking-[0.2rem] block ml-1">Ideal Implementation</label>
-                                        <div className="bg-slate-900 text-slate-300 p-4 sm:p-6 rounded-2xl sm:rounded-4xl text-[11px] sm:text-[13px] overflow-x-auto shadow-inner leading-relaxed prose prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-pre:bg-slate-800 prose-code:text-blue-400 prose-code:bg-slate-800 prose-code:px-1 prose-code:rounded prose-code:font-mono prose-li:my-0.5">
-                                            <ReactMarkdown>
-                                                {formatIdealAnswer(q.idealAnswer)}
-                                            </ReactMarkdown>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))
-                }
+                {(questions || []).map((q: Question, index: number) => (
+                    <FeedbackItem key={index} question={q} index={index} />
+                ))}
             </div>
         </div>
     )
