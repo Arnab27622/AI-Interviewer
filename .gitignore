@@ -1,4 +1,4 @@
-.env*
+.env
 node_modules/
 .DS_Store
 Recording.wav
@@ -6,4 +6,3 @@ Recording.wav
 **/.env
 __pycache__/
 CODEBASE_AUDIT_REPORT.md
-REFACTORING_PLAN.md

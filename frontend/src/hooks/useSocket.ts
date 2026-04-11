@@ -34,6 +34,7 @@ const useSocket = () => {
 
         const socket: Socket = io(BACKEND_URL, {
             query: { userId },
+            auth: { token: user?.token },
             transports: ["websocket"],
             reconnection: true,
             reconnectionAttempts: 10,
@@ -64,6 +65,7 @@ const useSocket = () => {
             socket.disconnect();
             socketRef.current = null;
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userId]);  // Only re-run when the user ID changes
 
     return socketRef;

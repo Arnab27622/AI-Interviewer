@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -54,12 +55,32 @@ app.use("/api/sessions", sessionRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token || socket.handshake.query.token;
+    if (!token) {
+        return next(new Error("Authentication error: No token provided"));
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        socket.user = decoded; // Store decoded user info in socket
+        next();
+    } catch (err) {
+        return next(new Error("Authentication error: Invalid token"));
+    }
+});
+
 io.on("connection", (socket) => {
-    console.log("A user connected");
+    console.log("An authenticated user connected");
     const userId = socket.handshake.query.userId;
-    if (userId) {
+    
+    // Ensure the decoded user ID matches the requested room ID
+    if (userId && socket.user && (socket.user.id === userId || socket.user._id === userId)) {
         socket.join(userId);
-        console.log(`User ${userId} joined room`);
+        console.log(`User ${userId} joined room securely`);
+    } else if (userId) {
+        console.warn(`Unauthorized room join attempt for ${userId} by ${socket.user?.id}`);
+        socket.emit("error", "Unauthorized access to this room");
     }
 
     socket.on("disconnect", () => {

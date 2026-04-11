@@ -1,4 +1,4 @@
-const API_SERVICE_URL = "http://localhost:8000";
+const API_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
 
 /**
  * Service to handle all interactions with the Python AI microservice.
