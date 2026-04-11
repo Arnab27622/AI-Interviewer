@@ -95,6 +95,36 @@ const sessionSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+sessionSchema.statics.calculateScoreSummary = async function(sessionId) {
+    const result = await this.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(sessionId),
+            },
+        },
+        {
+            $unwind: "$questions",
+        },
+        {
+            $group: {
+                _id: "$_id",
+                avgTechnical: { $avg: { $cond: [{ $eq: ['$questions.isEvaluated', true] }, '$questions.technicalScore', null] } },
+                avgConfidence: { $avg: { $cond: [{ $eq: ['$questions.isEvaluated', true] }, '$questions.confidenceScore', null] } },
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                overallScore: { $round: [{ $avg: ['$avgTechnical', '$avgConfidence'] }, 0] },
+                avgTechnical: { $round: ["$avgTechnical", 0] },
+                avgConfidence: { $round: ["$avgConfidence", 0] },
+            }
+        },
+    ]);
+
+    return result[0] || { overallScore: 0, avgTechnical: 0, avgConfidence: 0 };
+};
+
 const Session = mongoose.model("Session", sessionSchema);
 
 export default Session;

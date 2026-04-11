@@ -1,22 +1,15 @@
 import asyncHandler from "express-async-handler";
 import Session from "../models/SessionModel.js";
-
 import fs from "fs";
 import path from "path";
-import mongoose from "mongoose";
+import { aiService } from "../services/aiService.js";
+import { pushSocketUpdate } from "../services/socketService.js";
 
-const API_SERVICE_URL = "http://localhost:8000";
-
-const pushSocketUpdate = (io, userId, sessionId, status, message, session = null) => {
-    io.to(userId.toString()).emit("sessionUpdate", {
-        sessionId,
-        status,
-        message,
-        session
-    });
-}
-
-const createSession = asyncHandler(async (req, res) => {
+/**
+ * @desc Create a new interview session and trigger AI question generation
+ * @route POST /api/sessions
+ */
+export const createSession = asyncHandler(async (req, res) => {
     const { role, level, interviewType, count } = req.body;
     const userId = req.user.id;
 
@@ -36,35 +29,15 @@ const createSession = asyncHandler(async (req, res) => {
     res.status(201).json({
         message: "Session created successfully",
         sessionId: session._id,
-        // status: session.status,
         status: "processing"
     });
 
+    // Background process for AI generation
     (async () => {
         try {
-            pushSocketUpdate(io, userId, session._id, "AI_GENERATING", `Generating ${count} questions for ${role} role ${level} level interview ...`);
+            pushSocketUpdate(io, userId, session._id, "AI_GENERATING", `Generating ${count} questions for ${role}...`);
 
-            const aiResponse = await fetch(`${API_SERVICE_URL}/generate-questions`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    role,
-                    level,
-                    interview_type: interviewType,
-                    count,
-                }),
-            });
-
-            if (!aiResponse.ok) {
-                const errorData = await aiResponse.json();
-                const errorMsg = errorData.detail || errorData.error || "Unknown error";
-                console.error("AI Service Error:", errorMsg);
-                throw new Error(`Failed to generate questions: ${aiResponse.status} - ${errorMsg}`);
-            }
-
-            const aiData = await aiResponse.json();
+            const aiData = await aiService.generateQuestions({ role, level, interviewType, count });
             const codingCount = interviewType === 'coding-mix' ? Math.floor(count * 0.2) : 0;
 
             const questions = (aiData.questions || []).map((qInfo, index) => ({
@@ -85,325 +58,171 @@ const createSession = asyncHandler(async (req, res) => {
             console.error("Error in createSession:", error.message);
             session.status = "failed";
             await session.save();
-            pushSocketUpdate(io, userId, session._id, "GENERATION_FAILED", "Failed to generate questions", {
-                error: error.message,
-            });
+            pushSocketUpdate(io, userId, session._id, "GENERATION_FAILED", "Failed to generate questions", { error: error.message });
         }
     })();
 });
 
-const getSession = asyncHandler(async (req, res) => {
+/**
+ * @desc Get all interview sessions for the logged-in user
+ * @route GET /api/sessions
+ */
+export const getSession = asyncHandler(async (req, res) => {
     const userId = req.user.id;
-
-    if (!userId) {
-        return res.status(400).json({ message: "User ID is required" });
-    }
-
-    const session = await Session.find({
-        user: userId,
-    }).sort({ createdAt: -1 }).select("-questions");
-
-    if (!session) {
-        return res.status(404).json({ message: "Session not found" });
-    }
-
+    const sessions = await Session.find({ user: userId }).sort({ createdAt: -1 }).select("-questions");
+    
     res.status(200).json({
-        message: "Session found successfully",
-        session,
+        message: "Sessions retrieved successfully",
+        session: sessions,
     });
 });
 
-const getSessionById = asyncHandler(async (req, res) => {
+/**
+ * @desc Get a specific interview session by ID
+ * @route GET /api/sessions/:sessionId
+ */
+export const getSessionById = asyncHandler(async (req, res) => {
     const { sessionId } = req.params;
     const userId = req.user.id;
 
-    if (!sessionId) {
-        return res.status(400).json({ message: "Session ID is required" });
-    }
+    const session = await Session.findOne({ _id: sessionId, user: userId });
+    if (!session) return res.status(404).json({ message: "Session not found" });
 
-    const session = await Session.findOne({
-        _id: sessionId,
-        user: userId,
-    });
-
-    if (!session) {
-        return res.status(404).json({ message: "Session not found" });
-    }
-
-    res.status(200).json({
-        message: "Session found successfully",
-        session,
-    });
+    res.status(200).json({ message: "Session found", session });
 });
 
-const deleteSession = asyncHandler(async (req, res) => {
+/**
+ * @desc Delete an interview session
+ * @route DELETE /api/sessions/:sessionId
+ */
+export const deleteSession = asyncHandler(async (req, res) => {
     const { sessionId } = req.params;
     const userId = req.user.id;
 
-    if (!sessionId) {
-        return res.status(400).json({ message: "Session ID is required" });
-    }
-
-    const session = await Session.findOne({
-        _id: sessionId,
-        user: userId,
-    });
-
-    if (!session) {
-        return res.status(404).json({ message: "Session not found" });
-    }
+    const session = await Session.findOne({ _id: sessionId, user: userId });
+    if (!session) return res.status(404).json({ message: "Session not found" });
 
     await session.deleteOne();
-
-    res.status(200).json({
-        id: session._id,
-        message: "Session deleted successfully",
-    });
+    res.status(200).json({ id: session._id, message: "Session deleted successfully" });
 });
 
-const calculateScoreSummary = async (sessionId) => {
-    const result = await Session.aggregate([
-        {
-            $match: {
-                _id: new mongoose.Types.ObjectId(sessionId),
-            },
-        },
-        {
-            $unwind: "$questions",
-        },
-        {
-            $group: {
-                _id: "$_id",
-                avgTechnical: { $avg: { $cond: [{ $eq: ['$questions.isEvaluated', true] }, '$questions.technicalScore', null] } },
-                avgConfidence: { $avg: { $cond: [{ $eq: ['$questions.isEvaluated', true] }, '$questions.confidenceScore', null] } },
-                // totalQuestions: { $sum: 1 },
-                // completedQuestions: { $sum: { $cond: [{ $eq: ['$questions.isEvaluated', true] }, 1, 0] } }
-            },
-        },
-        {
-            $project: {
-                _id: 0,
-                overallScore: { $round: [{ $avg: ['$avgTechnical', '$avgConfidence'] }, 0] },
-                avgTechnical: { $round: ["$avgTechnical", 0] },
-                avgConfidence: { $round: ["$avgConfidence", 0] },
-                // totalQuestions: 1,
-                // completedQuestions: { $sum: { $cond: [{ $eq: ['$questions.isEvaluated', true] }, 1, 0] } }
-            }
-        },
-    ]);
-
-    if (!result) {
-        throw new Error("Session not found");
-    }
-
-    return result[0] || { overallScore: 0, avgTechnical: 0, avgConfidence: 0 };
-};
-
-const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmission = null, audioFilePath = null) => {
+/**
+ * @desc Helper to handle transcription and evaluation in the background
+ */
+const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmission, audioFilePath) => {
     try {
-        let transcription = "";
-        const questionIndex = typeof questionIdx === "string" ? parseInt(questionIdx) : questionIdx;
         const session = await Session.findById(sessionId);
+        if (!session) throw new Error("Session not found");
 
-        if (!session) {
-            throw new Error("Session not found");
-        }
-
-        const question = session.questions[questionIndex];
-
-        if (!question) {
-            throw new Error(`Question not found at index ${questionIndex}`);
-        }
+        const question = session.questions[questionIdx];
+        let transcription = "";
 
         if (audioFilePath) {
             try {
-                pushSocketUpdate(io, userId, sessionId, "AI_TRANSCRIBING", `Transcribing question ${questionIndex + 1}...`);
-
-                const fileBuffer = await fs.promises.readFile(audioFilePath);
-                const fileBlob = new Blob([fileBuffer], { type: 'audio/webm' });
-                const formData = new FormData();
-                formData.append("file", fileBlob, "audio.webm");
-
-                const response = await fetch(`${API_SERVICE_URL}/transcribe`, {
-                    method: "POST",
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const error = await response.text();
-                    throw new Error(`Failed to transcribe audio: ${error}`);
-                }
-
-                const data = await response.json();
-                transcription = data.transcription || "";
+                pushSocketUpdate(io, userId, sessionId, "AI_TRANSCRIBING", `Transcribing answer...`);
+                const audioBuffer = await fs.promises.readFile(audioFilePath);
+                transcription = await aiService.transcribeAudio(audioBuffer);
             } catch (error) {
-                console.error("Error in transcription:", error.message);
-                // We'll continue with empty transcription if it fails
-            }
-            finally {
-                if (audioFilePath && fs.existsSync(audioFilePath)) {
-                    await fs.promises.unlink(audioFilePath);
-                }
+                console.error("Transcription Error:", error.message);
+            } finally {
+                if (fs.existsSync(audioFilePath)) await fs.promises.unlink(audioFilePath);
             }
         }
 
-        try {
-            pushSocketUpdate(io, userId, sessionId, "AI_EVALUATING", `Evaluating question ${questionIndex + 1}...`);
+        pushSocketUpdate(io, userId, sessionId, "AI_EVALUATING", `Evaluating question ${questionIdx + 1}...`);
 
-            const response = await fetch(`${API_SERVICE_URL}/evaluate`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    question: question.questionText,
-                    question_type: question.questionType,
-                    user_answer: transcription || "No verbal answer provided.",
-                    user_code: codeSubmission || "",
-                    role: session.role,
-                    level: session.level,
-                    interview_type: session.interviewType,
-                }),
-            });
+        const evaluation = await aiService.evaluateAnswer({
+            question: question.questionText,
+            question_type: question.questionType,
+            user_answer: transcription || "No verbal answer provided.",
+            user_code: codeSubmission || "",
+            role: session.role,
+            level: session.level,
+            interview_type: session.interviewType,
+        });
 
-            if (!response.ok) {
-                let errorMsg = await response.text();
-                try {
-                    const parsed = JSON.parse(errorMsg);
-                    errorMsg = parsed.detail || parsed.message || errorMsg;
-                } catch {
-                    // Use raw text if not JSON
-                }
-                throw new Error(errorMsg);
+        question.userAnswerText = transcription;
+        question.userSubmittedCode = codeSubmission || "";
+        question.idealAnswer = evaluation.ideal_answer;
+        question.technicalScore = evaluation.technical_score;
+        question.confidenceScore = evaluation.confidence_score;
+        question.aiFeedback = evaluation.ai_feedback;
+        question.isEvaluated = true;
+        question.isSubmitted = true;
+
+        const allEvaluated = session.questions.every(q => q.isEvaluated);
+        if (allEvaluated || session.status === "completed") {
+            const scores = await Session.calculateScoreSummary(sessionId);
+            session.overallScore = scores.overallScore;
+            Object.assign(session.metrics, { avgTechnical: scores.avgTechnical, avgConfidence: scores.avgConfidence });
+            
+            if (allEvaluated) {
+                session.status = "completed";
+                session.endTime = session.endTime || Date.now();
             }
-
-            const data = await response.json();
-            question.userAnswerText = transcription;
-            question.userSubmittedCode = codeSubmission || "";
-            question.idealAnswer = data.ideal_answer;
-            question.technicalScore = data.technical_score;
-            question.confidenceScore = data.confidence_score;
-            question.aiFeedback = data.ai_feedback;
-            question.isEvaluated = true;
-            question.isSubmitted = true;
-
-            const allQuestionsEvaluated = session.questions.every((q) => q.isEvaluated);
-
-            if (session.status === "completed" || allQuestionsEvaluated) {
-                const scoreSummary = await calculateScoreSummary(sessionId);
-                session.overallScore = scoreSummary.overallScore;
-                session.metrics.avgTechnical = scoreSummary.avgTechnical;
-                session.metrics.avgConfidence = scoreSummary.avgConfidence;
-
-                if (allQuestionsEvaluated) {
-                    session.status = "completed";
-                    session.endTime = session.endTime || Date.now();
-                }
-                await session.save();
-
-                pushSocketUpdate(io, userId, sessionId, "session completed", `Question ${questionIndex + 1} evaluated successfully`);
-            } else {
-                session.status = "in-progress";
-                await session.save();
-                pushSocketUpdate(io, userId, sessionId, "evaluation completed", `Feedback for question ${questionIndex + 1} is ready`, session);
-            }
-
-        } catch (error) {
-            console.error("Error in AI evaluation:", error.message);
-            // Re-fetch session to ensure we have the latest state before update
-            const sessionToUpdate = await Session.findById(sessionId);
-            if (sessionToUpdate && sessionToUpdate.questions[questionIndex]) {
-                sessionToUpdate.questions[questionIndex].isSubmitted = false;
-                await sessionToUpdate.save();
-            }
-            pushSocketUpdate(io, userId, sessionId, "error", `Failed to evaluate answer: ${error.message}`, sessionToUpdate);
+            await session.save();
+            pushSocketUpdate(io, userId, sessionId, "session completed", "Evaluation complete", session);
+        } else {
+            await session.save();
+            pushSocketUpdate(io, userId, sessionId, "evaluation completed", `Feedback for Q${questionIdx+1} ready`, session);
         }
-
     } catch (error) {
-        console.error("Error in evaluateAnswerAsync:", error.message);
-        pushSocketUpdate(io, userId, sessionId, "error", `Failed to evaluate answer: ${error.message}`);
+        console.error("Evaluation Async Task Error:", error.message);
+        const errSession = await Session.findById(sessionId);
+        if (errSession?.questions[questionIdx]) {
+            errSession.questions[questionIdx].isSubmitted = false;
+            await errSession.save();
+        }
+        pushSocketUpdate(io, userId, sessionId, "error", `Evaluation failed: ${error.message}`, errSession);
     }
 };
 
-const submitAnswer = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+/**
+ * @desc Submit a question answer (code and/or audio)
+ * @route POST /api/sessions/:sessionId/submit-answer
+ */
+export const submitAnswer = asyncHandler(async (req, res) => {
     const { sessionId } = req.params;
     const { questionIndex, code } = req.body;
+    const userId = req.user.id;
 
-    const session = await Session.findOne({
-        _id: sessionId,
-        user: userId,
-    });
+    const session = await Session.findOne({ _id: sessionId, user: userId });
+    if (!session) return res.status(404).json({ message: "Session not found" });
 
-    if (!session || session.user.toString() !== userId.toString()) {
-        return res.status(404).json({ message: "Session not found" });
-    }
+    const qIdx = parseInt(questionIndex);
+    if (!session.questions[qIdx]) return res.status(404).json({ message: "Question not found" });
 
-    const questionIdx = parseInt(questionIndex);
-    const question = session.questions[questionIdx];
-
-    if (!question) {
-        return res.status(404).json({ message: `Question not found at index ${questionIdx}` });
-    }
-
-    let audioFilePath = null;
-    if (req.file) {
-        audioFilePath = path.join(process.cwd(), req.file.path);
-    }
-
-    const codeSubmission = code || null;
-
-    question.isSubmitted = true;
+    session.questions[qIdx].isSubmitted = true;
     await session.save();
 
-    res.status(200).json({
-        status: "received",
-        message: "Answer submitted successfully",
-    });
+    res.status(200).json({ message: "Answer received" });
 
-    const io = req.app.get("io");
-    evaluateAnswerAsync(io, userId, sessionId, questionIdx, codeSubmission, audioFilePath);
+    const audioFilePath = req.file ? path.join(process.cwd(), req.file.path) : null;
+    evaluateAnswerAsync(req.app.get("io"), userId, sessionId, qIdx, code, audioFilePath);
 });
 
-const endSession = asyncHandler(async (req, res) => {
+/**
+ * @desc Manually end an interview session
+ * @route POST /api/sessions/:sessionId/end
+ */
+export const endSession = asyncHandler(async (req, res) => {
     const { sessionId } = req.params;
     const userId = req.user.id;
 
-    if (!sessionId) {
-        return res.status(400).json({ message: "Session ID is required" });
+    const session = await Session.findOne({ _id: sessionId, user: userId });
+    if (!session) return res.status(404).json({ message: "Session not found" });
+
+    if (session.questions.some(q => !q.isEvaluated && q.isSubmitted)) {
+        return res.status(400).json({ message: "Evaluation in progress, please wait." });
     }
 
-    const session = await Session.findById(sessionId);
-
-    if (!session || session.user.toString() !== userId.toString()) {
-        return res.status(404).json({ message: "Session not found" });
-    }
-
-    const isProcessing = session.questions.some((q) => !q.isEvaluated && q.isSubmitted);
-
-    if (isProcessing) {
-        return res.status(400).json({ message: "Session is still processing. Please wait..." });
-    }
-
-    if (session.status === "completed") {
-        return res.status(400).json({ message: "Session is already completed" });
-    }
-
-    const scoreSummary = await calculateScoreSummary(sessionId);
-    session.overallScore = scoreSummary.overallScore || 0;
-    session.metrics.avgTechnical = scoreSummary.avgTechnical || 0;
-    session.metrics.avgConfidence = scoreSummary.avgConfidence || 0;
-
+    const scores = await Session.calculateScoreSummary(sessionId);
+    session.overallScore = scores.overallScore;
+    Object.assign(session.metrics, { avgTechnical: scores.avgTechnical, avgConfidence: scores.avgConfidence });
     session.status = "completed";
-    session.endTime = session.endTime || Date.now();
+    session.endTime = Date.now();
     await session.save();
-    const io = req.app.get("io");
-    pushSocketUpdate(io, userId, sessionId, "session completed", `Session completed successfully`, session);
 
-    res.status(200).json({
-        message: "Session ended successfully",
-        session
-    });
+    pushSocketUpdate(req.app.get("io"), userId, sessionId, "session completed", "Session ended", session);
+    res.status(200).json({ message: "Session ended", session });
 });
-
-export { createSession, getSession, getSessionById, deleteSession, submitAnswer, endSession };
