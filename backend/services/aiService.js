@@ -1,5 +1,30 @@
 const API_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
 
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const fetchWithRetry = async (url, options = {}, retries = 3, backoff = 1000) => {
+    let lastError;
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url, options);
+            // Return immediately on success or client errors (4xx). Retry only on network issues or 5xx.
+            if (response.ok || (response.status >= 400 && response.status < 500)) {
+                return response;
+            }
+            const errBody = await response.text();
+            throw new Error(`Server returned status ${response.status}: ${errBody}`);
+        } catch (error) {
+            lastError = error;
+            if (i < retries - 1) {
+                console.warn(`Fetch attempt ${i + 1} failed for ${url}. Retrying in ${backoff}ms...`);
+                await wait(backoff);
+                backoff *= 2; // Exponential backoff
+            }
+        }
+    }
+    throw lastError;
+};
+
 /**
  * Service to handle all interactions with the Python AI microservice.
  */
@@ -10,7 +35,7 @@ export const aiService = {
     generateQuestions: async (params) => {
         const { role, level, interviewType, count } = params;
         
-        const response = await fetch(`${API_SERVICE_URL}/generate-questions`, {
+        const response = await fetchWithRetry(`${API_SERVICE_URL}/generate-questions`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -37,7 +62,7 @@ export const aiService = {
         const formData = new FormData();
         formData.append("file", fileBlob, "audio.webm");
 
-        const response = await fetch(`${API_SERVICE_URL}/transcribe`, {
+        const response = await fetchWithRetry(`${API_SERVICE_URL}/transcribe`, {
             method: "POST",
             body: formData
         });
@@ -55,7 +80,7 @@ export const aiService = {
      * Evaluate a user's answer (verbal and/or code).
      */
     evaluateAnswer: async (params) => {
-        const response = await fetch(`${API_SERVICE_URL}/evaluate`, {
+        const response = await fetchWithRetry(`${API_SERVICE_URL}/evaluate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(params),

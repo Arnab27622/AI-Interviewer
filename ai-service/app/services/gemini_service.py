@@ -22,7 +22,8 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False) -> 
         },
     }
 
-    resp = requests.post(url, json=body, headers=headers)
+    timeout = int(os.getenv("REQUEST_TIMEOUT", "30"))
+    resp = requests.post(url, json=body, headers=headers, timeout=timeout)
     if not resp.ok:
         try:
             error_data = resp.json()

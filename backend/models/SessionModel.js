@@ -29,7 +29,8 @@ const questionSchema = new mongoose.Schema({
     },
     isEvaluated: {
         type: Boolean,
-        default: false
+        default: false,
+        index: true
     },
     technicalScore: {
         type: Number,
@@ -69,6 +70,7 @@ const sessionSchema = new mongoose.Schema({
         type: String,
         enum: ["pending", "in-progress", "completed", "cancelled", "failed"],
         default: "pending",
+        index: true,
     },
     overallScore: {
         type: Number,
@@ -94,6 +96,9 @@ const sessionSchema = new mongoose.Schema({
         default: null
     }
 }, { timestamps: true });
+
+// Compound index for efficient sorting by user and creation date (used in Dashboard)
+sessionSchema.index({ user: 1, createdAt: -1 });
 
 sessionSchema.statics.calculateScoreSummary = async function(sessionId) {
     const result = await this.aggregate([

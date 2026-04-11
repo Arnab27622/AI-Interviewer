@@ -14,10 +14,22 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith("audio/") || file.mimetype === "application/octet-stream") {
+    const allowedMimeTypes = [
+        "audio/webm", 
+        "audio/wav", 
+        "audio/mp3", 
+        "audio/mpeg", 
+        "audio/ogg", 
+        "audio/mp4"
+    ];
+    
+    // Some browsers append codecs to the mimetype, e.g., 'audio/webm;codecs=opus'
+    const baseMimeType = file.mimetype.split(';')[0].trim();
+
+    if (allowedMimeTypes.includes(baseMimeType)) {
         cb(null, true);
     } else {
-        cb(new Error("Invalid file type"), false);
+        cb(new Error("Invalid file type. Only standardized audio formats are allowed."), false);
     }
 }
 

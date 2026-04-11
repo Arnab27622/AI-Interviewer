@@ -69,11 +69,28 @@ export const createSession = asyncHandler(async (req, res) => {
  */
 export const getSession = asyncHandler(async (req, res) => {
     const userId = req.user.id;
-    const sessions = await Session.find({ user: userId }).sort({ createdAt: -1 }).select("-questions");
+    
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+
+    const totalSessions = await Session.countDocuments({ user: userId });
+
+    const sessions = await Session.find({ user: userId })
+        .sort({ createdAt: -1 })
+        .select("-questions")
+        .skip(skip)
+        .limit(limit);
     
     res.status(200).json({
         message: "Sessions retrieved successfully",
         session: sessions,
+        pagination: {
+            totalSessions,
+            totalPages: Math.ceil(totalSessions / limit),
+            currentPage: page,
+            pageSize: limit
+        }
     });
 });
 
@@ -158,7 +175,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
                     [`questions.${questionIdx}.isSubmitted`]: true,
                 }
             },
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         if (!updatedSession) throw new Error("Failed to update session during evaluation");
@@ -181,7 +198,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
             const finalSession = await Session.findOneAndUpdate(
                 { _id: sessionId },
                 { $set: finalUpdate },
-                { new: true }
+                { returnDocument: 'after' }
             );
 
             pushSocketUpdate(io, userId, sessionId, "session completed", "Evaluation complete", finalSession);
@@ -195,7 +212,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
         const errSession = await Session.findOneAndUpdate(
             { _id: sessionId, [`questions.${questionIdx}.isEvaluated`]: false },
             { $set: { [`questions.${questionIdx}.isSubmitted`]: false } },
-            { new: true }
+            { returnDocument: 'after' }
         );
         
         pushSocketUpdate(io, userId, sessionId, "error", `Evaluation failed: ${error.message}`, errSession);

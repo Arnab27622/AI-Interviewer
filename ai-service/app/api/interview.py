@@ -61,7 +61,7 @@ async def generate_questions(req: QuestionRequest):
             QuestionItem(
                 question=item.get("question", item.get("text", "")),
                 ideal_answer=item.get("ideal_answer", item.get("answer", ""))
-            ) for item in items[:req.count] if item
+            ) for item in items[:req.count] if isinstance(item, dict)
         ]
 
         if not final_questions:
@@ -93,12 +93,15 @@ async def evaluate_answer(req: EvaluationRequest):
     try:
         text_output = call_gemini(system_prompt, user_prompt, as_json=True)
         parsed = parse_response(text_output)
+        
+        if not isinstance(parsed, dict):
+            parsed = {}
 
         return EvaluationResponse(
             technical_score=to_float(parsed.get("technical_score")),
             confidence_score=to_float(parsed.get("confidence_score")),
-            ai_feedback=parsed.get("ai_feedback", ""),
-            ideal_answer=parsed.get("ideal_answer", ""),
+            ai_feedback=parsed.get("ai_feedback", "Missing feedback. Format error."),
+            ideal_answer=parsed.get("ideal_answer", "Missing ideal answer. Format error."),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
