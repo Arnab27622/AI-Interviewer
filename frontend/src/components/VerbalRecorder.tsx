@@ -39,7 +39,7 @@ const VerbalRecorder: React.FC<VerbalRecorderProps> = ({
                     <span className="text-red-500 font-mono font-bold">
                         {Math.floor(recordingTime / 60)}:{String(recordingTime % 60).padStart(2, '0')}
                     </span>
-                    <button onClick={stopRecording} className="text-slate-500 underline text-sm">Stop Recording</button>
+                    <button onClick={stopRecording} className="text-slate-500 underline text-sm cursor-pointer">Stop Recording</button>
                 </div>
             ) : (
                 <div className="text-center">
@@ -47,7 +47,7 @@ const VerbalRecorder: React.FC<VerbalRecorderProps> = ({
                     {!isQuestionLocked && (
                         <button
                             onClick={deleteDraftAudio}
-                            className="text-xs text-slate-400 underline hover:text-rose-500"
+                            className="text-xs text-slate-400 underline hover:text-rose-500 cursor-pointer"
                         >
                             Delete & Re-record
                         </button>

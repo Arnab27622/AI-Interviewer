@@ -1,24 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import axios, { AxiosError } from "axios";
+import api from "../../services/api";
+import { handleThunkError } from "../../utils/thunkUtils";
+import { updateSessionFromSocket } from "./sessionUtils";
 import type { SessionState, Session, SocketUpdatePayload } from "../../types/session";
-
-const API_URL = `${import.meta.env.VITE_API_URL}/sessions`;
-
-const api = axios.create({
-    baseURL: API_URL,
-});
-
-api.interceptors.request.use((request) => {
-    const user = localStorage.getItem("user");
-    const parsedUser = user ? JSON.parse(user) : null;
-    if (parsedUser) {
-        request.headers.Authorization = `Bearer ${parsedUser.token}`;
-    }
-    return request;
-});
-
-
 
 const initialState: SessionState = {
     sessions: [],
@@ -36,54 +21,46 @@ export const getSession = createAsyncThunk<Session[], void, { rejectValue: strin
             const response = await api.get<Session[]>(`/`);
             return response.data;
         } catch (error) {
-            const axiosError = error as AxiosError<{ message: string }>;
-            const message = axiosError.response?.data?.message || axiosError.message || String(error);
-            return thunkAPI.rejectWithValue(message);
+            return thunkAPI.rejectWithValue(handleThunkError(error));
         }
     }
-)
+);
 
 export const createSession = createAsyncThunk<Session, Record<string, unknown>, { rejectValue: string }>(
     "session/create",
-    async (sessionData: Record<string, unknown>, thunkAPI) => {
+    async (sessionData, thunkAPI) => {
         try {
             const response = await api.post<Session>(`/`, sessionData);
             return response.data;
         } catch (error) {
-            const axiosError = error as AxiosError<{ message: string }>;
-            const message = axiosError.response?.data?.message || axiosError.message || String(error);
-            return thunkAPI.rejectWithValue(message);
+            return thunkAPI.rejectWithValue(handleThunkError(error));
         }
     }
-)
+);
 
 export const getSessionById = createAsyncThunk<Session, string, { rejectValue: string }>(
     "session/getOne",
-    async (sessionId: string, thunkAPI) => {
+    async (sessionId, thunkAPI) => {
         try {
             const response = await api.get<Session>(`/${sessionId}`);
             return response.data;
         } catch (error) {
-            const axiosError = error as AxiosError<{ message: string }>;
-            const message = axiosError.response?.data?.message || axiosError.message || String(error);
-            return thunkAPI.rejectWithValue(message);
+            return thunkAPI.rejectWithValue(handleThunkError(error));
         }
     }
-)
+);
 
 export const deleteSession = createAsyncThunk<Session, string, { rejectValue: string }>(
     "session/delete",
-    async (sessionId: string, thunkAPI) => {
+    async (sessionId, thunkAPI) => {
         try {
             const response = await api.delete<Session>(`/${sessionId}`);
             return response.data;
         } catch (error) {
-            const axiosError = error as AxiosError<{ message: string }>;
-            const message = axiosError.response?.data?.message || axiosError.message || String(error);
-            return thunkAPI.rejectWithValue(message);
+            return thunkAPI.rejectWithValue(handleThunkError(error));
         }
     }
-)
+);
 
 export const submitAnswer = createAsyncThunk<Session, { sessionId: string; formData: FormData }, { rejectValue: string }>(
     "session/submitAnswer",
@@ -92,26 +69,22 @@ export const submitAnswer = createAsyncThunk<Session, { sessionId: string; formD
             const response = await api.post<Session>(`/${sessionId}/submit-answer`, formData);
             return response.data;
         } catch (error) {
-            const axiosError = error as AxiosError<{ message: string }>;
-            const message = axiosError.response?.data?.message || axiosError.message || String(error);
-            return thunkAPI.rejectWithValue(message);
+            return thunkAPI.rejectWithValue(handleThunkError(error));
         }
     }
-)
+);
 
 export const endSession = createAsyncThunk<Session, string, { rejectValue: string }>(
     "session/endSession",
-    async (sessionId: string, thunkAPI) => {
+    async (sessionId, thunkAPI) => {
         try {
             const response = await api.post<Session>(`/${sessionId}/end`);
             return response.data;
         } catch (error) {
-            const axiosError = error as AxiosError<{ message: string }>;
-            const message = axiosError.response?.data?.message || axiosError.message || String(error);
-            return thunkAPI.rejectWithValue(message);
+            return thunkAPI.rejectWithValue(handleThunkError(error));
         }
     }
-)
+);
 
 export const sessionSlice = createSlice({
     name: "session",
@@ -119,53 +92,7 @@ export const sessionSlice = createSlice({
     reducers: {
         reset: () => initialState,
         socketUpdateSession: (state, action: PayloadAction<SocketUpdatePayload>) => {
-            const { sessionId, status, message, session } = action.payload;
-            state.message = message;
-            
-            const upperStatus = (status || "").toUpperCase();
-            // Clear error state if we are receiving a progress update
-            if (!upperStatus.includes("ERROR") && !upperStatus.includes("FAILED")) {
-                state.isError = false;
-            }
-
-            if (!Array.isArray(state.sessions)) {
-                state.sessions = [];
-            }
-
-            if (!session && state.activeSession && state.activeSession?._id === sessionId) {
-                const qMatch = message.match(/Q(\d+)/);
-                if (qMatch) {
-                    const qIndex = parseInt(qMatch[1]) - 1;
-                    if (upperStatus.includes('AI_')) {
-                        state.activeSession.questions[qIndex].isSubmitted = true;
-                    }
-                }
-            }
-
-            // Handle generation status updates
-            const isFinished = upperStatus.includes("READY") || upperStatus.includes("FAILED") || upperStatus.includes("ERROR") || upperStatus.includes("COMPLETED");
-            const hasError = upperStatus.includes("FAILED") || upperStatus.includes("ERROR");
-
-            if (isFinished) {
-                state.isGenerating = false;
-                if (hasError) {
-                    state.isError = true;
-                    state.message = message || "Operation failed";
-                }
-            }
-
-            if (session) {
-                // Update activeSession if it matches the ID, or if we don't have an active session yet
-                if (!state.activeSession || state.activeSession._id === sessionId) {
-                    state.activeSession = session;
-                }
-                const index = state.sessions.findIndex((s) => s._id === sessionId);
-                if (index !== -1) {
-                    state.sessions[index] = session;
-                } else if (upperStatus.includes("READY") || upperStatus.includes("COMPLETED")) {
-                    state.sessions.unshift(session);
-                }
-            }
+            updateSessionFromSocket(state, action.payload);
         },
         setActiveSession: (state, action: PayloadAction<Session>) => {
             state.activeSession = action.payload;
@@ -173,13 +100,14 @@ export const sessionSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            // Get all sessions
             .addCase(getSession.pending, (state) => {
                 state.isLoading = true;
             })
             .addCase(getSession.fulfilled, (state, action) => {
                 state.isLoading = false;
                 const payload = action.payload as unknown;
-                // Handle both { session: [] } and direct []
+                // Handle different response formats
                 if (payload && typeof payload === 'object' && 'session' in payload && Array.isArray(payload.session)) {
                     state.sessions = payload.session as Session[];
                 } else {
@@ -189,8 +117,10 @@ export const sessionSlice = createSlice({
             .addCase(getSession.rejected, (state, action) => {
                 state.isLoading = false;
                 state.isError = true;
-                state.message = action.payload || "Failed to get sessions";
+                state.message = action.payload || "Failed to fetch sessions";
             })
+
+            // Create new session
             .addCase(createSession.pending, (state) => {
                 state.isLoading = true;
             })
@@ -201,7 +131,7 @@ export const sessionSlice = createSlice({
                     state.sessions = [];
                 }
                 const payload = action.payload as unknown;
-                // Only push if it looks like a full session object
+                // Prepend new session to lists
                 if (payload && typeof payload === 'object' && ('_id' in payload || 'role' in payload)) {
                     state.sessions.unshift(payload as Session);
                 }
@@ -209,15 +139,16 @@ export const sessionSlice = createSlice({
             .addCase(createSession.rejected, (state, action) => {
                 state.isLoading = false;
                 state.isError = true;
-                state.message = action.payload || "Failed to create session";
+                state.message = action.payload || "Failed to create interview";
             })
+
+            // Get session by ID
             .addCase(getSessionById.pending, (state) => {
                 state.isLoading = true;
             })
             .addCase(getSessionById.fulfilled, (state, action) => {
                 state.isLoading = false;
                 const payload = action.payload as { session?: Session };
-                // Handle wrapped { session: { ... } } or direct { ... }
                 if (payload && payload.session) {
                     state.activeSession = payload.session;
                 } else {
@@ -227,30 +158,29 @@ export const sessionSlice = createSlice({
             .addCase(getSessionById.rejected, (state, action) => {
                 state.isLoading = false;
                 state.isError = true;
-                state.message = action.payload || "Failed to get session";
+                state.message = action.payload || "Failed to locate session";
             })
+
+            // Delete session
             .addCase(deleteSession.pending, (state) => {
                 state.isLoading = true;
             })
             .addCase(deleteSession.fulfilled, (state, action) => {
                 state.isLoading = false;
-                const sessions = Array.isArray(state.sessions) ? state.sessions : [];
-                // Handle different response formats (id or _id)
-                const payload = action.payload as { id?: string; _id?: string };
-                const deletedId = payload.id || payload._id;
-                state.sessions = sessions.filter((session) => session._id !== deletedId);
+                const sessionsList = Array.isArray(state.sessions) ? state.sessions : [];
+                const payloadId = (action.payload as { id?: string; _id?: string }).id || (action.payload as { id?: string; _id?: string })._id;
+                state.sessions = sessionsList.filter((s) => s._id !== payloadId);
             })
             .addCase(deleteSession.rejected, (state, action) => {
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload || "Failed to delete session";
             })
-            .addCase(submitAnswer.pending, () => {
-                // state.isLoading = true;
-            })
+
+            // Submit answer
+            .addCase(submitAnswer.pending, () => {})
             .addCase(submitAnswer.fulfilled, (state, action) => {
                 state.isLoading = false;
-
                 if (action.payload && Array.isArray(action.payload.questions)) {
                     state.activeSession = action.payload;
                 }
@@ -258,27 +188,25 @@ export const sessionSlice = createSlice({
             .addCase(submitAnswer.rejected, (state, action) => {
                 state.isLoading = false;
                 state.isError = true;
-                state.message = action.payload || "Failed to submit answer";
+                state.message = action.payload || "Evaluation submission failed";
             })
+
+            // End session
             .addCase(endSession.pending, (state) => {
                 state.isLoading = true;
             })
             .addCase(endSession.fulfilled, (state, action) => {
                 state.isLoading = false;
                 const payload = action.payload as { session?: Session };
-                if (payload && payload.session) {
-                    state.activeSession = payload.session;
-                } else {
-                    state.activeSession = action.payload as Session;
-                }
+                state.activeSession = payload.session || (action.payload as Session);
             })
             .addCase(endSession.rejected, (state, action) => {
                 state.isLoading = false;
                 state.isError = true;
-                state.message = action.payload || "Failed to end session";
-            })
+                state.message = action.payload || "Failed to end interview session";
+            });
     }
-})
+});
 
 export const { reset, socketUpdateSession, setActiveSession } = sessionSlice.actions;
 export default sessionSlice.reducer;
