@@ -13,10 +13,14 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
     const { activeSession, isLoading, isError: sessionError, message: sessionMessage } = useSelector((state: RootState) => state.session);
 
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [selectedLanguage, setSelectedLanguage] = useState("javascript");
-    const [prevSessionRole, setPrevSessionRole] = useState<string | undefined>(undefined);
+    // Derive selected language securely without side-effects (React paradigm)
+    const [languageOverride, setLanguageOverride] = useState<string | null>(null);
+    const defaultLang = activeSession?.role ? ROLE_LANGUAGE_MAP[activeSession.role] || "plaintext" : "javascript";
+    const selectedLanguage = languageOverride ?? defaultLang;
+    const setSelectedLanguage = setLanguageOverride;
+
     const [submittedLocal, setSubmittedLocal] = useState<Record<number, boolean>>({});
-    
+
     // Initial drafts state from localStorage with safety check
     const [drafts, setDrafts] = useState<Record<number, { code?: string; audio?: Blob }>>(() => {
         if (!sessionId) return {};
@@ -36,15 +40,6 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
             return {};
         }
     });
-
-    // Sync selectedLanguage during render to avoid cascading renders in useEffect.
-    // This is the recommended React pattern for adjusting state based on props:
-    // https://react.dev/learn/you-might-not-need-an-effect#adjusting-state-when-a-prop-changes
-    if (activeSession && activeSession.role && activeSession.role !== prevSessionRole) {
-        setPrevSessionRole(activeSession.role);
-        const defaultLang = ROLE_LANGUAGE_MAP[activeSession.role] || "plaintext";
-        setSelectedLanguage(defaultLang);
-    }
 
     useEffect(() => {
         if (sessionId) {

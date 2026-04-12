@@ -58,7 +58,18 @@ app.use(notFound);
 app.use(errorHandler);
 
 io.use((socket, next) => {
-    const token = socket.handshake.auth.token || socket.handshake.query.token;
+    let token = socket.handshake.auth.token || socket.handshake.query.token;
+    
+    // Supplement missing auth header bindings by reading raw HTTPOnly cookie layer context
+    if (socket.handshake.headers.cookie) {
+        const cookies = socket.handshake.headers.cookie.split(';').reduce((acc, c) => {
+            const [k, v] = c.trim().split('=');
+            acc[k] = v;
+            return acc;
+        }, {});
+        if (cookies.jwt) token = cookies.jwt;
+    }
+
     if (!token) {
         return next(new Error("Authentication error: No token provided"));
     }
