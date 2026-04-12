@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 import os
 from ..services.gemini_service import call_gemini, parse_response, to_float
@@ -16,10 +16,10 @@ from ..prompts import (
 router = APIRouter()
 
 class QuestionRequest(BaseModel):
-    role: str = "Full-Stack Developer"
-    level: str = "Junior"
-    count: int = 5
-    interview_type: str = "coding-mix"
+    role: str = Field(default="Full-Stack Developer", max_length=100)
+    level: str = Field(default="Junior", max_length=50)
+    count: int = Field(default=5, gt=0, le=20)
+    interview_type: str = Field(default="coding-mix", max_length=50)
 
 class QuestionItem(BaseModel):
     question: str
@@ -30,12 +30,12 @@ class QuestionResponse(BaseModel):
     model_used: str
 
 class EvaluationRequest(BaseModel):
-    question: str
-    question_type: str
-    role: str = "Full-Stack Developer"
-    level: Optional[str] = None
-    user_answer: Optional[str] = None
-    user_code: Optional[str] = None
+    question: str = Field(..., max_length=2000)
+    question_type: str = Field(..., max_length=50)
+    role: str = Field(default="Full-Stack Developer", max_length=100)
+    level: Optional[str] = Field(default=None, max_length=50)
+    user_answer: Optional[str] = Field(default=None, max_length=50000)
+    user_code: Optional[str] = Field(default=None, max_length=50000)
 
 class EvaluationResponse(BaseModel):
     technical_score: float
@@ -57,12 +57,15 @@ async def generate_questions(req: QuestionRequest):
         parsed = parse_response(text_output)
         items = parsed.get("questions", []) if isinstance(parsed, dict) else parsed
         
-        final_questions = [
-            QuestionItem(
-                question=item.get("question", item.get("text", "")),
-                ideal_answer=item.get("ideal_answer", item.get("answer", ""))
-            ) for item in items[:req.count] if isinstance(item, dict)
-        ]
+        final_questions = []
+        for item in items:
+            if isinstance(item, dict):
+                q = item.get("question") or item.get("text") or ""
+                ans = item.get("ideal_answer") or item.get("answer") or ""
+                if q and ans:
+                    final_questions.append(QuestionItem(question=str(q), ideal_answer=str(ans)))
+            if len(final_questions) >= req.count:
+                break
 
         if not final_questions:
             raise ValueError("No questions found in AI response")

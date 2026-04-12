@@ -6,13 +6,15 @@ from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from app.api.interview import router as interview_router
 from app.services.whisper_service import whisper_service
+import asyncio
+
 
 load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize Services
-    whisper_service.load_model()
+    # Initialize Services asynchronously to prevent Uvicorn blocking
+    asyncio.create_task(asyncio.to_thread(whisper_service.load_model))
     yield
     # Cleanup logic (if any) can go here
 

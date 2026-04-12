@@ -36,9 +36,11 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False) -> 
         except Exception:
             error_msg = resp.text
             
+        print(f"[ERROR] Gemini API Failure {resp.status_code}: {error_msg}")
+            
         raise HTTPException(
             status_code=resp.status_code if resp.status_code != 500 else 500,
-            detail=error_msg
+            detail="The AI Evaluation Service encountered an upstream error. Please try again later."
         )
 
     data = resp.json()
