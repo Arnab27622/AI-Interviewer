@@ -12,7 +12,8 @@ class WhisperService:
     def load_model(self):
         try:
             print("Loading Whisper model...")
-            self.model = whisper.load_model("base.en")
+            # Location - C:\Users\<Username>\.cache\whisper
+            self.model = whisper.load_model("tiny.en")
             print("Whisper model loaded successfully.")
         except Exception as e:
             print(f"Error loading Whisper model: {e}")
