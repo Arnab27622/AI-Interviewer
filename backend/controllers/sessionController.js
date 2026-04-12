@@ -126,7 +126,7 @@ export const deleteSession = asyncHandler(async (req, res) => {
 /**
  * @desc Helper to handle transcription and evaluation in the background
  */
-const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmission, audioFilePath) => {
+const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmission, language, audioFilePath) => {
     try {
         const session = await Session.findById(sessionId);
         if (!session) throw new Error("Session not found");
@@ -155,6 +155,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
             question_type: question.questionType,
             user_answer: transcription || "No verbal answer provided.",
             user_code: codeSubmission || "",
+            selected_language: language || "plaintext",
             role: session.role,
             level: session.level,
             interview_type: session.interviewType,
@@ -225,7 +226,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
  */
 export const submitAnswer = asyncHandler(async (req, res) => {
     const { sessionId } = req.params;
-    const { questionIndex, code } = req.body;
+    const { questionIndex, code, language } = req.body;
     const userId = req.user.id;
 
     const session = await Session.findOne({ _id: sessionId, user: userId });
@@ -240,7 +241,7 @@ export const submitAnswer = asyncHandler(async (req, res) => {
     res.status(200).json({ message: "Answer received" });
 
     const audioFilePath = req.file ? path.join(process.cwd(), req.file.path) : null;
-    evaluateAnswerAsync(req.app.get("io"), userId, sessionId, qIdx, code, audioFilePath);
+    evaluateAnswerAsync(req.app.get("io"), userId, sessionId, qIdx, code, language, audioFilePath);
 });
 
 /**

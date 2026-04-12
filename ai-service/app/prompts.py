@@ -28,11 +28,13 @@ def get_generation_user_prompt(count: int, role: str, level: str, instruction: s
         "Return ONLY raw JSON."
     )
 
-def get_evaluation_user_prompt_coding(question: str, user_code: str) -> str:
+def get_evaluation_user_prompt_coding(question: str, user_code: str, language: str) -> str:
     return (
         f"Question: {question}\n"
+        f"Candidate Selected Language: {language}\n"
         f"Candidate Code:\n{user_code}\n"
-        "Evaluate and respond in the required JSON format."
+        "Evaluate and respond in the required JSON format. Ensure you check if the code matches the selected language. "
+        "If the code is in a different language than selected, mark it as incorrect or note the mismatch."
     )
 
 def get_evaluation_user_prompt_conceptual(question: str, user_answer: str) -> str:

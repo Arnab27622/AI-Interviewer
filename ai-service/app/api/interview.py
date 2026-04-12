@@ -36,6 +36,7 @@ class EvaluationRequest(BaseModel):
     level: Optional[str] = Field(default=None, max_length=50)
     user_answer: Optional[str] = Field(default=None, max_length=50000)
     user_code: Optional[str] = Field(default=None, max_length=50000)
+    selected_language: Optional[str] = Field(default=None, max_length=50)
 
 class EvaluationResponse(BaseModel):
     technical_score: float
@@ -86,7 +87,7 @@ async def evaluate_answer(req: EvaluationRequest):
         if not req.user_code or not req.user_code.strip():
             raise HTTPException(status_code=422, detail="user_code is required for coding questions.")
         system_prompt = EVALUATION_SYSTEM_PROMPT_CODING
-        user_prompt = get_evaluation_user_prompt_coding(req.question, req.user_code)
+        user_prompt = get_evaluation_user_prompt_coding(req.question, req.user_code, req.selected_language or "unknown")
     else:
         if not req.user_answer or not req.user_answer.strip():
             raise HTTPException(status_code=422, detail="user_answer is required for non-coding questions.")

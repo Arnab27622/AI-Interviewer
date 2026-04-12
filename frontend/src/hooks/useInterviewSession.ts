@@ -129,6 +129,7 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
         const formData = new FormData();
         formData.append("questionIndex", currentQuestionIndex.toString());
         if (code) formData.append("code", code);
+        if (selectedLanguage) formData.append("language", selectedLanguage);
         if (audio) formData.append("audio", audio, 'audio.webm');
 
         dispatch(submitAnswer({ sessionId, formData })).unwrap().catch(() => {
