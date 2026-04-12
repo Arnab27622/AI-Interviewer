@@ -31,7 +31,7 @@ const Register = () => {
 
     useEffect(() => {
         if (isError) {
-            toast.error(message);
+            toast.error(message || "An error occurred");
             dispatch(reset());
         }
 

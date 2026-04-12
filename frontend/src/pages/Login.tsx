@@ -27,7 +27,7 @@ const Login = () => {
 
     useEffect(() => {
         if (isError) {
-            toast.error(message);
+            toast.error(message || "Invalid email or password");
             dispatch(reset());
         }
 

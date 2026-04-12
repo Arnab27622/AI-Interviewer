@@ -17,7 +17,7 @@ function App() {
   return (
     <>
       <div className="min-h-screen bg-gray-50">
-        <ToastContainer position="top-right" autoClose={2500} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+        <ToastContainer position="top-right" autoClose={1800} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
         <Header />
         <main className="container mx-auto p-4">
           <Routes>
