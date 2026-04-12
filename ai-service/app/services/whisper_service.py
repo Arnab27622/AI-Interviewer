@@ -14,7 +14,8 @@ class WhisperService:
             try:
                 print("Loading Whisper model (lazy)...")
                 # Using tiny.en to fit in Render Free Tier's 512MB RAM
-                self.model = whisper.load_model("tiny.en")
+                # Setting device="cpu" and fp16=False is essential for Render Free Tier
+                self.model = whisper.load_model("tiny.en", device="cpu")
                 print("Whisper model loaded successfully.")
             except Exception as e:
                 print(f"Error loading Whisper model: {e}")
@@ -27,14 +28,13 @@ class WhisperService:
 
         tmp_path = None
         try:
-            audio_data = await file.read()
-            audio_segment = AudioSegment.from_file(io.BytesIO(audio_data))
-            audio_segment = audio_segment.set_channels(1).set_frame_rate(16000)
-
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
-                audio_segment.export(tmp.name, format="wav")
+            # Save the uploaded file directly to a temporary file to save RAM
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as tmp:
+                content = await file.read()
+                tmp.write(content)
                 tmp_path = tmp.name
 
+            # Tiny model is robust enough to handle the format directly
             result = self.model.transcribe(tmp_path, fp16=False)
             return result["text"].strip()
 
