@@ -13,8 +13,7 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize Services asynchronously to prevent Uvicorn blocking
-    asyncio.create_task(asyncio.to_thread(whisper_service.load_model))
+    # Model is now lazy-loaded in whisper_service to save startup RAM
     yield
     # Cleanup logic (if any) can go here
 

@@ -10,17 +10,20 @@ class WhisperService:
         self.model = None
 
     def load_model(self):
-        try:
-            print("Loading Whisper model...")
-            # Location - C:\Users\<Username>\.cache\whisper
-            self.model = whisper.load_model("tiny.en")
-            print("Whisper model loaded successfully.")
-        except Exception as e:
-            print(f"Error loading Whisper model: {e}")
+        if self.model is None:
+            try:
+                print("Loading Whisper model (lazy)...")
+                # Using tiny.en to fit in Render Free Tier's 512MB RAM
+                self.model = whisper.load_model("tiny.en")
+                print("Whisper model loaded successfully.")
+            except Exception as e:
+                print(f"Error loading Whisper model: {e}")
+                raise HTTPException(status_code=500, detail=f"Model load failed: {str(e)}")
 
     async def transcribe(self, file: UploadFile):
+        # Load model only when needed
         if not self.model:
-            raise HTTPException(status_code=500, detail="Whisper model not loaded")
+            self.load_model()
 
         tmp_path = None
         try:
