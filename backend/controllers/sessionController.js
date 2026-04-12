@@ -25,14 +25,15 @@ export const createSession = asyncHandler(async (req, res) => {
         status: "pending",
     });
 
-    const io = req.app.get("io");
     res.status(201).json({
         message: "Session created successfully",
         sessionId: session._id,
         status: "processing"
     });
 
-    // Background process for AI generation
+    // Background process for AI generation:
+    // We trigger this immediately and respond to the user with "processing"
+    // to avoid blocking the HTTP response during slow AI generation calls.
     (async () => {
         try {
             pushSocketUpdate(io, userId, session._id, "AI_GENERATING", `Generating ${count} questions for ${role}...`);
@@ -55,7 +56,7 @@ export const createSession = asyncHandler(async (req, res) => {
 
             pushSocketUpdate(io, userId, session._id, "QUESTIONS_READY", "Starting Interview...", session);
         } catch (error) {
-            console.error("Error in createSession:", error.message);
+            console.error("Error in createSession (Background):", error.message);
             session.status = "failed";
             await session.save();
             pushSocketUpdate(io, userId, session._id, "GENERATION_FAILED", "Failed to generate questions", { error: error.message });
@@ -70,6 +71,7 @@ export const createSession = asyncHandler(async (req, res) => {
 export const getSession = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     
+    // Pagination defaults
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 20;
     const skip = (page - 1) * limit;
@@ -78,7 +80,7 @@ export const getSession = asyncHandler(async (req, res) => {
 
     const sessions = await Session.find({ user: userId })
         .sort({ createdAt: -1 })
-        .select("-questions")
+        .select("-questions") // Exclude heavy question data for the list view
         .skip(skip)
         .limit(limit);
     
@@ -124,7 +126,8 @@ export const deleteSession = asyncHandler(async (req, res) => {
 });
 
 /**
- * @desc Helper to handle transcription and evaluation in the background
+ * @desc Helper to handle transcription and evaluation in the background.
+ * This runs after the initial "Answer received" response to keep UI snappy.
  */
 const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmission, language, audioFilePath) => {
     try {
@@ -134,6 +137,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
         const question = session.questions[questionIdx];
         let transcription = "";
 
+        // Stage 1: Transcription (if audio exists)
         if (audioFilePath) {
             try {
                 pushSocketUpdate(io, userId, sessionId, "AI_TRANSCRIBING", `Transcribing answer...`);
@@ -142,12 +146,14 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
             } catch (error) {
                 console.error("Transcription Error:", error.message);
             } finally {
+                // Ensure temp file is deleted even if transcription fails
                 if (fs.existsSync(audioFilePath)) {
                     await fs.promises.unlink(audioFilePath).catch(err => console.error("Error unlinking file:", err));
                 }
             }
         }
 
+        // Stage 2: AI Evaluation
         pushSocketUpdate(io, userId, sessionId, "AI_EVALUATING", `Evaluating question ${questionIdx + 1}...`);
 
         const evaluation = await aiService.evaluateAnswer({
@@ -161,7 +167,9 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
             interview_type: session.interviewType,
         });
 
-        // Use Atomic Update to prevent race conditions
+        // Stage 3: Atomic Update
+        // We use findOneAndUpdate with $set to avoid overwriting other fields 
+        // that might have changed since we first loaded the session.
         const updatedSession = await Session.findOneAndUpdate(
             { _id: sessionId },
             {
@@ -181,6 +189,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
 
         if (!updatedSession) throw new Error("Failed to update session during evaluation");
 
+        // Check if this was the last question
         const allEvaluated = updatedSession.questions.every(q => q.isEvaluated);
         if (allEvaluated || updatedSession.status === "completed") {
             const scores = await Session.calculateScoreSummary(sessionId);
@@ -209,7 +218,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
     } catch (error) {
         console.error("Evaluation Async Task Error:", error.message);
         
-        // Atomic revert of isSubmitted if possible
+        // Revert isSubmitted flag on error so the user can try again
         const errSession = await Session.findOneAndUpdate(
             { _id: sessionId, [`questions.${questionIdx}.isEvaluated`]: false },
             { $set: { [`questions.${questionIdx}.isSubmitted`]: false } },
@@ -235,11 +244,13 @@ export const submitAnswer = asyncHandler(async (req, res) => {
     const qIdx = parseInt(questionIndex);
     if (!session.questions[qIdx]) return res.status(404).json({ message: "Question not found" });
 
+    // Mark as submitted immediately to prevent duplicate submissions
     session.questions[qIdx].isSubmitted = true;
     await session.save();
 
     res.status(200).json({ message: "Answer received" });
 
+    // Offload actual AI work to the background task
     const audioFilePath = req.file ? path.join(process.cwd(), req.file.path) : null;
     evaluateAnswerAsync(req.app.get("io"), userId, sessionId, qIdx, code, language, audioFilePath);
 });
@@ -255,6 +266,7 @@ export const endSession = asyncHandler(async (req, res) => {
     const session = await Session.findOne({ _id: sessionId, user: userId });
     if (!session) return res.status(404).json({ message: "Session not found" });
 
+    // Prevent ending if answers are still being transcribed/evaluated
     if (session.questions.some(q => !q.isEvaluated && q.isSubmitted)) {
         return res.status(400).json({ message: "Evaluation in progress, please wait." });
     }

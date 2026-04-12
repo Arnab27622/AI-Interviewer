@@ -31,12 +31,14 @@ const io = new Server(server, {
     },
 });
 
+// --- Middlewares & Configuration ---
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true);
         if (allowOrigin === origin || allowOrigin.split(',').map(o => o.trim()).includes(origin)) {
             callback(null, true);
         } else {
+            // Allow all origins in development to simplify local testing
             if (process.env.NODE_ENV === "development") {
                 callback(null, true);
             } else {
@@ -48,15 +50,16 @@ app.use(cors({
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.set("io", io);
+app.set("io", io); // Make socket instance accessible to controllers
 
+// --- Routes ---
 app.get("/", (req, res) => {
     res.send("API is running...");
 });
-
 
 app.use("/api/user", userRoutes);
 app.use("/api/sessions", sessionRoutes);
@@ -64,10 +67,16 @@ app.use("/api/sessions", sessionRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
+// --- Real-time Communication (Socket.IO) ---
+
+/**
+ * Socket.io Authentication Middleware
+ * Supports both Auth Headers (Mobile/Postman) and HttpOnly Cookies (Web)
+ */
 io.use((socket, next) => {
     let token = socket.handshake.auth.token || socket.handshake.query.token;
     
-    // Supplement missing auth header bindings by reading raw HTTPOnly cookie layer context
+    // Extract token from cookies if not found in handshake (essential for cross-site browser sessions)
     if (socket.handshake.headers.cookie) {
         const cookies = socket.handshake.headers.cookie.split(';').reduce((acc, c) => {
             const [k, v] = c.trim().split('=');
@@ -77,13 +86,11 @@ io.use((socket, next) => {
         if (cookies.jwt) token = cookies.jwt;
     }
 
-    if (!token) {
-        return next(new Error("Authentication error: No token provided"));
-    }
+    if (!token) return next(new Error("Authentication error: No token provided"));
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        socket.user = decoded; // Store decoded user info in socket
+        socket.user = decoded; 
         next();
     } catch (err) {
         return next(new Error("Authentication error: Invalid token"));
@@ -91,15 +98,13 @@ io.use((socket, next) => {
 });
 
 io.on("connection", (socket) => {
-    console.log("An authenticated user connected");
+    console.log(`User connected: ${socket.user.id}`);
     const userId = socket.handshake.query.userId;
     
-    // Ensure the decoded user ID matches the requested room ID
+    // Securely join a private room matching the user's ID
     if (userId && socket.user && (socket.user.id === userId || socket.user._id === userId)) {
         socket.join(userId);
-        console.log(`User ${userId} joined room securely`);
     } else if (userId) {
-        console.warn(`Unauthorized room join attempt for ${userId} by ${socket.user?.id}`);
         socket.emit("error", "Unauthorized access to this room");
     }
 

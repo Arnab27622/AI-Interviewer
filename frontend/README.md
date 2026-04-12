@@ -1,73 +1,61 @@
-# React + TypeScript + Vite
+# Prepify Frontend 💻
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The user-facing application for Prepify. A high-performance, responsive React application built with Vite and TypeScript, providing an immersive interview experience.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **📊 Dynamic Dashboard**: View interview history, start new sessions, and track progress.
+- **🎤 Interactive Interview Interface**: Smooth, distraction-free environment for answering questions.
+- **📈 Comprehensive Reviews**: Detailed feedback screens with scores and AI-driven suggestions.
+- **🌗 Modern UI/UX**: Clean, professional design with responsive layouts for all devices.
+- **🔒 Secure Auth Flow**: Seamless integration with Google Login for quick access.
 
-## React Compiler
+## 🏗️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React 18**: Component-based UI library.
+- **Vite**: Rapid development build tool.
+- **TypeScript**: Type-safe development for robust code.
+- **Shadcn UI & Tailwind CSS**: Elegant, modern styling and components.
+- **Lucide Icons**: Beautiful, consistent iconography.
+- **Socket.io-client**: Real-time communication with the backend.
 
-## Expanding the ESLint configuration
+## 🛠️ Installation & Setup
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 1. Prerequisites
+- **Node.js 18+**
+- **npm** or **yarn**
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 2. Environment Setup
+```bash
+# Navigate to the frontend directory
+cd frontend
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Install dependencies
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 3. Configuration
+Create a `.env` file in this directory:
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
 ```
+
+## 🏃 Running Locally
+
+```bash
+# Start the development server
+npm run dev
+```
+The app will be available at `http://localhost:5173`.
+
+## 🏗️ Core Modules Breakdown
+
+- `src/pages/`: Main view components (Dashboard, Interview, Review).
+- `src/components/`: Reusable UI elements and complex feature blocks.
+- `src/services/`: API client and WebSocket handlers.
+- `src/hooks/`: Custom React hooks for state and logic management.
+- `src/features/`: Large functional modules like the Interview Runner.
+
+---
+
