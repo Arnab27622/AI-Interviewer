@@ -1,45 +1,31 @@
-import whisper
-import io
-import os
-import tempfile
-from fastapi import HTTPException, UploadFile
-from pydub import AudioSegment
+import base64
+from fastapi import UploadFile
+from app.services.gemini_service import call_gemini
 
 class WhisperService:
     def __init__(self):
-        self.model = None
+        # We don't need to load any local models anymore!
+        self.model = True # Dummy for compatibility
 
     def load_model(self):
-        if self.model is None:
-            try:
-                print("Loading Whisper model (lazy)...")
-                # Using tiny.en to fit in Render Free Tier's 512MB RAM
-                # Setting device="cpu" and fp16=False is essential for Render Free Tier
-                self.model = whisper.load_model("tiny.en", device="cpu")
-                print("Whisper model loaded successfully.")
-            except Exception as e:
-                print(f"Error loading Whisper model: {e}")
-                raise HTTPException(status_code=500, detail=f"Model load failed: {str(e)}")
+        # No-op for compatibility
+        pass
 
     async def transcribe(self, file: UploadFile):
-        # Load model only when needed
-        if not self.model:
-            self.load_model()
-
-        tmp_path = None
         try:
-            # Save the uploaded file directly to a temporary file to save RAM
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as tmp:
-                content = await file.read()
-                tmp.write(content)
-                tmp_path = tmp.name
+            # Read audio data
+            audio_data = await file.read()
+            # Encode to base64 for Gemini
+            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
 
-            # Tiny model is robust enough to handle the format directly
-            result = self.model.transcribe(tmp_path, fp16=False)
-            return result["text"].strip()
+            system_prompt = "You are an expert transcription service. Transcribe the following audio exactly as spoken. Return ONLY the transcribed text."
+            user_prompt = "Transcribe this audio:"
 
-        finally:
-            if tmp_path and os.path.exists(tmp_path):
-                os.unlink(tmp_path)
+            transcription = call_gemini(system_prompt, user_prompt, audio_base64=audio_base64)
+            return transcription.strip()
+
+        except Exception as e:
+            print(f"Transcription error via Gemini: {e}")
+            return ""
 
 whisper_service = WhisperService()

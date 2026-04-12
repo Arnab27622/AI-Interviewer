@@ -1,10 +1,11 @@
 import requests
 import os
 import json
+import base64
 from fastapi import HTTPException
 
-def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False) -> str:
-    """Shared helper to call the Gemini API and return raw text output."""
+def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, audio_base64: str = None) -> str:
+    """Shared helper to call the Gemini API. Supports text or text+audio."""
     model_name = os.getenv("MODEL_NAME")
     api_key = os.getenv("GEMINI_API_KEY")
     
@@ -13,18 +14,30 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False) -> 
         "Content-Type": "application/json",
         "x-goog-api-key": api_key,
     }
+    
+    # Build parts list
+    parts = [{"text": user_prompt}]
+    if audio_base64:
+        parts.append({
+            "inline_data": {
+                "mime_type": "audio/webm", # Most browsers record in webm
+                "data": audio_base64
+            }
+        })
+
     body = {
         "system_instruction": {"parts": [{"text": system_prompt}]},
-        "contents": [{"parts": [{"text": user_prompt}]}],
+        "contents": [{"parts": parts}],
         "generationConfig": {
             "maxOutputTokens": 5000,
             **({"responseMimeType": "application/json"} if as_json else {}),
         },
     }
 
-    timeout = int(os.getenv("REQUEST_TIMEOUT", "30"))
+    timeout = int(os.getenv("REQUEST_TIMEOUT", "60"))
     resp = requests.post(url, json=body, headers=headers, timeout=timeout)
     if not resp.ok:
+        # Error handling... (rest of your logic)
         try:
             error_data = resp.json()
             if "error" in error_data and "message" in error_data["error"]:
