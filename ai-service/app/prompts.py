@@ -24,7 +24,7 @@ EVALUATION_SYSTEM_PROMPT_CONCEPTUAL = (
 def get_generation_user_prompt(count: int, role: str, level: str, instruction: str) -> str:
     return (
         f"Generate exactly {count} unique interview questions for a {level} {role} role. "
-        f"{instruction}. For each question, provide a detailed ideal answer. "
+        f"{instruction}. For each question, provide a concise ideal answer. "
         "Return ONLY raw JSON."
     )
 
