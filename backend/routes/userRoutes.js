@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, loginUser, googleLogin, getUserProfile, updateUserProfile } from "../controllers/userController.js";
+import { registerUser, loginUser, googleLogin, logoutUser, getUserProfile, updateUserProfile } from "../controllers/userController.js";
 import { protect } from "../middleware/auth.js";
 import rateLimit from "express-rate-limit";
 import { registerValidation, loginValidation, profileUpdateValidation, validateResult } from "../middleware/validationMiddleware.js";
@@ -14,6 +14,7 @@ const router = express.Router();
 
 router.post("/register", authLimiter, registerValidation, validateResult, registerUser);
 router.post("/login", authLimiter, loginValidation, validateResult, loginUser);
+router.post("/logout", logoutUser);
 router.post("/google", googleLogin);
 router.route("/profile").get(protect, getUserProfile).put(protect, profileUpdateValidation, validateResult, updateUserProfile);
 

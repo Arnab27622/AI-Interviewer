@@ -4,15 +4,19 @@ const API_URL = `${import.meta.env.VITE_API_URL}/sessions`;
 
 const api = axios.create({
     baseURL: API_URL,
+    withCredentials: true,
 });
 
-api.interceptors.request.use((request) => {
-    const userString = localStorage.getItem("user");
-    const user = userString ? JSON.parse(userString) : null;
-    if (user?.token) {
-        request.headers.Authorization = `Bearer ${user.token}`;
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Token expired or invalid HTTP-only cookie missing
+            localStorage.removeItem("user");
+            window.location.href = "/login";
+        }
+        return Promise.reject(error);
     }
-    return request;
-});
+);
 
 export default api;

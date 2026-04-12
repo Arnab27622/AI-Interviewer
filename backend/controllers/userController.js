@@ -3,8 +3,14 @@ import User from "../models/User.js";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
 
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "3d" });
+const generateTokenInCookie = (res, id) => {
+    const token = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "3d" });
+    res.cookie("jwt", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== "development",
+        sameSite: "strict",
+        maxAge: 3 * 24 * 60 * 60 * 1000,
+    });
 };
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -28,11 +34,11 @@ const registerUser = asyncHandler(async (req, res) => {
     });
 
     if (user) {
+        generateTokenInCookie(res, user._id);
         res.status(201).json({
             _id: user._id,
             name: user.name,
             email: user.email,
-            token: generateToken(user._id),
         });
     } else {
         res.status(400);
@@ -50,12 +56,12 @@ const loginUser = asyncHandler(async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
+        generateTokenInCookie(res, user._id);
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
             preferredRole: user.preferredRole,
-            token: generateToken(user._id),
         });
     } else {
         res.status(401);
@@ -95,12 +101,12 @@ const googleLogin = asyncHandler(async (req, res) => {
             user.googleId = googleId;
             await user.save();
         }
+        generateTokenInCookie(res, user._id);
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
             preferredRole: user.preferredRole,
-            token: generateToken(user._id),
         });
     } else {
         user = await User.create({
@@ -111,12 +117,12 @@ const googleLogin = asyncHandler(async (req, res) => {
         });
 
         if (user) {
+            generateTokenInCookie(res, user._id);
             res.status(201).json({
                 _id: user._id,
                 name: user.name,
                 email: user.email,
                 preferredRole: user.preferredRole,
-                token: generateToken(user._id),
             });
         } else {
             res.status(400);
@@ -168,4 +174,12 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     }
 });
 
-export { registerUser, loginUser, googleLogin, getUserProfile, updateUserProfile };
+const logoutUser = asyncHandler(async (req, res) => {
+    res.cookie("jwt", "", {
+        httpOnly: true,
+        expires: new Date(0),
+    });
+    res.status(200).json({ message: "Logged out successfully" });
+});
+
+export { registerUser, loginUser, googleLogin, logoutUser, getUserProfile, updateUserProfile };
