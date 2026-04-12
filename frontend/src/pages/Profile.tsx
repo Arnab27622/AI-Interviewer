@@ -4,6 +4,7 @@ import { toast } from "react-toastify"
 import { updateProfile, reset } from "../features/auth/authSlice"
 import { ROLES } from "../types/misc"
 import type { RootState, AppDispatch } from "../app/store"
+import CustomSelect from "../components/CustomSelect"
 
 interface FormFieldProps {
     label: string;
@@ -13,8 +14,8 @@ interface FormFieldProps {
 
 function FormField({ label, children, muted }: FormFieldProps) {
     return (
-        <div className={`space-y-1.5 ${muted ? 'opacity-60' : ''}`}>
-            <label className="ml-1 text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest">{label}</label>
+        <div className={`space-y-3 ${muted ? 'opacity-40' : ''}`}>
+            <label className="ml-1 text-[10px] font-black text-surface-500 uppercase tracking-[0.2em]">{label}</label>
             {children}
         </div>
     )
@@ -23,19 +24,9 @@ function FormField({ label, children, muted }: FormFieldProps) {
 function Loader() {
     return (
         <>
-            <span className="w-5 h-5 border-2 border-slate-400 border-t-transparent animate-spin rounded-full" />
-            <span className="ml-2 text-slate-500">Saving...</span>
+            <span className="w-5 h-5 border-2 border-white/20 border-t-white animate-spin rounded-full" />
+            <span className="ml-2">Updating...</span>
         </>
-    )
-}
-
-function SelectArrow() {
-    return (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
-            </svg>
-        </div>
     )
 }
 
@@ -49,7 +40,6 @@ const Profile = () => {
         preferredRole: user?.preferredRole || "",
     });
 
-    // Initial cleanup on mount to clear state from previous pages (e.g. login success)
     useEffect(() => {
         dispatch(reset());
     }, [dispatch]);
@@ -65,10 +55,15 @@ const Profile = () => {
     }
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [e.target.name]: e.target.value,
+            [name]: value,
         }));
+    };
+
+    const handleRoleChange = (name: string, value: string | number) => {
+        setFormData(prev => ({ ...prev, [name]: String(value) }));
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -76,60 +71,85 @@ const Profile = () => {
         if (!user) return;
         
         if (formData.name === user?.name && formData.preferredRole === user?.preferredRole) {
-            toast.error("No changes to update", { toastId: "no-changes" });
+            toast.error("No changes to update");
             return;
         }
 
         try {
             await dispatch(updateProfile({ ...user, ...formData })).unwrap();
-            toast.success("Profile updated successfully", { toastId: "profile-success" });
+            toast.success("Profile updated successfully");
             dispatch(reset());
         } catch (error: unknown) {
-            toast.error(typeof error === 'string' ? error : "An error occurred", { toastId: "profile-error" });
+            const errorMessage = (error as { message?: string })?.message || "An error occurred";
+            toast.error(errorMessage);
             dispatch(reset());
         }
     };
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-6 sm:py-12 pb-24">
-            <div className="bg-white rounded-3xl shadow-xl sm:shadow-2xl p-6 sm:p-12 border border-slate-100">
-                <header className="mb-8">
-                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Edit Profile</h1>
-                    <p className="text-slate-500 mt-1 text-sm">Update your personal information</p>
-                </header>
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <FormField label="Full Name" muted={false}>
-                        <input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent rounded-xl sm:rounded-2xl p-3.5 sm:p-4 font-semibold text-slate-700 text-base transition-all focus:bg-white focus:border-teal-500 outline-none" placeholder="Enter your full name" />
-                    </FormField>
-
-                    <FormField label="Email" muted={true}>
-                        <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full bg-slate-100 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 font-semibold text-slate-500 text-base cursor-not-allowed" disabled />
-                    </FormField>
-
-                    <FormField label="Preferred Role" muted={false}>
-                        <div className="relative">
-                            <select name="preferredRole" value={formData.preferredRole} onChange={handleChange} className="w-full bg-slate-50 border-2 border-transparent rounded-xl sm:rounded-2xl p-3.5 sm:p-4 font-semibold text-slate-700 text-base transition-all focus:bg-white focus:border-teal-500 outline-none appearance-none cursor-pointer">
-                                <option value="">Select your role</option>
-                                {ROLES.map((role) => (
-                                    <option key={role} value={role}>
-                                        {role}
-                                    </option>
-                                ))}
-                            </select>
-                            <SelectArrow />
+        <div className="max-w-4xl mx-auto px-4 py-12 pb-32">
+            <div className="relative group">
+                <div className="absolute -inset-1 bg-linear-to-r from-primary-500 to-indigo-500 rounded-[2.5rem] blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
+                <div className="glass-card rounded-[2.5rem] relative">
+                    <div className="bg-white/5 px-10 py-8 border-b border-white/5 flex items-center justify-between rounded-t-[2.5rem]">
+                        <div>
+                            <h1 className="text-2xl font-black text-white uppercase tracking-tighter">Aesthetic <span className="text-surface-500">Settings</span></h1>
+                            <p className="text-surface-500 mt-1 text-xs font-bold uppercase tracking-widest">Update your identification</p>
                         </div>
-                    </FormField>
-
-                    <div className="pt-4">
-                        <button type="submit" disabled={isProfileLoading} className={`w-full flex items-center justify-center gap-2 py-4 font-bold rounded-xl sm:rounded-2xl transition-all active:scale-[0.98] ${isProfileLoading ? 'bg-slate-200 text-slate-400  cursor-wait' : 'bg-teal-600 text-white hover:bg-teal-700 shadow-lg shadow-teal-100 cursor-pointer'}`}>
-                            {isProfileLoading ? <Loader /> : "Save Changes"}
-                        </button>
+                        <div className="w-16 h-16 rounded-2xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center text-3xl shadow-lg shadow-primary-500/10">
+                            👤
+                        </div>
                     </div>
-                </form>
+
+                    <form onSubmit={handleSubmit} className="p-10 space-y-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            <FormField label="Full Identity">
+                                <input 
+                                    type="text" 
+                                    name="name" 
+                                    value={formData.name} 
+                                    onChange={handleChange} 
+                                    className="glass-input h-14 font-bold" 
+                                    placeholder="Enter your name" 
+                                />
+                            </FormField>
+
+                            <FormField label="Email Access" muted={true}>
+                                <div className="glass-input h-14 flex items-center opacity-60 bg-white/2 cursor-not-allowed">
+                                    <span className="font-bold text-surface-400">{formData.email}</span>
+                                </div>
+                            </FormField>
+                        </div>
+
+                        <div className="pt-4">
+                            <CustomSelect 
+                                label="Primary Professional Role" 
+                                name="preferredRole" 
+                                options={ROLES} 
+                                value={formData.preferredRole} 
+                                onChange={handleRoleChange} 
+                            />
+                        </div>
+
+                        <div className="pt-6">
+                            <button 
+                                type="submit" 
+                                disabled={isProfileLoading} 
+                                className={`w-full h-14 flex items-center justify-center gap-3 font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-[0.98] ${isProfileLoading ? 'bg-surface-800 text-surface-500 cursor-wait' : 'bg-primary-600 text-white hover:bg-primary-500 shadow-xl shadow-primary-900/40 hover:-translate-y-1 cursor-pointer'}`}
+                            >
+                                {isProfileLoading ? <Loader /> : (
+                                    <>
+                                        Synchronize Changes
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4"/><path d="m16 2-4 4-4-4"/><path d="M12 22v-4"/><path d="m8 22 4-4 4 4"/><path d="M22 12h-4"/><path d="m22 8-4 4 4 4"/><path d="M2 12h4"/><path d="m2 16 4-4-4-4"/></svg>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     )
 }
 
-export default Profile
+export default Profile

@@ -7,6 +7,7 @@ import type { AppDispatch, RootState } from "../app/store";
 import { toast } from "react-toastify";
 import type { User } from "../types/user";
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
+import PasswordInput from "../components/PasswordInput";
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -84,61 +85,113 @@ const Register = () => {
             </div>);
     }
 
-    return (<div className="flex justify-center items-center min-h-[90vh] bg-gray-50 sm:px-6 py-10">
-        <div className="w-full max-w-md bg-white p-6 sm:p-10 border border-gray-200 rounded-2xl shadow-xl">
-            <div className="text-center mb-8">
-                <h2 className="text-xs font-black uppercase tracking-[0.3rem] text-teal-600 mb-2">Prepify</h2>
-                <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight">Get <span className="text-teal-500">Started</span></h1>
-                <p className="text-gray-500 mt-3 text-sm sm:text-base px-2">Join thousands of developer practicing for their dream job</p>
-            </div>
+    return (
+        <div className="flex flex-col justify-center items-center min-h-[85vh] py-12 px-4">
+            <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="glass-card rounded-[2.5rem] p-10 relative overflow-hidden">
+                    {/* Decorative element */}
+                    <div className="absolute top-0 left-0 w-32 h-32 bg-indigo-500/10 blur-3xl -ml-16 -mt-16"></div>
+                    
+                    <div className="text-center mb-10 relative z-10">
+                        <h2 className="text-4xl font-extrabold tracking-tight mb-3">
+                            Get <span className="text-gradient">Started</span>
+                        </h2>
+                        <p className="text-surface-400 text-sm font-medium">Join the next generation of top talent</p>
+                    </div>
 
-            <form className="grid grid-cols-1 gap-4" onSubmit={onSubmit}>
-                <div className="space-y-1">
-                    <label htmlFor="name" className="text-[10px] font-bold uppercase text-gray-400 ml-1">Full Name</label>
-                    <input type="text" id="name" name="name" value={name} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all" placeholder="Enter your full name" required />
-                </div>
-                <div className="space-y-1">
-                    <label htmlFor="email" className="text-[10px] font-bold uppercase text-gray-400 ml-1">Email Address</label>
-                    <input type="email" id="email" name="email" value={email} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all" placeholder="Enter your email address" required />
-                </div>
-                <div className="space-y-1">
-                    <label htmlFor="password" className="text-[10px] font-bold uppercase text-gray-400 ml-1">Password</label>
-                    <input type="password" id="password" name="password" value={password} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all" placeholder="Enter your password" required />
-                </div>
-                <div className="space-y-1">
-                    <label htmlFor="confirmPassword" className="text-[10px] font-bold uppercase text-gray-400 ml-1">Confirm Password</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" value={confirmPassword} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all" placeholder="Confirm your password" required />
-                </div>
-                <button type="submit" className="w-full p-3.5 bg-teal-600 text-white font-bold rounded-xl shadow-lg shadow-teal-100 hover:bg-teal-700 transition-all active:scale-[0.98] cursor-pointer">Register</button>
-            </form>
+                    <form className="grid grid-cols-1 gap-5 relative z-10" onSubmit={onSubmit}>
+                        <div className="space-y-2">
+                            <label htmlFor="name" className="text-[11px] font-black uppercase tracking-widest text-surface-500 ml-1">Full Name</label>
+                            <input 
+                                type="text" 
+                                id="name" 
+                                name="name" 
+                                value={name} 
+                                onChange={handleChange} 
+                                className="glass-input" 
+                                placeholder="John Doe" 
+                                required 
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label htmlFor="email" className="text-[11px] font-black uppercase tracking-widest text-surface-500 ml-1">Email Address</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                value={email} 
+                                onChange={handleChange} 
+                                className="glass-input" 
+                                placeholder="name@company.com" 
+                                required 
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label htmlFor="password" className="text-[11px] font-black uppercase tracking-widest text-surface-500 ml-1">Password</label>
+                                <PasswordInput
+                                    id="password"
+                                    name="password"
+                                    value={password}
+                                    onChange={handleChange}
+                                    className="py-3! px-4!"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label htmlFor="confirmPassword" className="text-[11px] font-black uppercase tracking-widest text-surface-500 ml-1">Confirm</label>
+                                <PasswordInput
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    value={confirmPassword}
+                                    onChange={handleChange}
+                                    className="py-3! px-4!"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <button 
+                            type="submit" 
+                            className="btn-primary w-full text-sm uppercase tracking-widest font-black mt-2"
+                        >
+                            Create Account
+                        </button>
+                    </form>
 
-            <div className="my-8 flex items-center">
-                <div className="grow border-t border-gray-200"></div>
-                <div className="mx-4 text-gray-400 text-[13px] font-black tracking-widest uppercase">OR</div>
-                <div className="grow border-t border-gray-200"></div>
-            </div>
-            
-            <div className="w-full flex items-center justify-center">
-                <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => {
-                        toast.error("Google Login Failed");
-                    }}
-                    theme="outline"
-                    shape="circle"
-                    size="large"
-                    text="continue_with"
-                />
-            </div>
+                    <div className="my-10 flex items-center relative z-10">
+                        <div className="grow border-t border-white/5"></div>
+                        <div className="mx-4 text-surface-500 text-[10px] font-black tracking-[0.2em] uppercase">Identity Sync</div>
+                        <div className="grow border-t border-white/5"></div>
+                    </div>
+                    
+                    <div className="w-full flex items-center justify-center relative z-10">
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => {
+                                toast.error("Google Login Failed");
+                            }}
+                            theme="filled_black"
+                            shape="pill"
+                            size="large"
+                            text="continue_with"
+                            width="100%"
+                        />
+                    </div>
 
-            <div className="mt-7 text-center">
-                <p className="text-sm text-gray-600">
-                    Already have an account? <Link to="/login" className="text-teal-500 font-bold hover:underline">Log in</Link>
+                    <div className="mt-10 text-center relative z-10">
+                        <p className="text-surface-400 text-sm font-medium">
+                            Already a member?{" "}
+                            <Link to="/login" className="text-primary-400 hover:text-primary-300 font-bold underline underline-offset-4 transition-colors">Log In</Link>
+                        </p>
+                    </div>
+                </div>
+
+                <p className="mt-8 text-center text-surface-500 text-[10px] font-bold uppercase tracking-widest">
+                    &copy; 2024 Prepify AI. The smart way to interview.
                 </p>
             </div>
         </div>
-    </div>
-    )
+    );
 }
 
 export default Register

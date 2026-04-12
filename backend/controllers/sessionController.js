@@ -12,6 +12,7 @@ import { pushSocketUpdate } from "../services/socketService.js";
 export const createSession = asyncHandler(async (req, res) => {
     const { role, level, interviewType, count } = req.body;
     const userId = req.user.id;
+    const io = req.app.get("io");
 
     if (!userId || !role || !level || !interviewType || !count) {
         return res.status(400).json({ message: "All fields are required" });

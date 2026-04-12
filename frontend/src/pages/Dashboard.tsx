@@ -10,7 +10,9 @@ import type { Session } from "../types/session"
 import { ROLES, LEVELS, TYPES, COUNTS } from "../types/misc"
 
 
-import NewInterviewForm from "../components/NewInterviewForm"
+import NewInterviewForm, { type FormChangeEvent } from "../components/NewInterviewForm"
+
+import { motion } from "framer-motion"
 
 const Dashboard = () => {
     const dispatch = useDispatch<AppDispatch>()
@@ -41,7 +43,7 @@ const Dashboard = () => {
         }
     }, [isError, message, dispatch]);
 
-    const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const onChange = (e: FormChangeEvent) => {
         setFormData((prev) => ({
             ...prev,
             [e.target.name]: e.target.value,
@@ -79,84 +81,146 @@ const Dashboard = () => {
         }
     }
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 }
+    };
+
+    // Calculate stats
+    const totalSessions = Array.isArray(sessions) ? sessions.length : 0;
+    const completedSessions = Array.isArray(sessions) ? sessions.filter(s => s.status === 'completed').length : 0;
+    const activeSessions = totalSessions - completedSessions;
+
     return (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-16 space-y-12 animate-in duration-700">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-16">
             {/* Header Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                        Welcome, <span className="text-[#10B981]">{user?.name?.split(' ')[0]}</span>
+            <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex flex-col sm:flex-row sm:items-end justify-between gap-8 pb-4"
+            >
+                <div className="space-y-4">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-500/10 border border-primary-500/20">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary-400">Terminal Active</span>
+                    </div>
+                    <h1 className="text-4xl sm:text-6xl font-black tracking-tighter leading-none">
+                        Welcome, <span className="text-gradient">{user?.name?.split(' ')[0]}</span>
                     </h1>
-                    <p className="text-slate-500 mt-1 text-sm sm:text-base font-medium">
-                        Let's get you ready for your next interview
+                    <p className="text-surface-400 text-base sm:text-lg font-medium max-w-md leading-relaxed">
+                        Precision practice for high-stakes interviews. Level up your performance today.
                     </p>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-3">
-                        <div>
-                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Total Sessions</p>
-                            <p className="text-2xl font-black text-slate-800 leading-none mt-1">
-                                {Array.isArray(sessions) ? sessions.length : 0}
-                            </p>
-                        </div>
-                        <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center text-teal-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                        </div>
+                
+                <div className="grid grid-cols-2 lg:flex items-center gap-4">
+                    <div className="glass-card px-6 py-4 rounded-3xl flex flex-col gap-1 border-white/5 shadow-inner">
+                        <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em]">Total Pulse</p>
+                        <p className="text-2xl font-black text-white">{totalSessions}</p>
                     </div>
+                    <div className="glass-card px-6 py-4 rounded-3xl flex flex-col gap-1 border-white/5 border-l-primary-500/30">
+                        <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em]">Completed</p>
+                        <p className="text-2xl font-black text-emerald-400">{completedSessions}</p>
+                    </div>
+                    {activeSessions > 0 && (
+                        <div className="glass-card px-6 py-4 rounded-3xl flex flex-col gap-1 border-white/5 border-l-indigo-500/30 animate-pulse">
+                            <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em]">In Queue</p>
+                            <p className="text-2xl font-black text-indigo-400">{activeSessions}</p>
+                        </div>
+                    )}
                 </div>
-            </div>
+            </motion.div>
 
             {/* New Interview Card */}
-            <NewInterviewForm 
-                formData={formData}
-                onChange={onChange}
-                onSubmit={onSubmit}
-                isProcessing={isProcessing}
-            />
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="relative group z-20"
+            >
+                <div className="absolute -inset-1 bg-linear-to-r from-primary-500/20 to-indigo-500/20 rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+                <div className="relative">
+                    <NewInterviewForm
+                        formData={formData}
+                        onChange={onChange}
+                        onSubmit={onSubmit}
+                        isProcessing={isProcessing}
+                    />
+                </div>
+            </motion.div>
 
             {/* Interview History Section */}
-            <div className="space-y-6">
-                <h2 className="text-xl sm:text-2xl font-black text-[#1B1B2F] flex items-center gap-4">
-                    <span className="w-12 h-12 bg-white shadow-sm border border-slate-100 rounded-2xl flex items-center justify-center text-2xl">📊</span>
-                    Interview History
-                </h2>
-                
-                <div className="grid gap-6">
+            <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="space-y-8 pb-12"
+            >
+                <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-black flex items-center gap-4 text-white">
+                        <span className="p-2.5 glass-card rounded-xl flex items-center justify-center text-xl shadow-inner border-white/5">📋</span>
+                        Interview <span className="text-surface-500">History</span>
+                    </h2>
+                    <div className="h-px grow mx-6 bg-white/5 hidden sm:block"></div>
+                </div>
+
+                <div className="grid gap-8">
                     {isLoading && (!sessions || !Array.isArray(sessions) || sessions.length === 0) ? (
-                        <div className="flex items-center justify-center py-24">
-                            <div className="animate-spin h-14 w-14 border-4 border-[#10B981] border-t-transparent rounded-full"></div>
+                        <div className="flex flex-col items-center justify-center py-32 space-y-6">
+                            <div className="relative flex items-center justify-center">
+                                <div className="absolute w-16 h-16 border-4 border-primary-500/20 rounded-full"></div>
+                                <div className="animate-spin h-16 w-16 border-4 border-primary-500 border-t-transparent rounded-full shadow-[0_0_30px_rgba(20,184,166,0.3)]"></div>
+                            </div>
+                            <p className="text-surface-500 font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Establishing secure link...</p>
                         </div>
                     ) : (
                         (!sessions || !Array.isArray(sessions) || sessions.length === 0) ? (
-                            <div className="bg-white border-2 border-dashed border-slate-200 rounded-[2.5rem] py-24 text-center">
-                                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            <motion.div 
+                                variants={itemVariants}
+                                className="glass-card rounded-[3rem] py-24 text-center border-dashed border-white/10 group/empty"
+                            >
+                                <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 border border-white/5 group-hover/empty:scale-110 transition-transform duration-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-surface-600"><circle cx="12" cy="12" r="10" /><path d="M8 12h8" /><path d="M12 8v8" /></svg>
                                 </div>
-                                <p className="text-slate-400 font-bold text-xl uppercase tracking-widest">No Sessions Found</p>
-                                <p className="text-slate-300 mt-2 font-medium">Start a new interview to see your history here.</p>
-                            </div>
+                                <h3 className="text-xl font-black uppercase tracking-widest text-surface-400">Archive Clear</h3>
+                                <p className="text-surface-500 mt-2 font-medium">Initialize your first session to populate this database.</p>
+                                <button className="mt-8 btn-secondary py-2! px-8! text-[10px] uppercase tracking-widest font-black">Open Guidebook</button>
+                            </motion.div>
                         ) : (
-                            <div className="space-y-5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {sessions.map((session, index) => (
-                                    <SessionCard 
-                                        key={session._id || index} 
-                                        session={session} 
-                                        onClick={viewSession} 
-                                        onDelete={handleDelete}
-                                    />
+                                    <motion.div key={session._id || index} variants={itemVariants}>
+                                        <SessionCard
+                                            session={session}
+                                            onClick={viewSession}
+                                            onDelete={handleDelete}
+                                        />
+                                    </motion.div>
                                 ))}
                             </div>
                         )
                     )}
                 </div>
-            </div>
+            </motion.div>
 
             <ConfirmModal
                 isOpen={modalConfig.isOpen}
-                title="Delete Session?"
-                message="Are you sure you want to delete this interview session? This action cannot be undone."
-                confirmText="Delete"
-                cancelText="Keep Session"
+                title="Vanish Session?"
+                message="This will permanently delete this interview session from your history. Are you sure?"
+                confirmText="Vanish"
+                cancelText="Keep"
                 onConfirm={confirmDelete}
                 onCancel={() => setModalConfig({ isOpen: false, sessionId: '' })}
                 isDanger={true}

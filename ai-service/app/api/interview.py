@@ -73,6 +73,8 @@ async def generate_questions(req: QuestionRequest):
 
         return QuestionResponse(questions=final_questions, model_used=os.getenv("MODEL_NAME", "unknown"))
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -107,5 +109,7 @@ async def evaluate_answer(req: EvaluationRequest):
             ai_feedback=parsed.get("ai_feedback", "Missing feedback. Format error."),
             ideal_answer=parsed.get("ideal_answer", "Missing ideal answer. Format error."),
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

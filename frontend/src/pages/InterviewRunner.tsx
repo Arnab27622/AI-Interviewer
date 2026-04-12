@@ -92,18 +92,18 @@ const InterviewRunner = () => {
                 score={currentQuestion?.technicalScore || 0}
             />
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 px-6 md:px-12 flex justify-between items-center z-50">
+            <div className="fixed bottom-0 left-0 right-0 glass-card border-x-0 border-b-0 p-5 px-6 md:px-12 flex justify-between items-center z-50">
                 <button 
                     onClick={() => handleNavigation(currentQuestionIndex - 1)} 
                     disabled={currentQuestionIndex === 0} 
-                    className="text-slate-500 font-bold text-sm hover:text-slate-800 disabled:opacity-30 cursor-pointer"
+                    className="text-surface-500 font-black text-[10px] uppercase tracking-widest hover:text-white disabled:opacity-20 cursor-pointer transition-colors"
                 >
-                    ← Previous
+                    ← Back
                 </button>
 
                 <div className="flex flex-col items-center">
                     {isProcessing && sessionMessage && (
-                        <div className="mb-2 text-xs font-mono text-blue-600 bg-blue-50 px-3 py-1 rounded-full animate-pulse border border-blue-100">
+                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-widest text-primary-400 bg-primary-500/10 px-4 py-2 rounded-full animate-pulse border border-primary-500/20 backdrop-blur-md">
                             {sessionMessage}...
                         </div>
                     )}
@@ -111,16 +111,16 @@ const InterviewRunner = () => {
                     <button 
                         onClick={handleSubmitAnswer} 
                         disabled={isQuestionLocked} 
-                        className={`px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-all ${isProcessing ? 'bg-slate-400 cursor-wait' : currentQuestion?.isEvaluated ? 'bg-emerald-500' : isQuestionLocked ? 'bg-slate-400' : 'bg-slate-900 hover:bg-slate-800 active:scale-95 cursor-pointer'}`}
+                        className={`px-10 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest text-white shadow-xl transition-all active:scale-[0.98] ${isProcessing ? 'bg-surface-800 cursor-wait' : currentQuestion?.isEvaluated ? 'bg-emerald-600 shadow-emerald-900/20' : isQuestionLocked ? 'bg-surface-800' : 'bg-primary-600 hover:bg-primary-500 shadow-primary-900/20 cursor-pointer'}`}
                     >
-                        {isProcessing ? 'Analyzing...' : currentQuestion?.isEvaluated ? 'Answer Submitted' : isQuestionLocked ? 'Submitted' : 'Submit Answer'}
+                        {isProcessing ? 'Analyzing...' : currentQuestion?.isEvaluated ? 'Submitted' : isQuestionLocked ? 'Locked' : 'Commit Answer'}
                     </button>
                 </div>
 
                 <button 
                     onClick={() => handleNavigation(currentQuestionIndex + 1)} 
                     disabled={currentQuestionIndex === (activeSession?.questions?.length || 0) - 1} 
-                    className="text-slate-500 font-bold hover:text-slate-800 disabled:opacity-30 cursor-pointer"
+                    className="text-surface-500 font-black text-[10px] uppercase tracking-widest hover:text-white disabled:opacity-20 cursor-pointer transition-colors"
                 >
                     Next →
                 </button>

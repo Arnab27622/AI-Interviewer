@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import MonacoEditor from "@monaco-editor/react";
 import { SUPPORTED_LANGUAGES } from "../constants/interview";
+import CustomSelect from "./CustomSelect";
 
 interface CodeEditorSectionProps {
     language: string;
@@ -53,19 +54,20 @@ const CodeEditorSection: React.FC<CodeEditorSectionProps> = ({
     }, []);
 
     return (
-        <div className="bg-white p-2 rounded-3xl border border-slate-100 shadow-sm overflow-hidden h-100 flex flex-col">
-            <div className="flex justify-between px-4 py-2 bg-slate-50 border-b border-slate-100">
-                <span className="text-xs font-bold text-slate-500 uppercase py-2">Code Editor</span>
-                <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    disabled={isQuestionLocked}
-                    className="text-xs bg-white border border-slate-200 rounded-lg px-2 disabled:bg-slate-100 disabled:text-slate-400"
-                >
-                    {SUPPORTED_LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
-                </select>
+        <div className="glass-card rounded-[2.5rem] group/form h-125 flex flex-col border border-white/5 relative overflow-hidden">
+            <div className="flex justify-between items-center px-8 py-3 bg-white/5 border-b border-white/5">
+                <span className="text-[10px] font-black text-surface-500 uppercase tracking-widest">Workspace</span>
+                <div className="w-48">
+                    <CustomSelect 
+                        label="" 
+                        name="language" 
+                        options={SUPPORTED_LANGUAGES} 
+                        value={language} 
+                        onChange={(_, val) => setLanguage(String(val))} 
+                    />
+                </div>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 opacity-90">
                 <MonacoEditor
                     height="100%"
                     language={language}

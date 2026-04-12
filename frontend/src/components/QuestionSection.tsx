@@ -7,9 +7,15 @@ interface QuestionSectionProps {
 
 const QuestionSection: React.FC<QuestionSectionProps> = ({ index, text }) => {
     return (
-        <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl mb-6">
-            <span className="text-blue-400 text-xs font-bold uppercase tracking-widest">Question {index + 1}</span>
-            <h2 className="text-2xl font-medium leading-relaxed mt-2">{text}</h2>
+        <div className="glass-card p-10 rounded-[2.5rem] mb-10 border-white/5 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-10 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none">
+                <svg width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5"><path d="M12 2v20M2 12h20M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/></svg>
+            </div>
+            
+            <span className="bg-primary-500/10 border border-primary-500/20 text-primary-400 text-[9px] font-black uppercase tracking-[0.3em] px-4 py-1.5 rounded-full shadow-[0_0_20px_rgba(20,184,166,0.1)]">Technical Briefing :: {index + 1}</span>
+            <h2 className="text-lg sm:text-xl font-bold leading-relaxed mt-6 text-white tracking-tight max-w-4xl">
+                {text}
+            </h2>
         </div>
     );
 };

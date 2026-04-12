@@ -6,8 +6,8 @@ import { toast } from "react-toastify";
 import { login, reset, googleLogin } from "../features/auth/authSlice";
 import type { RootState, AppDispatch } from "../app/store";
 import type { User } from "../types/user";
-import { GoogleLogin } from "@react-oauth/google";
-import type { CredentialResponse } from "@react-oauth/google";
+import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
+import PasswordInput from "../components/PasswordInput";
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -65,51 +65,86 @@ const Login = () => {
             </div>);
     }
 
-    return (<div className="flex justify-center items-center min-h-[90vh] bg-gray-50 sm:px-6 py-10">
-        <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-            <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h2>
-                <p className="text-gray-500 text-sm">Sign in to your account</p>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="space-y-1">
-                    <label htmlFor="email" className="text-[10px] font-bold uppercase text-gray-400 ml-1">Email Address</label>
-                    <input type="email" id="email" name="email" value={email} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all" placeholder="Enter your email address" required />
-                </div>
-                <div className="space-y-1">
-                    <label htmlFor="password" className="text-[10px] font-bold uppercase text-gray-400 ml-1">Password</label>
-                    <input type="password" id="password" name="password" value={password} onChange={handleChange} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all" placeholder="Enter your password" required />
-                </div>
-                <button type="submit" className="w-full p-3.5 bg-teal-600 text-white font-bold rounded-xl shadow-lg shadow-teal-100 hover:bg-teal-700 transition-all active:scale-[0.98] cursor-pointer">Login</button>
-            </form>
+    return (
+        <div className="flex flex-col justify-center items-center min-h-[85vh] py-12 px-4">
+            <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="glass-card rounded-[2.5rem] p-10 relative overflow-hidden">
+                    {/* Decorative element */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/10 blur-3xl -mr-16 -mt-16"></div>
+                    
+                    <div className="text-center mb-10 relative z-10">
+                        <h2 className="text-4xl font-extrabold tracking-tight mb-3">
+                            Welcome <span className="text-gradient">Back</span>
+                        </h2>
+                        <p className="text-surface-400 text-sm font-medium">Sign in to your Prepify account</p>
+                    </div>
 
-            <div className="my-8 flex items-center">
-                <div className="grow border-t border-gray-200"></div>
-                <div className="mx-4 text-gray-400 text-[13px] font-black tracking-widest uppercase">OR</div>
-                <div className="grow border-t border-gray-200"></div>
-            </div>
-            
-            <div className="w-full flex items-center justify-center">
-                <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => {
-                        toast.error("Google Login Failed");
-                    }}
-                    theme="outline"
-                    shape="circle"
-                    size="large"
-                    text="continue_with"
-                />
-            </div>
+                    <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+                        <div className="space-y-2">
+                            <label htmlFor="email" className="text-[11px] font-black uppercase tracking-widest text-surface-500 ml-1">Email Address</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                value={email} 
+                                onChange={handleChange} 
+                                className="glass-input" 
+                                placeholder="name@company.com" 
+                                required 
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label htmlFor="password" className="text-[11px] font-black uppercase tracking-widest text-surface-500 ml-1">Password</label>
+                            <PasswordInput
+                                id="password"
+                                name="password"
+                                value={password}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                        <button 
+                            type="submit" 
+                            className="btn-primary w-full text-sm uppercase tracking-widest font-black"
+                        >
+                            Log In
+                        </button>
+                    </form>
 
-            <div className="mt-6 text-center">
-                <p className="text-gray-500 text-sm">
-                    Don't have an account?{" "}
-                    <Link to="/register" className="font-bold text-teal-600 hover:text-teal-700 transition-colors">Register here</Link>
+                    <div className="my-10 flex items-center relative z-10">
+                        <div className="grow border-t border-white/5"></div>
+                        <div className="mx-4 text-surface-500 text-[10px] font-black tracking-[0.2em] uppercase">Security Check</div>
+                        <div className="grow border-t border-white/5"></div>
+                    </div>
+                    
+                    <div className="w-full flex items-center justify-center relative z-10">
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={() => {
+                                toast.error("Google Login Failed");
+                            }}
+                            theme="filled_black"
+                            shape="pill"
+                            size="large"
+                            text="continue_with"
+                            width="100%"
+                        />
+                    </div>
+
+                    <div className="mt-10 text-center relative z-10">
+                        <p className="text-surface-400 text-sm font-medium">
+                            New here?{" "}
+                            <Link to="/register" className="text-primary-400 hover:text-primary-300 font-bold underline underline-offset-4 transition-colors">Create account</Link>
+                        </p>
+                    </div>
+                </div>
+
+                {/* Footer text */}
+                <p className="mt-8 text-center text-surface-500 text-[10px] font-bold uppercase tracking-widest">
+                    &copy; 2024 Prepify AI. Built for the next generation of talent.
                 </p>
             </div>
         </div>
-    </div>
     );
 }
 

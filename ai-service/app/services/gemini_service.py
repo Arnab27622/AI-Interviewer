@@ -2,6 +2,7 @@ import requests
 import os
 import json
 import base64
+import time
 from fastapi import HTTPException
 
 def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, audio_base64: str = None) -> str:
@@ -35,26 +36,41 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, aud
     }
 
     timeout = int(os.getenv("REQUEST_TIMEOUT", "60"))
-    resp = requests.post(url, json=body, headers=headers, timeout=timeout)
-    if not resp.ok:
-        # Error handling... (rest of your logic)
-        try:
-            error_data = resp.json()
-            if "error" in error_data and "message" in error_data["error"]:
-                error_msg = error_data["error"]["message"]
-            elif "detail" in error_data:
-                error_msg = str(error_data["detail"])
-            else:
+    
+    # Retry logic for Rate Limiting (429)
+    max_retries = 2
+    retry_delay = 2
+    
+    for attempt in range(max_retries + 1):
+        resp = requests.post(url, json=body, headers=headers, timeout=timeout)
+        
+        if resp.status_code == 429 and attempt < max_retries:
+            print(f"[RETRY] 429 Too Many Requests. Retrying in {retry_delay}s... (Attempt {attempt+1}/{max_retries})")
+            time.sleep(retry_delay)
+            retry_delay *= 2
+            continue
+            
+        if not resp.ok:
+            try:
+                error_data = resp.json()
+                if "error" in error_data and "message" in error_data["error"]:
+                    error_msg = error_data["error"]["message"]
+                else:
+                    error_msg = resp.text
+            except Exception:
                 error_msg = resp.text
-        except Exception:
-            error_msg = resp.text
+                
+            print(f"[ERROR] Gemini API Failure {resp.status_code}: {error_msg}")
             
-        print(f"[ERROR] Gemini API Failure {resp.status_code}: {error_msg}")
-            
-        raise HTTPException(
-            status_code=resp.status_code if resp.status_code != 500 else 500,
-            detail="The AI Evaluation Service encountered an upstream error. Please try again later."
-        )
+            detail = "The AI Evaluation Service encountered an upstream error. Please try again later."
+            if resp.status_code == 429:
+                detail = "AI Service rate limit exceeded. Please wait a moment and try again."
+                
+            raise HTTPException(
+                status_code=resp.status_code if resp.status_code != 500 else 500,
+                detail=detail
+            )
+        break
 
     data = resp.json()
     text_output = "".join(
