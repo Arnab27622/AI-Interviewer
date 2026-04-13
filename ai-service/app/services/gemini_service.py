@@ -5,15 +5,16 @@ import base64
 import time
 from fastapi import HTTPException
 
-def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, audio_base64: str = None) -> str:
+def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, audio_base64: str = None, api_key: str = None) -> str:
     """Shared helper to call the Gemini API. Supports text or text+audio."""
     model_name = os.getenv("MODEL_NAME")
-    api_key = os.getenv("GEMINI_API_KEY")
+    # Use override key if provided, otherwise fallback to default env var
+    actual_api_key = api_key or os.getenv("GEMINI_API_KEY")
     
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
     headers = {
         "Content-Type": "application/json",
-        "x-goog-api-key": api_key,
+        "x-goog-api-key": actual_api_key,
     }
     
     # Build parts list
@@ -30,32 +31,35 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, aud
         "system_instruction": {"parts": [{"text": system_prompt}]},
         "contents": [{"parts": parts}],
         "generationConfig": {
-            "maxOutputTokens": 20000,
+            "maxOutputTokens": 8192,
             **({"responseMimeType": "application/json"} if as_json else {}),
         },
     }
 
     timeout = int(os.getenv("REQUEST_TIMEOUT", "60"))
     
-    # Retry logic for Rate Limiting (429)
-    max_retries = 2
-    retry_delay = 2
+    # Retry logic for Rate Limiting (429) and Server Errors (500, 503, 504)
+    max_retries = 3
+    retry_delay = 5 # Start with a 5s delay for rate limits
     
     for attempt in range(max_retries + 1):
         try:
             resp = requests.post(url, json=body, headers=headers, timeout=timeout)
             
-            # Retry logic for Rate Limiting (429) and Server Errors (500, 503, 504)
-            if resp.status_code in [429, 500, 503, 504] and attempt < max_retries:
-                print(f"[RETRY] {resp.status_code} received. Retrying in {retry_delay}s... (Attempt {attempt+1}/{max_retries})")
+            if resp.status_code == 429 and attempt < max_retries:
+                print(f"[RATE LIMIT] 429 received. Waiting {retry_delay}s before retry... (Attempt {attempt+1})")
                 time.sleep(retry_delay)
-                retry_delay *= 2
+                retry_delay += 5 # Increase linearly (5s, 10s, 15s)
+                continue
+                
+            if resp.status_code in [500, 503, 504] and attempt < max_retries:
+                print(f"[UPSTREAM ERROR] {resp.status_code} received. Retrying in 2s...")
+                time.sleep(2)
                 continue
         except requests.exceptions.RequestException as e:
             if attempt < max_retries:
-                print(f"[RETRY] Request failed: {str(e)}. Retrying in {retry_delay}s... (Attempt {attempt+1}/{max_retries})")
-                time.sleep(retry_delay)
-                retry_delay *= 2
+                print(f"[RETRY] Network error: {str(e)}. Retrying...")
+                time.sleep(2)
                 continue
             raise HTTPException(status_code=504, detail=f"AI Service Timeout: {str(e)}")
             

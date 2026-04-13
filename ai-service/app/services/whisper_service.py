@@ -1,4 +1,5 @@
 import base64
+import os
 from fastapi import UploadFile
 from app.services.gemini_service import call_gemini
 
@@ -30,8 +31,16 @@ class WhisperService:
             system_prompt = "You are an expert transcription service. Transcribe the following audio exactly as spoken. Return ONLY the transcribed text."
             user_prompt = "Transcribe this audio:"
 
+            # Use a separate API key for transcription to bypass rate limits if available
+            transcription_api_key = os.getenv("GEMINI_API_KEY_TRANSCRIPTION")
+            
             # Offload the heavy lifting to Google's infrastructure
-            transcription = call_gemini(system_prompt, user_prompt, audio_base64=audio_base64)
+            transcription = call_gemini(
+                system_prompt, 
+                user_prompt, 
+                audio_base64=audio_base64, 
+                api_key=transcription_api_key
+            )
             return transcription.strip()
 
         except Exception as e:
