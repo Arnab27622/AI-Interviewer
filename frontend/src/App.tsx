@@ -8,7 +8,6 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import InterviewRunner from "./pages/InterviewRunner";
 import SessionReview from "./pages/SessionReview";
-import Profile from "./pages/Profile";
 import PrivateRoute from "./components/PrivateRoute";
 import PublicRoute from "./components/PublicRoute";
 import NotFound from "./pages/NotFound";
@@ -22,7 +21,7 @@ function App() {
 
   return (
     <>
-    <div className="relative min-h-screen bg-surface-950 text-surface-200 overflow-x-hidden">
+    <div className="relative min-h-screen bg-surface-900 text-surface-300 overflow-x-hidden">
       {/* Decorative background elements */}
       <div className="bg-glow w-125 h-125 bg-primary-500 -top-48 -left-48 opacity-10"></div>
       <div className="bg-glow w-100 h-100 bg-indigo-500 bottom-0 -right-24 opacity-10"></div>
@@ -57,7 +56,6 @@ function App() {
                 
                 <Route path="/" element={<PrivateRoute />} >
                   <Route path="/" element={<Dashboard />} />
-                  <Route path="/profile" element={<Profile />} />
                   <Route path="/interview/:sessionId" element={<InterviewRunner />} />
                   <Route path="/review/:sessionId" element={<SessionReview />} />
                 </Route>

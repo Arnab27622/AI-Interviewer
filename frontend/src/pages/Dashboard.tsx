@@ -118,7 +118,7 @@ const Dashboard = () => {
                         <span className="text-[10px] font-black uppercase tracking-widest text-primary-400">Terminal Active</span>
                     </div>
                     <h1 className="text-4xl sm:text-6xl font-black tracking-tighter leading-none">
-                        Welcome, <span className="text-gradient">{user?.name?.split(' ')[0]}</span>
+                        Welcome, <span className="text-gradient pr-4">{user?.name?.split(' ')[0]}</span>
                     </h1>
                     <p className="text-surface-400 text-base sm:text-lg font-medium max-w-md leading-relaxed">
                         Precision practice for high-stakes interviews. Level up your performance today.
