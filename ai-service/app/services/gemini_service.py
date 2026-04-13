@@ -30,7 +30,7 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, aud
         "system_instruction": {"parts": [{"text": system_prompt}]},
         "contents": [{"parts": parts}],
         "generationConfig": {
-            "maxOutputTokens": 5000,
+            "maxOutputTokens": 20000,
             **({"responseMimeType": "application/json"} if as_json else {}),
         },
     }
@@ -42,29 +42,42 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, aud
     retry_delay = 2
     
     for attempt in range(max_retries + 1):
-        resp = requests.post(url, json=body, headers=headers, timeout=timeout)
-        
-        if resp.status_code == 429 and attempt < max_retries:
-            print(f"[RETRY] 429 Too Many Requests. Retrying in {retry_delay}s... (Attempt {attempt+1}/{max_retries})")
-            time.sleep(retry_delay)
-            retry_delay *= 2
-            continue
+        try:
+            resp = requests.post(url, json=body, headers=headers, timeout=timeout)
+            
+            # Retry logic for Rate Limiting (429) and Server Errors (500, 503, 504)
+            if resp.status_code in [429, 500, 503, 504] and attempt < max_retries:
+                print(f"[RETRY] {resp.status_code} received. Retrying in {retry_delay}s... (Attempt {attempt+1}/{max_retries})")
+                time.sleep(retry_delay)
+                retry_delay *= 2
+                continue
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries:
+                print(f"[RETRY] Request failed: {str(e)}. Retrying in {retry_delay}s... (Attempt {attempt+1}/{max_retries})")
+                time.sleep(retry_delay)
+                retry_delay *= 2
+                continue
+            raise HTTPException(status_code=504, detail=f"AI Service Timeout: {str(e)}")
             
         if not resp.ok:
             try:
                 error_data = resp.json()
-                if "error" in error_data and "message" in error_data["error"]:
-                    error_msg = error_data["error"]["message"]
+                if "error" in error_data:
+                    err_info = error_data["error"]
+                    error_msg = f"{err_info.get('status', 'ERROR')}: {err_info.get('message', 'No message')}"
                 else:
                     error_msg = resp.text
             except Exception:
                 error_msg = resp.text
                 
-            print(f"[ERROR] Gemini API Failure {resp.status_code}: {error_msg}")
+            print(f"!!! [CRITICAL] Gemini API Failure {resp.status_code} !!!")
+            print(f"!!! Error Message: {error_msg} !!!")
             
             detail = "The AI Evaluation Service encountered an upstream error. Please try again later."
             if resp.status_code == 429:
                 detail = "AI Service rate limit exceeded. Please wait a moment and try again."
+            elif resp.status_code == 503:
+                detail = "AI Service is currently overloaded or undergoing maintenance. Please try a smaller question count or wait a minute."
                 
             raise HTTPException(
                 status_code=resp.status_code if resp.status_code != 500 else 500,
