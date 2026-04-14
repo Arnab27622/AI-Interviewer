@@ -153,8 +153,16 @@ const updateUserProfile = asyncHandler(async (req, res) => {
             throw new Error("User not found");
         }
 
+        if (req.body?.email && req.body.email !== user.email) {
+            const emailTaken = await User.findOne({ email: req.body.email });
+            if (emailTaken) {
+                res.status(400);
+                throw new Error("Email is already in use");
+            }
+            user.email = req.body.email;
+        }
+
         user.name = req.body?.name || user.name;
-        user.email = req.body?.email || user.email;
         user.preferredRole = req.body?.preferredRole || user.preferredRole;
 
         if (req.body?.password) {
@@ -177,6 +185,8 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 const logoutUser = asyncHandler(async (req, res) => {
     res.cookie("jwt", "", {
         httpOnly: true,
+        secure: process.env.NODE_ENV !== "development",
+        sameSite: process.env.NODE_ENV !== "development" ? "none" : "lax",
         expires: new Date(0),
     });
     res.status(200).json({ message: "Logged out successfully" });

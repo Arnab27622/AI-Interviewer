@@ -49,7 +49,7 @@ const CodeOutputPanel: React.FC<CodeOutputPanelProps> = ({ language, code }) => 
     const isSuccess = result && result.exitCode === 0 && !result.stderr;
 
     return (
-        <div className="glass-card rounded-[2.5rem] group/form h-125 flex flex-col border border-white/5 overflow-hidden">
+        <div className="bg-surface-900 rounded-[2.5rem] group/form h-125 flex flex-col border border-white/5 overflow-hidden">
             {/* Toolbar */}
             <div className="flex justify-between items-center px-8 py-3 bg-white/5 border-b border-white/5">
                 <div className="flex items-center gap-3">

@@ -1,6 +1,10 @@
 import express from "express";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
+
+// Require authentication for all code execution routes
+router.use(protect);
 
 const JDOODLE_API = "https://api.jdoodle.com/v1/execute";
 

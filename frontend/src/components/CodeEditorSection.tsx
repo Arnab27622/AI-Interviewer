@@ -54,7 +54,7 @@ const CodeEditorSection: React.FC<CodeEditorSectionProps> = ({
     }, []);
 
     return (
-        <div className="glass-card rounded-[2.5rem] group/form h-125 flex flex-col border border-white/5 relative overflow-visible">
+        <div className="bg-surface-900 rounded-[2.5rem] group/form h-125 flex flex-col border border-white/5 relative overflow-visible">
             <div className="flex justify-between items-center px-8 py-3 bg-white/5 border-b border-white/5 overflow-visible rounded-t-[2.5rem] z-20">
                 <span className="text-[10px] font-black text-surface-500 uppercase tracking-widest">Workspace</span>
                 <div className="w-48">

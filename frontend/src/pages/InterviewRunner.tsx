@@ -52,6 +52,7 @@ const InterviewRunner = () => {
         <div className="max-w-7xl mx-auto px-4 pb-32">
             <InterviewHeader 
                 role={activeSession.role}
+                startTime={activeSession.createdAt || activeSession.updatedAt || new Date().toISOString()}
                 questions={activeSession.questions}
                 currentQuestionIndex={currentQuestionIndex}
                 submittedLocal={submittedLocal}

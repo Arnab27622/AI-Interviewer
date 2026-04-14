@@ -5,6 +5,7 @@ import { createSession, deleteSession, getSession, reset } from "../features/ses
 import type { RootState, AppDispatch } from "../app/store"
 import { toast } from "react-toastify"
 import SessionCard from "../components/SessionCard"
+import SkeletonSessionCard from "../components/SkeletonSessionCard"
 import ConfirmModal from "../components/ConfirmModal"
 import type { Session } from "../types/session"
 import { ROLES, LEVELS, TYPES, COUNTS } from "../types/misc"
@@ -18,7 +19,7 @@ const Dashboard = () => {
     const dispatch = useDispatch<AppDispatch>()
     const navigate = useNavigate()
     const { user } = useSelector((state: RootState) => state.auth)
-    const { sessions, isLoading, isGenerating, isError, message } = useSelector((state: RootState) => state.session)
+    const { sessions, isLoading, isGenerating, isError, message, pagination, stats } = useSelector((state: RootState) => state.session)
     const isProcessing = isGenerating || isLoading;
     const [formData, setFormData] = useState({
         role: user?.preferredRole || ROLES[0],
@@ -81,6 +82,12 @@ const Dashboard = () => {
         }
     }
 
+    const loadMore = () => {
+        if (pagination && pagination.currentPage < pagination.totalPages) {
+            dispatch(getSession({ page: pagination.currentPage + 1 }));
+        }
+    }
+
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -96,10 +103,10 @@ const Dashboard = () => {
         visible: { opacity: 1, y: 0 }
     };
 
-    // Calculate stats
-    const totalSessions = Array.isArray(sessions) ? sessions.length : 0;
-    const completedSessions = Array.isArray(sessions) ? sessions.filter(s => s.status === 'completed').length : 0;
-    const activeSessions = totalSessions - completedSessions;
+    // Calculate stats globally
+    const totalSessions = stats?.totalSessions || 0;
+    const completedSessions = stats?.completedSessions || 0;
+    const activeSessions = stats?.activeSessions || 0;
 
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-16">
@@ -178,12 +185,10 @@ const Dashboard = () => {
 
                 <div className="grid gap-8">
                     {isLoading && (!sessions || !Array.isArray(sessions) || sessions.length === 0) ? (
-                        <div className="flex flex-col items-center justify-center py-32 space-y-6">
-                            <div className="relative flex items-center justify-center">
-                                <div className="absolute w-16 h-16 border-4 border-primary-500/20 rounded-full"></div>
-                                <div className="animate-spin h-16 w-16 border-4 border-primary-500 border-t-transparent rounded-full shadow-[0_0_30px_rgba(20,184,166,0.3)]"></div>
-                            </div>
-                            <p className="text-surface-500 font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Establishing secure link...</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {[1, 2, 3, 4, 5, 6].map((i) => (
+                                <SkeletonSessionCard key={i} />
+                            ))}
                         </div>
                     ) : (
                         (!sessions || !Array.isArray(sessions) || sessions.length === 0) ? (
@@ -213,6 +218,18 @@ const Dashboard = () => {
                         )
                     )}
                 </div>
+
+                {pagination && pagination.currentPage < pagination.totalPages && (
+                    <div className="flex justify-center pt-8">
+                        <button 
+                            onClick={loadMore}
+                            disabled={isLoading}
+                            className="btn-secondary px-8 py-3 text-[10px] font-black uppercase tracking-widest disabled:opacity-50 cursor-pointer"
+                        >
+                            {isLoading ? 'Loading...' : 'Load More Archives'}
+                        </button>
+                    </div>
+                )}
             </motion.div>
 
             <ConfirmModal

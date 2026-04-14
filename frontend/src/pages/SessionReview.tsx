@@ -68,6 +68,10 @@ const SessionReview = () => {
                 </div>
                 <div className="flex gap-4">
                      <span className="text-[10px] font-black uppercase tracking-widest text-surface-500 border border-white/5 px-4 py-2 rounded-xl">Session ID: {sessionId?.slice(-8)}</span>
+                     <button onClick={() => window.print()} className="btn-secondary flex items-center gap-2 px-6! py-2! text-[10px] tracking-widest uppercase font-black print:hidden cursor-pointer hover:bg-white/10 transition-colors rounded-xl border border-white/5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        Export Report
+                     </button>
                 </div>
             </div>
 
@@ -78,17 +82,19 @@ const SessionReview = () => {
                 duration={formatDuration(startTime, endTime)}
             />
 
-            <div className="glass-card p-10 rounded-[3rem] relative group">
-                <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
+            <div className="glass-card p-10 rounded-[3rem] relative group break-inside-avoid print:bg-surface-900 print:shadow-none">
+                <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity print:hidden">
                     <svg width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20V16"/></svg>
                 </div>
                 <h3 className="text-[10px] font-black text-surface-500 mb-10 uppercase tracking-[0.3rem] flex items-center gap-3">
                     <span className="w-1.5 h-4 bg-indigo-500 rounded-full"></span>
                     Mastery Calibration
                 </h3>
-                <div className="h-80">
+                <div className="h-80 w-full relative print:max-w-[180mm] print:mx-auto">
                     <Bar data={barData} options={{
                         maintainAspectRatio: false,
+                        animation: false,
+                        responsive: true,
                         plugins: { legend: { display: false } },
                         scales: {
                             y: { 
@@ -107,7 +113,7 @@ const SessionReview = () => {
             </div>
 
             <div className="space-y-12">
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-6 break-inside-avoid">
                     <h2 className="text-xl font-black uppercase tracking-widest text-white">Question Narrative</h2>
                     <div className="h-px grow bg-white/5"></div>
                 </div>
@@ -121,4 +127,4 @@ const SessionReview = () => {
     )
 }
 
-export default SessionReview;
+export default SessionReview;

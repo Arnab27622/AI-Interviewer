@@ -3,12 +3,19 @@ import { createSession, getSession, getSessionById, deleteSession, submitAnswer,
 import { protect } from "../middleware/auth.js";
 import { uploadSingleAudio } from "../middleware/uploadMiddleware.js";
 import { sessionCreationValidation, validateResult } from "../middleware/validationMiddleware.js";
+import rateLimit from "express-rate-limit";
 
 const router = express.Router();
 
+const createSessionLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 5,
+    message: { message: "Too many sessions created from this IP, please try again after 15 minutes" },
+});
+
 router.use(protect);
 
-router.route("/").post(sessionCreationValidation, validateResult, createSession).get(getSession);
+router.route("/").post(createSessionLimiter, sessionCreationValidation, validateResult, createSession).get(getSession);
 router.route("/:sessionId").get(getSessionById).delete(deleteSession);
 router.route("/:sessionId/submit-answer").post(uploadSingleAudio, submitAnswer);
 router.route("/:sessionId/end").post(endSession);

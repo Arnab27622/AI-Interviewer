@@ -18,7 +18,7 @@ interface Session {
     level: string;
     interviewType: string;
     questions: Question[];
-    status: "pending" | "in-progress" | "completed" | "failed";
+    status: "pending" | "in-progress" | "completed" | "failed" | "cancelled";
     startTime?: Date | string;
     endTime?: Date | string | number;
     overallScore?: number;
@@ -30,6 +30,24 @@ interface Session {
     updatedAt?: string;
 }
 
+interface Pagination {
+    totalSessions: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+}
+
+interface PaginatedSessionsResponse {
+    message: string;
+    sessions: Session[];
+    pagination: Pagination;
+    stats: {
+        totalSessions: number;
+        completedSessions: number;
+        activeSessions: number;
+    };
+}
+
 interface SessionState {
     sessions: Session[];
     activeSession: Session | null;
@@ -37,9 +55,15 @@ interface SessionState {
     isError: boolean;
     message: string;
     isLoading: boolean;
+    pagination: Pagination | null;
+    stats: {
+        totalSessions: number;
+        completedSessions: number;
+        activeSessions: number;
+    } | null;
 }
 
-export type { Question, Session, SessionState };
+export type { Question, Session, SessionState, Pagination, PaginatedSessionsResponse };
 
 export interface SocketUpdatePayload {
     sessionId: string;

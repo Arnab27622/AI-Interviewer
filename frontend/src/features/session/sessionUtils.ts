@@ -27,8 +27,9 @@ export const updateSessionFromSocket = (
         const qMatch = message.match(/Q(\d+)/);
         if (qMatch) {
             const qIndex = parseInt(qMatch[1]) - 1;
-            if (upperStatus.includes('AI_')) {
-                state.activeSession.questions[qIndex].isSubmitted = true;
+            const questions = state.activeSession.questions;
+            if (questions && qIndex >= 0 && qIndex < questions.length && upperStatus.includes('AI_')) {
+                questions[qIndex].isSubmitted = true;
             }
         }
     }

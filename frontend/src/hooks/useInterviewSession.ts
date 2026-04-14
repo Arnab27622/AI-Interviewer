@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import type { AppDispatch, RootState } from "../app/store";
 import { getSessionById, submitAnswer, endSession } from "../features/session/sessionSlice";
 import { ROLE_LANGUAGE_MAP } from "../constants/interview";
+import { saveDrafts, getDrafts, deleteDrafts } from "../utils/idb";
 
 export const useInterviewSession = (stopRecording: () => void, setRecordingTime: (time: number) => void) => {
     const { sessionId } = useParams<{ sessionId: string }>();
@@ -21,35 +22,36 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
 
     const [submittedLocal, setSubmittedLocal] = useState<Record<number, boolean>>({});
 
-    // Initial drafts state from localStorage with safety check
-    const [drafts, setDrafts] = useState<Record<number, { code?: string; audio?: Blob }>>(() => {
-        if (!sessionId) return {};
-        try {
-            const saved = localStorage.getItem(`draft_code_${sessionId}`); 
-            const codes = saved ? JSON.parse(saved) : {};
-            const initialDrafts: Record<number, { code?: string; audio?: Blob }> = {};
-            Object.keys(codes).forEach(key => {
-                const idx = parseInt(key);
-                if (!isNaN(idx)) {
-                    initialDrafts[idx] = { code: codes[key] };
-                }
-            });
-            return initialDrafts;
-        } catch (error) {
-            console.error("Error parsing draft codes from localStorage:", error);
-            return {};
-        }
-    });
+    // Initial drafts state from IDB with empty fallback
+    const [drafts, setDrafts] = useState<Record<number, { code?: string; audio?: Blob }>>({});
 
     useEffect(() => {
-        if (sessionId) {
-            const codeOnly: Record<number, string> = {};
-            Object.keys(drafts).forEach(key => {
-                const idx = parseInt(key);
-                const draft = drafts[idx];
-                if (draft?.code) codeOnly[idx] = draft.code;
-            });
-            localStorage.setItem(`draft_code_${sessionId}`, JSON.stringify(codeOnly));
+        if (!sessionId) return;
+        getDrafts(sessionId).then(saved => {
+            if (saved && Object.keys(saved).length > 0) {
+                setDrafts(saved);
+            } else {
+                // LocalStorage Migration Fallback
+                const savedStr = localStorage.getItem(`draft_code_${sessionId}`); 
+                if (savedStr) {
+                    try {
+                        const parsed = JSON.parse(savedStr);
+                        const migrated: Record<number, { code?: string; audio?: Blob }> = {};
+                        Object.keys(parsed).forEach(key => {
+                            migrated[parseInt(key)] = { code: parsed[key] };
+                        });
+                        setDrafts(migrated);
+                    } catch (e) {
+                        console.error("JSON parse failed", e);
+                    }
+                }
+            }
+        });
+    }, [sessionId]);
+
+    useEffect(() => {
+        if (sessionId && Object.keys(drafts).length > 0) {
+            saveDrafts(sessionId, drafts);
         }
     }, [drafts, sessionId]);
 
@@ -144,6 +146,7 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
         if (!sessionId) return;
         return dispatch(endSession(sessionId)).unwrap().then(() => {
             localStorage.removeItem(`draft_code_${sessionId}`);
+            deleteDrafts(sessionId);
             navigate(`/review/${sessionId}`);
             toast.success("Interview ended successfully.");
         }).catch(() => {

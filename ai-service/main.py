@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from app.api.interview import router as interview_router
-from app.services.whisper_service import whisper_service
 
 
 load_dotenv()

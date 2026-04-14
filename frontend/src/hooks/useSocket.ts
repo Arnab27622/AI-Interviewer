@@ -44,6 +44,8 @@ const useSocket = () => {
 
         socket.on('connect', () => {
             console.log('Connected to socket');
+            // Re-join the user's room on reconnection (crucial for Render cold starts)
+            socket.emit('joinRoom', { userId });
         });
 
         socket.on('disconnect', (reason) => {

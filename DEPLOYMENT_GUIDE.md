@@ -54,7 +54,7 @@ This guide explains how to set up the AI Interviewer locally and how to deploy i
 - **Root Directory**: `ai-service`
 - **Build Command**: `pip install -r requirements.txt`
 - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-- **Env Vars**: Add `GEMINI_API_KEY`, `GEMINI_API_KEY_TRANSCRIPTION` (optional second key), `MODEL_NAME=gemini-1.5-flash`, `REQUEST_TIMEOUT=120`.
+- **Env Vars**: Add `GEMINI_API_KEY`, `GEMINI_API_KEY_TRANSCRIPTION` (optional second key), `MODEL_NAME=gemini-2.5-flash`, `REQUEST_TIMEOUT=120`.
 
 ### 2. ⚙️ Backend (Render)
 - **New Web Service** -> Connect Repo.

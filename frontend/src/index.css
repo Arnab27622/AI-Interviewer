@@ -39,6 +39,18 @@
 
   body {
     @apply font-sans bg-surface-900 text-surface-300 selection:bg-primary-500/30 selection:text-primary-200 min-h-screen;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @media print {
+    html, body {
+      background-color: var(--color-surface-900) !important;
+    }
+    canvas {
+      max-width: 100% !important;
+      height: auto !important;
+    }
   }
 
   h1, h2, h3, h4, h5, h6 {

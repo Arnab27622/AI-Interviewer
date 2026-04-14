@@ -4,6 +4,7 @@ import http from "http";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import cors from "cors";
+import mongoose from "mongoose";
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import sessionRoutes from "./routes/sessionRoutes.js";
@@ -11,11 +12,17 @@ import codeRoutes from "./routes/codeRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
 import fs from "fs";
+import path from "path";
 
-// Ensure uploads directory exists for Multer
+// Ensure uploads directory exists for Multer and is clean
 const uploadDir = "uploads";
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
+} else {
+    // Clean up orphaned audio files on startup that might have been left behind after a crash
+    fs.readdirSync(uploadDir).forEach(file => {
+        fs.unlinkSync(path.join(uploadDir, file));
+    });
 }
 
 connectDB();
@@ -60,6 +67,15 @@ app.set("io", io); // Make socket instance accessible to controllers
 // --- Routes ---
 app.get("/", (req, res) => {
     res.send("API is running...");
+});
+
+app.get("/health", async (req, res) => {
+    try {
+        await mongoose.connection.db.admin().ping();
+        res.json({ status: "ok", db: "connected" });
+    } catch {
+        res.status(503).json({ status: "error", db: "disconnected" });
+    }
 });
 
 app.use("/api/user", userRoutes);
@@ -109,6 +125,13 @@ io.on("connection", (socket) => {
     } else if (userId) {
         socket.emit("error", "Unauthorized access to this room");
     }
+
+    socket.on("joinRoom", ({ userId }) => {
+        if (userId && socket.user && (socket.user.id === userId || socket.user._id === userId)) {
+            socket.join(userId);
+            console.log(`User ${userId} explicitly joined room`);
+        }
+    });
 
     socket.on("disconnect", () => {
         console.log("User disconnected");

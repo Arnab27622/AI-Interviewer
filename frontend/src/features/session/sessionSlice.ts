@@ -3,7 +3,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "../../services/api";
 import { handleThunkError } from "../../utils/thunkUtils";
 import { updateSessionFromSocket } from "./sessionUtils";
-import type { SessionState, Session, SocketUpdatePayload } from "../../types/session";
+import type { SessionState, Session, SocketUpdatePayload, PaginatedSessionsResponse } from "../../types/session";
 
 const initialState: SessionState = {
     sessions: [],
@@ -12,13 +12,17 @@ const initialState: SessionState = {
     isError: false,
     message: "",
     isLoading: false,
+    pagination: null,
+    stats: null,
 };
 
-export const getSession = createAsyncThunk<Session[], void, { rejectValue: string }>(
+export const getSession = createAsyncThunk<PaginatedSessionsResponse, { page?: number; limit?: number } | void, { rejectValue: string }>(
     "session/getAll",
-    async (_, thunkAPI) => {
+    async (args, thunkAPI) => {
         try {
-            const response = await api.get<Session[]>(`/`);
+            const page = args?.page || 1;
+            const limit = args?.limit || 9; // use 9 to fit nice grids
+            const response = await api.get(`/?page=${page}&limit=${limit}`);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(handleThunkError(error));
@@ -106,13 +110,16 @@ export const sessionSlice = createSlice({
             })
             .addCase(getSession.fulfilled, (state, action) => {
                 state.isLoading = false;
-                const payload = action.payload as unknown;
-                // Handle different response formats
-                if (payload && typeof payload === 'object' && 'session' in payload && Array.isArray(payload.session)) {
-                    state.sessions = payload.session as Session[];
+                const payload = action.payload;
+                if (payload.pagination.currentPage === 1) {
+                    state.sessions = payload.sessions;
                 } else {
-                    state.sessions = Array.isArray(action.payload) ? action.payload : [];
+                    // Append logically, avoid duplicates
+                    const newSessions = payload.sessions.filter((s: Session) => !state.sessions.find(existing => existing._id === s._id));
+                    state.sessions = [...state.sessions, ...newSessions];
                 }
+                state.pagination = payload.pagination;
+                if (payload.stats) state.stats = payload.stats;
             })
             .addCase(getSession.rejected, (state, action) => {
                 state.isLoading = false;

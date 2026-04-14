@@ -1,9 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-axios.defaults.withCredentials = true;
+import authApi from "../../services/authApi";
 import type { AuthState, User } from "../../types/user";
-
-const API_URL = `${import.meta.env.VITE_API_URL}/user/`;
 
 const storedUser = localStorage.getItem("user");
 const user = storedUser ? JSON.parse(storedUser) : null;
@@ -23,7 +21,7 @@ export const register = createAsyncThunk<User, User, { rejectValue: string }>(
     "auth/register",
     async (user, thunkAPI) => {
         try {
-            const response = await axios.post<User>(`${API_URL}register`, user);
+            const response = await authApi.post<User>(`register`, user);
             if (response.data) {
                 localStorage.setItem("user", JSON.stringify(response.data));
             }
@@ -42,7 +40,7 @@ export const login = createAsyncThunk<User, User, { rejectValue: string }>(
     "auth/login",
     async (user, thunkAPI) => {
         try {
-            const response = await axios.post<User>(`${API_URL}login`, user);
+            const response = await authApi.post<User>(`login`, user);
             if (response.data) {
                 localStorage.setItem("user", JSON.stringify(response.data));
             }
@@ -61,7 +59,7 @@ export const googleLogin = createAsyncThunk<User, string, { rejectValue: string 
     "auth/googleLogin",
     async (token, thunkAPI) => {
         try {
-            const response = await axios.post<User>(`${API_URL}google`, { token });
+            const response = await authApi.post<User>(`google`, { token });
             if (response.data) {
                 localStorage.setItem("user", JSON.stringify(response.data));
             }
@@ -83,7 +81,7 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
             // Backend might not have a logout endpoint, so clear localStorage first
             localStorage.removeItem("user");
             try {
-                await axios.post(`${API_URL}logout`);
+                await authApi.post(`logout`);
             } catch {
                 // Ignore API error on logout if endpoint doesn't exist
             }
@@ -102,11 +100,7 @@ export const updateProfile = createAsyncThunk<User, User, { rejectValue: string;
     async (user, thunkAPI) => {
         try {
             const token = thunkAPI.getState().auth.user?.token;
-            const response = await axios.put<User>(`${API_URL}profile`, user, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const response = await authApi.put<User>(`profile`, user);
             if (response.data) {
                 const updatedUser: User = { ...response.data, token: token || "" };
                 localStorage.setItem("user", JSON.stringify(updatedUser));

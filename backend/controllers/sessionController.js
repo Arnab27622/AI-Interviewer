@@ -78,6 +78,7 @@ export const getSession = asyncHandler(async (req, res) => {
     const skip = (page - 1) * limit;
 
     const totalSessions = await Session.countDocuments({ user: userId });
+    const completedSessionsCount = await Session.countDocuments({ user: userId, status: 'completed' });
 
     const sessions = await Session.find({ user: userId })
         .sort({ createdAt: -1 })
@@ -87,12 +88,17 @@ export const getSession = asyncHandler(async (req, res) => {
     
     res.status(200).json({
         message: "Sessions retrieved successfully",
-        session: sessions,
+        sessions: sessions,
         pagination: {
             totalSessions,
             totalPages: Math.ceil(totalSessions / limit),
             currentPage: page,
             pageSize: limit
+        },
+        stats: {
+            totalSessions,
+            completedSessions: completedSessionsCount,
+            activeSessions: totalSessions - completedSessionsCount
         }
     });
 });
@@ -121,6 +127,10 @@ export const deleteSession = asyncHandler(async (req, res) => {
 
     const session = await Session.findOne({ _id: sessionId, user: userId });
     if (!session) return res.status(404).json({ message: "Session not found" });
+
+    if (session.status === "pending") {
+        return res.status(400).json({ message: "Cannot delete a session while questions are being generated." });
+    }
 
     await session.deleteOne();
     res.status(200).json({ id: session._id, message: "Session deleted successfully" });
@@ -203,7 +213,7 @@ const evaluateAnswerAsync = async (io, userId, sessionId, questionIdx, codeSubmi
 
             if (allEvaluated) {
                 finalUpdate.status = "completed";
-                finalUpdate.endTime = updatedSession.endTime || Date.now();
+                finalUpdate.endTime = updatedSession.endTime || new Date();
             }
 
             const finalSession = await Session.findOneAndUpdate(
@@ -276,7 +286,7 @@ export const endSession = asyncHandler(async (req, res) => {
     session.overallScore = scores.overallScore;
     Object.assign(session.metrics, { avgTechnical: scores.avgTechnical, avgConfidence: scores.avgConfidence });
     session.status = "completed";
-    session.endTime = Date.now();
+    session.endTime = new Date();
     await session.save();
 
     pushSocketUpdate(req.app.get("io"), userId, sessionId, "session completed", "Session ended", session);
