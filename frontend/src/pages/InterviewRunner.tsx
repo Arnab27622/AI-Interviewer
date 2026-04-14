@@ -6,6 +6,7 @@ import InterviewHeader from "../components/InterviewHeader";
 import QuestionSection from "../components/QuestionSection";
 import VerbalRecorder from "../components/VerbalRecorder";
 import CodeEditorSection from "../components/CodeEditorSection";
+import CodeOutputPanel from "../components/CodeOutputPanel";
 import AIFeedbackSection from "../components/AIFeedbackSection";
 import InterviewLoading from "../components/InterviewLoading";
 
@@ -45,6 +46,7 @@ const InterviewRunner = () => {
     }
 
     const currentDraft = drafts[currentQuestionIndex] || {};
+    const isCodingQuestion = currentQuestion?.questionType === 'coding';
 
     return (
         <div className="max-w-7xl mx-auto px-4 pb-32">
@@ -64,18 +66,8 @@ const InterviewRunner = () => {
                 text={currentQuestion?.questionText || ""}
             />
 
-            <div className={`grid gap-6 ${currentQuestion?.questionType === 'coding' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
-                <VerbalRecorder 
-                    isRecording={isRecording}
-                    recordingTime={recordingTime}
-                    hasAudio={!!currentDraft.audio}
-                    isQuestionLocked={isQuestionLocked}
-                    startRecording={() => startRecording(updateDraftAudio)}
-                    stopRecording={stopRecording}
-                    deleteDraftAudio={deleteDraftAudio}
-                />
-
-                {currentQuestion?.questionType === 'coding' && (
+            {isCodingQuestion ? (
+                <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
                     <CodeEditorSection 
                         language={selectedLanguage}
                         code={currentDraft.code || ""}
@@ -83,8 +75,24 @@ const InterviewRunner = () => {
                         setLanguage={setSelectedLanguage}
                         updateCode={updateDraftCode}
                     />
-                )}
-            </div>
+                    <CodeOutputPanel 
+                        language={selectedLanguage}
+                        code={currentDraft.code || ""}
+                    />
+                </div>
+            ) : (
+                <div className="grid gap-6 grid-cols-1">
+                    <VerbalRecorder 
+                        isRecording={isRecording}
+                        recordingTime={recordingTime}
+                        hasAudio={!!currentDraft.audio}
+                        isQuestionLocked={isQuestionLocked}
+                        startRecording={() => startRecording(updateDraftAudio)}
+                        stopRecording={stopRecording}
+                        deleteDraftAudio={deleteDraftAudio}
+                    />
+                </div>
+            )}
 
             <AIFeedbackSection 
                 isEvaluated={!!currentQuestion?.isEvaluated}

@@ -7,6 +7,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import sessionRoutes from "./routes/sessionRoutes.js";
+import codeRoutes from "./routes/codeRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
 import fs from "fs";
@@ -63,6 +64,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/user", userRoutes);
 app.use("/api/sessions", sessionRoutes);
+app.use("/api/code", codeRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
