@@ -90,6 +90,13 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, aud
         break
 
     data = resp.json()
+    
+    # Check for truncated responses
+    candidate = data.get("candidates", [{}])[0]
+    finish_reason = candidate.get("finishReason", "UNKNOWN")
+    if finish_reason != "STOP" and finish_reason != "SUCCESS":
+        print(f"!!! [WARNING] Gemini finished with reason: {finish_reason}. Response may be truncated !!!")
+
     text_output = "".join(
         part.get("text", "")
         for candidate in data.get("candidates", [])

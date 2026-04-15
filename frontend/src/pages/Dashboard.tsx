@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useSelector, useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"
-import { createSession, deleteSession, getSession, reset } from "../features/session/sessionSlice"
+import { createSession, deleteSession, getSession } from "../features/session/sessionSlice"
 import type { RootState, AppDispatch } from "../app/store"
 import { toast } from "react-toastify"
 import SessionCard from "../components/SessionCard"
@@ -40,7 +40,6 @@ const Dashboard = () => {
     useEffect(() => {
         if (isError && message) {
             toast.error(message);
-            dispatch(reset());
         }
     }, [isError, message, dispatch]);
 

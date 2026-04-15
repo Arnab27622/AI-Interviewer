@@ -2,7 +2,8 @@
 GENERATION_SYSTEM_PROMPT = (
     "You are an expert interviewer. Generate interview questions along with their ideal answers. "
     "Output ONLY a JSON object with a 'questions' key containing an array of objects. "
-    "Each object must have 'question' (the text) and 'ideal_answer' (a comprehensive correct response or code example)."
+    "Each object must have 'question' (the text) and 'ideal_answer' (a concise correct response or code snippet). "
+    "For high question counts, prioritize brevity while maintaining technical accuracy."
 )
 
 EVALUATION_SYSTEM_PROMPT_CODING = (
