@@ -7,6 +7,14 @@ import { getSessionById, submitAnswer, endSession } from "../features/session/se
 import { ROLE_LANGUAGE_MAP } from "../constants/interview";
 import { saveDrafts, getDrafts, deleteDrafts } from "../utils/idb";
 
+/**
+ * Custom hook to manage the lifecycle of an interview session runner.
+ * Handles question state, draft persistence (via IDB), answer submission logic, 
+ * and real-time socket synchronization.
+ * 
+ * @param stopRecording - Callback to stop the active audio recorder.
+ * @param setRecordingTime - Callback to reset timer UI.
+ */
 export const useInterviewSession = (stopRecording: () => void, setRecordingTime: (time: number) => void) => {
     const { sessionId } = useParams<{ sessionId: string }>();
     const navigate = useNavigate();

@@ -6,7 +6,7 @@ Prepify is a state-of-the-art AI Interview platform designed to help candidates 
 
 ## 🏗️ Architecture Overview
 
-Prepify follows a modern, distributed 3-tier architecture designed for scalability and performance:
+Prepify follows a modern, distributed 3-tier architecture designed for scalability and performance within cloud resource constraints (e.g., 512MB RAM limits):
 
 ```mermaid
 graph TD
@@ -14,22 +14,24 @@ graph TD
     Frontend <--> Backend[Backend - Node.js/Express]
     Backend <--> MongoDB[(MongoDB Atlas)]
     Backend <--> AIService[AI Service - FastAPI]
-    AIService <--> Gemini[[Google Gemini API]]
+    AIService <--> Gemini[[Google Gemini Cloud API]]
 ```
 
-- **Frontend**: A responsive and interactive React application built with Vite and TypeScript.
-- **Backend**: An Express.js server managing authentication, session state, and real-time communication via Socket.io.
-- **AI Service**: A high-performance Python microservice powered by FastAPI, specializing in audio transcription and AI-driven interview evaluation using Google Gemini.
+- **Frontend**: A "Neo-Dark" React/Vite application utilizing **IndexedDB** for recording persistence and **Skeleton Screens** for professional loading states.
+- **Backend**: A hardened Express.js server managing authentication (HttpOnly JWT), session orchestration, and **real-time WebSocket synchronization** via Socket.io.
+- **AI Service**: A high-efficiency Python microservice that offloads heavy transcription and evaluation tasks to the Google Gemini Cloud API to minimize local resource footprint.
 
 ---
 
 ## ✨ Key Features
 
-- **🎯 Role-Specific Interviews**: Tailored questions based on specific job roles and seniority levels.
-- **🎙️ Real-time Audio Transcription**: Efficient processing of verbal answers using Gemini's native audio support.
-- **🧠 Intelligent Evaluation**: Comprehensive feedback on answer quality, communication skills, and technical accuracy.
-- **🔒 Secure Authentication**: Robust user management with Google OAuth and JWT.
-- **⚡ Live Progress Tracking**: Real-time updates during interview processing via WebSockets.
+- **🎯 Role-Specific Interviews**: Tailored questions based on job roles, seniority levels, and specific tech stacks.
+- **🎙️ Persistent Recording**: Never lose a draft. Audio recordings are persisted in **IndexedDB**, allowing users to resume interviews after browser restarts.
+- **⏱️ Live Interview Terminal**: Interactive coder interface with real-time **Interview Timers** and code draft persistence.
+- **👁️ Skeleton Loading**: Professional shimmer-based placeholders for a seamless, low-latency UI feel.
+- **🧠 Intelligent Evaluation**: Comprehensive feedback on answer quality, communication skills, and technical proficiency.
+- **📁 Result Exporting**: One-click **PDF Export** for interview performance reports.
+- **🔒 Production Hardened**: Includes **Rate Limiting**, Prompt Injection guardrails, and secure HttpOnly cookie authentication.
 
 ---
 
@@ -37,9 +39,9 @@ graph TD
 
 | Component | Technologies |
 | :--- | :--- |
-| **Frontend** | React, Vite, TypeScript, Lucide Icons, Socket.io-client |
-| **Backend** | Node.js, Express, MongoDB (Mongoose), Socket.io, JWT |
-| **AI Service** | Python, FastAPI, Google Gemini API, Uvicorn |
+| **Frontend** | React, Vite, TypeScript, Framer Motion, IndexedDB, Socket.io-client |
+| **Backend** | Node.js, Express, MongoDB, Socket.io, JWT, Express Rate Limit |
+| **AI Service** | Python, FastAPI, Google Gemini API, Pydantic |
 | **Deployment** | Render (Services), Vercel (Frontend), MongoDB Atlas |
 
 ---
@@ -83,5 +85,6 @@ AI-Interviewer/
 ## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
 
 

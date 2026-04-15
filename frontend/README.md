@@ -4,20 +4,22 @@ The user-facing application for Prepify. A high-performance, responsive React ap
 
 ## ✨ Features
 
-- **📊 Dynamic Dashboard**: View interview history, start new sessions, and track progress.
-- **🎤 Interactive Interview Interface**: Smooth, distraction-free environment for answering questions.
-- **📈 Comprehensive Reviews**: Detailed feedback screens with scores and AI-driven suggestions.
-- **🌗 Modern UI/UX**: Clean, professional design with responsive layouts for all devices.
-- **🔒 Secure Auth Flow**: Seamless integration with Google Login for quick access.
+- **📊 Dynamic Dashboard**: View interview history and stats with professional **Skeleton Shimmer** loading states.
+- **🎙️ Persistent Resume System**: Leveraging **IndexedDB** to store audio blobs and code drafts locally, ensuring no progress is lost if the browser is closed mid-session.
+- **🎤 Interactive Interview Terminal**: Real-time status updates (Transcribing -> Evaluating -> Feedback Ready) via WebSockets.
+- **⏲️ Active Session Timer**: Real-time display of interview duration.
+- **📈 Performance Visualization**: Detailed feedback reports with SVG progress rings and Chart.js mastery calibration charts.
+- **📁 PDF Reporting**: Print-optimized reporting system for exporting interview results.
 
 ## 🏗️ Tech Stack
 
-- **React 18**: Component-based UI library.
-- **Vite**: Rapid development build tool.
-- **TypeScript**: Type-safe development for robust code.
-- **Shadcn UI & Tailwind CSS**: Elegant, modern styling and components.
-- **Lucide Icons**: Beautiful, consistent iconography.
-- **Socket.io-client**: Real-time communication with the backend.
+- **React 18 & TypeScript**: Robust, type-safe Component UI.
+- **Vite**: Ultra-fast build tool and dev server.
+- **Framer Motion**: Smooth micro-animations and layout transitions.
+- **IndexedDB**: Persistent client-side storage for binary audio data.
+- **Chart.js**: Graphical mastery calibration and performance metrics.
+- **Tailwind CSS**: Utility-first CSS for the modern Neo-Dark design system.
+- **Socket.io-client**: Real-time event synchronization.
 
 ## 🛠️ Installation & Setup
 
@@ -49,13 +51,13 @@ npm run dev
 ```
 The app will be available at `http://localhost:5173`.
 
-## 🏗️ Core Modules Breakdown
+## 📂 Core Modules Breakdown
 
 - `src/pages/`: Main view components (Dashboard, Interview, Review).
-- `src/components/`: Reusable UI elements and complex feature blocks.
-- `src/services/`: API client and WebSocket handlers.
-- `src/hooks/`: Custom React hooks for state and logic management.
-- `src/features/`: Large functional modules like the Interview Runner.
+- `src/components/`: Reusable UI elements, loaders, and card systems.
+- `src/features/`: Feature-sliced logic for the Session Runner and User Auth.
+- `src/hooks/`: Custom hooks for Audio Recording and Socket management.
+- `src/utils/`: IndexedDB handlers and formatting utilities.
 
 ---
 

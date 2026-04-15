@@ -1,18 +1,20 @@
 # Prepify AI Service 🤖
 
-The AI microservice backend for Prepify. This service specialized in handling heavy-duty AI tasks, including audio transcription and generative interview intelligence.
+The AI microservice backend for Prepify. This service specialized in handling heavy-duty AI tasks, including audio transcription and generative interview intelligence, while maintaining a minimal resource footprint.
 
 ## 🚀 Capabilities
 
-- **🎙️ Advanced Transcription**: Utilizes Gemini's native audio analysis to transcribe and understand candidate responses.
-- **🧠 Generative Intelligence**: Leverages Google Gemini models to generate contextual interview questions and evaluate candidate performance.
-- **⚡ High Performance**: Built with FastAPI for asynchronous execution and low-latency response times.
+- **🎙️ Cloud-Native Transcription**: Offloads verbal analysis to Gemini Cloud, staying within strict RAM limits (under 512MB) of free-tier hosting.
+- **🧠 Generative Intelligence**: Uses advanced system prompting to generate exactly `n` role-specific questions with JSON output guarantees.
+- **🛡️ Security Guardrails**: Implements input sanitization and prompt-injection hardening to prevent malicious behavior through user-provided roles or answers.
+- **⚡ Async Execution**: Built with FastAPI for non-blocking processing of multiple parallel evaluation requests.
 
 ## 🏗️ Tech Stack
 
-- **FastAPI**: Modern, fast (high-performance) web framework for building APIs with Python.
-- **Google Generative AI SDK**: Direct integration with Gemini models.
-- **Uvicorn**: Lightning-fast ASGI server implementation.
+- **FastAPI**: Asynchronous, high-performance Python framework.
+- **Google Generative AI**: Native SDK for optimized interaction with Gemini models.
+- **Uvicorn**: Production-grade ASGI server with worker-based scaling.
+- **Pydantic**: Type-strict data validation for all API requests and responses.
 
 ## 🛠️ Installation & Setup
 
@@ -39,10 +41,11 @@ pip install -r requirements.txt
 ```
 
 ### 3. Configuration
-Create a `.env` file in this directory:
+Create a `.env` file in this directory based on `.env.example`:
 ```env
 PORT=8000
 GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY_TRANSCRIPTION=your_gemini_api_key_here
 MODEL_NAME=gemini-2.5-flash
 REQUEST_TIMEOUT=60
 ```
@@ -50,18 +53,23 @@ REQUEST_TIMEOUT=60
 ## 🏃 Running the Service
 
 ```bash
+# Production run
+uvicorn main:app --host 0.0.0.0 --port 8000
+
+# Development with reload (Increases RAM usage)
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-## 📡 API Endpoints (Highlights)
+## 📡 API Endpoints (Core)
 
-- `GET /health`: Health check endpoint.
-- `POST /transcribe`: Process audio files and return AI-driven insights (Internal use by Backend).
-- `POST /generate`: Generate customized interview questions based on role.
+- `POST /generate-questions`: Batch generation of technical/conceptual questions.
+- `POST /evaluate`: Detailed scoring and feedback for a specific answer/code snippet.
+- `POST /transcribe`: High-speed audio-to-text conversion via Gemini base64 encoding.
 
 ---
 
-## 🔒 Security & Optimization
-- **CORS Configured**: Restricted to trusted origins in production.
-- **Memory Optimized**: Designed to run efficiently on free-tier platforms by offloading transcription to the cloud.
+## 🔒 Optimization & Architecture
+- **Lazy Loading**: Service components are initialized only when first called to preserve startup memory.
+- **Stateless Design**: Allows the service to be horizontally scaled without sticky sessions.
+- **JSON Mode**: Explicitly uses `response_mime_type: application/json` for deterministic AI responses.
 

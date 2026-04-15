@@ -1,3 +1,7 @@
+"""
+Interview Router
+Defines API endpoints for question generation and answer evaluation.
+"""
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -46,6 +50,10 @@ class EvaluationResponse(BaseModel):
 
 @router.post("/generate-questions", response_model=QuestionResponse)
 async def generate_questions(req: QuestionRequest):
+    """
+    Generate multiple unique interview questions using Gemini AI.
+    Handles partitioning between coding and conceptual questions based on interview_type.
+    """
     try:
         instruction = (
             f"The first {int(req.count * 0.2)} questions should be coding questions requiring you to write code. "
@@ -80,11 +88,16 @@ async def generate_questions(req: QuestionRequest):
 
 @router.post("/transcribe")
 async def transcribe_audio(file: UploadFile = File(...)):
+    """Convert an uploaded audio (webm) file to text transcription using Gemini."""
     text = await whisper_service.transcribe(file)
     return {"transcription": text}
 
 @router.post("/evaluate", response_model=EvaluationResponse)
 async def evaluate_answer(req: EvaluationRequest):
+    """
+    Evaluate a user's answer (text or code) for technical accuracy and confidence.
+    Uses separate system prompts for coding and conceptual evaluation.
+    """
     if req.question_type == "coding":
         if not req.user_code or not req.user_code.strip():
             raise HTTPException(status_code=422, detail="user_code is required for coding questions.")

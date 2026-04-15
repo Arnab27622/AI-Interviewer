@@ -4,9 +4,10 @@ The core orchestrator for Prepify. This Node.js service manages the API, user au
 
 ## 🚀 Key Responsibilities
 
-- **🔐 User Management**: Handles Google OAuth 2.0 and JWT-based session management.
+- **🔐 User Management**: Handles Google OAuth 2.0 and JWT-based session management using HttpOnly cookies.
 - **🔄 Session Orchestration**: Manages the lifecycle of an interview session, from question generation to final evaluation.
 - **📡 Real-time Updates**: Uses Socket.io to provide live progress feedback during heavy AI processing tasks.
+- **🛡️ Request Throttling**: Implements API rate limiting to prevent resource exhaustion and abuse.
 - **💾 Data Persistence**: Manages user profiles, interview history, and evaluation results using MongoDB.
 
 ## 🏗️ Tech Stack
@@ -16,6 +17,7 @@ The core orchestrator for Prepify. This Node.js service manages the API, user au
 - **Socket.io**: Real-time, bidirectional communication engine.
 - **Passport.js**: Authentication middleware for Google OAuth.
 - **JWT**: Secure token-based authorization.
+- **Express-rate-limit**: Protective middleware against brute-force and DoS.
 
 ## 🛠️ Installation & Setup
 
@@ -56,18 +58,26 @@ npm run dev
 npm start
 ```
 
+## 📡 API Endpoints (Highlights)
+
+- `GET /health`: Health check endpoint for cloud monitoring. Returns database connectivity status.
+- `POST /api/sessions`: Create a new session (Rate limited: 5 req / 15 mins).
+- `GET /api/sessions`: Retrieve paginated interview history.
+- `POST /api/auth/google`: OAuth login entry point.
+
 ## 📂 Internal Directory Structure
 
 - `controllers/`: Logic for handling API requests.
 - `models/`: Mongoose schemas for Users, Interviews, etc.
 - `routes/`: Express route definitions.
-- `services/`: External service integration (AI Service, Storage).
-- `middleware/`: Auth and error handling filters.
+- `services/`: External service integration (AI Service, Socket logic).
+- `middleware/`: Auth, validation, and error handling filters.
 
 ---
 
 ## 🛡️ Security Features
-- **HTTP-Only Cookies**: Secure storage for JWTs.
-- **CORS Protection**: Hardened restricted origins.
-- **Authenticated Routes**: Protected endpoints for sensitive data.
+- **HTTP-Only Cookies**: Secure storage for JWTs (mitigates XSS).
+- **CORS Protection**: Hardened restricted origins for cross-domain safety.
+- **Rate Limiting**: Automated IP-based throttling on sensitive creation endpoints.
+- **Graceful Shutdown**: Handles process signals to close DB connections cleanly.
 

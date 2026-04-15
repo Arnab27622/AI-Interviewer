@@ -1,5 +1,13 @@
+/**
+ * @module SessionModel
+ * @description Mongoose schemas and models for Interview Sessions.
+ * Includes embedded Question schema for session-specific state.
+ */
 import mongoose from "mongoose";
 
+/**
+ * Schema for an individual interview question within a session.
+ */
 const questionSchema = new mongoose.Schema({
     questionText: {
         type: String,
@@ -46,6 +54,10 @@ const questionSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+/**
+ * Schema for the primary Interview Session.
+ * Tracks session state, aggregate metrics, and associated questions.
+ */
 const sessionSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
@@ -100,6 +112,12 @@ const sessionSchema = new mongoose.Schema({
 // Compound index for efficient sorting by user and creation date (used in Dashboard)
 sessionSchema.index({ user: 1, createdAt: -1 });
 
+/**
+ * Aggregate and calculate overall proficiency metrics for a specific session.
+ * Uses MongoDB aggregation pipeline to compute averages across evaluated questions.
+ * @param {string|mongoose.Types.ObjectId} sessionId - The session to analyze.
+ * @returns {Promise<Object>} Object containing overallScore, avgTechnical, and avgConfidence.
+ */
 sessionSchema.statics.calculateScoreSummary = async function(sessionId) {
     const result = await this.aggregate([
         {

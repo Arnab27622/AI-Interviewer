@@ -1,3 +1,8 @@
+"""
+AI Prompts & Prompt Templates
+Contains the core system instructions and user prompt templates for Gemini AI.
+Also includes input sanitization for security hardening.
+"""
 # System Prompts
 GENERATION_SYSTEM_PROMPT = (
     "You are an expert interviewer. Generate interview questions along with their ideal answers. "
@@ -36,6 +41,7 @@ def sanitize_input(text: str, max_length: int = 5000) -> str:
 
 # User Prompt Templates
 def get_generation_user_prompt(count: int, role: str, level: str, instruction: str) -> str:
+    """Constructs prompt for question generation."""
     s_role = sanitize_input(role, 100)
     s_level = sanitize_input(level, 50)
     s_instruction = sanitize_input(instruction, 500)
@@ -46,6 +52,7 @@ def get_generation_user_prompt(count: int, role: str, level: str, instruction: s
     )
 
 def get_evaluation_user_prompt_coding(question: str, user_code: str, language: str) -> str:
+    """Constructs prompt for coding answer evaluation."""
     s_code = sanitize_input(user_code, 10000)
     s_lang = sanitize_input(language, 50)
     return (
@@ -57,6 +64,7 @@ def get_evaluation_user_prompt_coding(question: str, user_code: str, language: s
     )
 
 def get_evaluation_user_prompt_conceptual(question: str, user_answer: str) -> str:
+    """Constructs prompt for conceptual answer evaluation."""
     s_answer = sanitize_input(user_answer, 5000)
     return (
         f"Question: {question}\n"

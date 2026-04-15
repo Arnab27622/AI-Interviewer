@@ -2,6 +2,14 @@ import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
 import User from "../models/User.js";
 
+/**
+ * Middleware to protect routes by verifying standard HttpOnly JWT cookies.
+ * Attaches the authenticated user to the request object (req.user).
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ * @throws {Error} 401 If token is missing, expired, or invalid.
+ */
 const protect = asyncHandler(async (req, res, next) => {
     let token = req.cookies.jwt;
     

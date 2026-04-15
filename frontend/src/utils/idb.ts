@@ -3,6 +3,10 @@ type DraftRecord = Record<number, { code?: string; audio?: Blob }>;
 const DB_NAME = "ai-interview-db";
 const STORE_NAME = "session-drafts";
 
+/**
+ * Initialize (or create) the IndexedDB instance for persistent audio/code drafts.
+ * @returns {Promise<IDBDatabase>}
+ */
 function initDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, 1);
@@ -17,6 +21,12 @@ function initDB(): Promise<IDBDatabase> {
     });
 }
 
+/**
+ * Persist the current session drafts (audio blobs and code text) to IndexedDB.
+ * Since Blobs cannot go in LocalStorage, this is essential for "Resume Interview".
+ * @param {string} sessionId - The current session ID.
+ * @param {DraftRecord} drafts - The draft state object.
+ */
 export async function saveDrafts(sessionId: string, drafts: DraftRecord) {
     try {
         const db = await initDB();
@@ -32,6 +42,11 @@ export async function saveDrafts(sessionId: string, drafts: DraftRecord) {
     }
 }
 
+/**
+ * Retrieve saved drafts for a specific session from IndexedDB.
+ * @param {string} sessionId - The session ID to fetch drafts for.
+ * @returns {Promise<DraftRecord>} The saved draft state or an empty object.
+ */
 export async function getDrafts(sessionId: string): Promise<DraftRecord> {
     try {
         const db = await initDB();
@@ -48,6 +63,10 @@ export async function getDrafts(sessionId: string): Promise<DraftRecord> {
     }
 }
 
+/**
+ * Purge all drafts for a session once the interview is completed or deleted.
+ * @param {string} sessionId 
+ */
 export async function deleteDrafts(sessionId: string) {
     try {
         const db = await initDB();
