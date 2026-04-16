@@ -17,6 +17,9 @@ const initialState: AuthState = {
     isAuthenticated: !!user,
 };
 
+/**
+ * Registers a new user.
+ */
 export const register = createAsyncThunk<User, User, { rejectValue: string }>(
     "auth/register",
     async (user, thunkAPI) => {
@@ -27,15 +30,15 @@ export const register = createAsyncThunk<User, User, { rejectValue: string }>(
             }
             return response.data;
         } catch (error: unknown) {
-            const message =
-                axios.isAxiosError(error)
-                    ? error.response?.data?.message ?? error.message
-                    : String(error);
+            const message = axios.isAxiosError(error) ? error.response?.data?.message ?? error.message : String(error);
             return thunkAPI.rejectWithValue(message);
         }
     }
 );
 
+/**
+ * Logins an existing user.
+ */
 export const login = createAsyncThunk<User, User, { rejectValue: string }>(
     "auth/login",
     async (user, thunkAPI) => {
@@ -46,15 +49,15 @@ export const login = createAsyncThunk<User, User, { rejectValue: string }>(
             }
             return response.data;
         } catch (error: unknown) {
-            const message =
-                axios.isAxiosError(error)
-                    ? error.response?.data?.message ?? error.message
-                    : String(error);
+            const message = axios.isAxiosError(error) ? error.response?.data?.message ?? error.message : String(error);
             return thunkAPI.rejectWithValue(message);
         }
     }
 );
 
+/**
+ * Authenticates via Google OAuth.
+ */
 export const googleLogin = createAsyncThunk<User, string, { rejectValue: string }>(
     "auth/googleLogin",
     async (token, thunkAPI) => {
@@ -65,20 +68,19 @@ export const googleLogin = createAsyncThunk<User, string, { rejectValue: string 
             }
             return response.data;
         } catch (error: unknown) {
-            const message =
-                axios.isAxiosError(error)
-                    ? error.response?.data?.message ?? error.message
-                    : String(error);
+            const message = axios.isAxiosError(error) ? error.response?.data?.message ?? error.message : String(error);
             return thunkAPI.rejectWithValue(message);
         }
     }
 );
 
+/**
+ * Logs out the current user and clears local persistence.
+ */
 export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
     "auth/logout",
     async (_, thunkAPI) => {
         try {
-            // Backend might not have a logout endpoint, so clear localStorage first
             localStorage.removeItem("user");
             try {
                 await authApi.post(`logout`);
@@ -86,15 +88,15 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
                 // Ignore API error on logout if endpoint doesn't exist
             }
         } catch (error: unknown) {
-            const message =
-                axios.isAxiosError(error)
-                    ? error.response?.data?.message ?? error.message
-                    : String(error);
+            const message = axios.isAxiosError(error) ? error.response?.data?.message ?? error.message : String(error);
             return thunkAPI.rejectWithValue(message);
         }
     }
 );
 
+/**
+ * Updates the user's profile information.
+ */
 export const updateProfile = createAsyncThunk<User, User, { rejectValue: string; state: { auth: AuthState } }>(
     "auth/update",
     async (user, thunkAPI) => {
@@ -108,10 +110,7 @@ export const updateProfile = createAsyncThunk<User, User, { rejectValue: string;
             }
             return response.data;
         } catch (error: unknown) {
-            const message =
-                axios.isAxiosError(error)
-                    ? error.response?.data?.message ?? error.message
-                    : String(error);
+            const message = axios.isAxiosError(error) ? error.response?.data?.message ?? error.message : String(error);
             return thunkAPI.rejectWithValue(message);
         }
     }
@@ -131,9 +130,7 @@ const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(register.pending, (state) => {
-                state.isLoading = true;
-            })
+            .addCase(register.pending, (state) => { state.isLoading = true; })
             .addCase(register.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isSuccess = true;
@@ -162,9 +159,7 @@ const authSlice = createSlice({
                 state.message = action.payload ?? "An error occurred";
                 state.isProfileLoading = false;
             })
-            .addCase(login.pending, (state) => {
-                state.isLoading = true;
-            })
+            .addCase(login.pending, (state) => { state.isLoading = true; })
             .addCase(login.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isSuccess = true;
@@ -177,9 +172,7 @@ const authSlice = createSlice({
                 state.message = action.payload ?? "An error occurred";
                 state.user = null;
             })
-            .addCase(googleLogin.pending, (state) => {
-                state.isLoading = true;
-            })
+            .addCase(googleLogin.pending, (state) => { state.isLoading = true; })
             .addCase(googleLogin.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isSuccess = true;
@@ -192,12 +185,10 @@ const authSlice = createSlice({
                 state.message = action.payload ?? "An error occurred";
                 state.user = null;
             })
-            .addCase(logout.pending, (state) => {
-                state.isLoading = true;
-            })
+            .addCase(logout.pending, (state) => { state.isLoading = true; })
             .addCase(logout.fulfilled, (state) => {
                 state.isLoading = false;
-                state.isSuccess = false; // Prevent triggering success effects on mount
+                state.isSuccess = false;
                 state.user = null;
                 state.isAuthenticated = false;
             })
@@ -210,4 +201,4 @@ const authSlice = createSlice({
 });
 
 export const { reset } = authSlice.actions;
-export default authSlice.reducer;
+export default authSlice.reducer;

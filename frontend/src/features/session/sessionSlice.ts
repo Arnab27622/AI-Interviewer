@@ -16,12 +16,15 @@ const initialState: SessionState = {
     stats: null,
 };
 
+/**
+ * Fetch a paginated list of sessions for the current user.
+ */
 export const getSession = createAsyncThunk<PaginatedSessionsResponse, { page?: number; limit?: number } | void, { rejectValue: string }>(
     "session/getAll",
     async (args, thunkAPI) => {
         try {
             const page = args?.page || 1;
-            const limit = args?.limit || 9; // use 9 to fit nice grids
+            const limit = args?.limit || 9;
             const response = await api.get(`/?page=${page}&limit=${limit}`);
             return response.data;
         } catch (error) {
@@ -30,6 +33,9 @@ export const getSession = createAsyncThunk<PaginatedSessionsResponse, { page?: n
     }
 );
 
+/**
+ * Initialize a new interview session and trigger AI question generation.
+ */
 export const createSession = createAsyncThunk<Session, Record<string, unknown>, { rejectValue: string }>(
     "session/create",
     async (sessionData, thunkAPI) => {
@@ -42,6 +48,9 @@ export const createSession = createAsyncThunk<Session, Record<string, unknown>, 
     }
 );
 
+/**
+ * Fetch full details of a single interview session.
+ */
 export const getSessionById = createAsyncThunk<Session, string, { rejectValue: string }>(
     "session/getOne",
     async (sessionId, thunkAPI) => {
@@ -54,6 +63,9 @@ export const getSessionById = createAsyncThunk<Session, string, { rejectValue: s
     }
 );
 
+/**
+ * Remove an interview session from the database.
+ */
 export const deleteSession = createAsyncThunk<Session, string, { rejectValue: string }>(
     "session/delete",
     async (sessionId, thunkAPI) => {
@@ -66,6 +78,9 @@ export const deleteSession = createAsyncThunk<Session, string, { rejectValue: st
     }
 );
 
+/**
+ * Submit candidate answer (audio/code) for a specific question.
+ */
 export const submitAnswer = createAsyncThunk<Session, { sessionId: string; formData: FormData }, { rejectValue: string }>(
     "session/submitAnswer",
     async ({ sessionId, formData }, thunkAPI) => {
@@ -78,6 +93,9 @@ export const submitAnswer = createAsyncThunk<Session, { sessionId: string; formD
     }
 );
 
+/**
+ * Manually end an active interview session.
+ */
 export const endSession = createAsyncThunk<Session, string, { rejectValue: string }>(
     "session/endSession",
     async (sessionId, thunkAPI) => {

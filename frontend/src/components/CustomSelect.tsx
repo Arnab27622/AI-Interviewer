@@ -1,18 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-
-interface Option {
-    label: string;
-    value: string | number;
-}
-
-interface CustomSelectProps {
-    options: (string | number | Option)[];
-    value: string | number;
-    onChange: (name: string, value: string | number) => void;
-    name: string;
-    label: string;
-    placeholder?: string;
-}
+import type { Option, CustomSelectProps } from "../types/components";
 
 const CustomSelect: React.FC<CustomSelectProps> = ({
     options,

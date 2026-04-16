@@ -1,4 +1,3 @@
-import type { MouseEvent } from "react";
 import { 
     Layout, 
     Server, 
@@ -21,13 +20,7 @@ import {
     Workflow
 } from "lucide-react";
 
-import type { Session } from "../types/session";
-
-interface SessionCardProps {
-    session: Session;
-    onClick: (session: Session) => void;
-    onDelete: (e: MouseEvent, sessionId: string) => void;
-}
+import type { SessionCardProps } from "../types/components";
 
 const SessionCard = ({ session, onClick, onDelete }: SessionCardProps) => {
     const isDeletable = session.status !== 'pending';

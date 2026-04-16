@@ -1,7 +1,23 @@
+/**
+ * @file aiService.js
+ * @description Proxy service for communicating with the Python FastAPI AI microservice.
+ * Handles question generation, transcription, and answer evaluation.
+ */
+
 const API_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
 
+/**
+ * Utility for asynchronous delayed execution.
+ */
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+/**
+ * Enhanced fetch with retry logic and exponential backoff.
+ * @param {string} url - Target URL.
+ * @param {Object} options - Fetch options.
+ * @param {number} retries - Number of retry attempts.
+ * @param {number} backoff - Initial backoff duration in ms.
+ */
 const fetchWithRetry = async (url, options = {}, retries = 2, backoff = 2000) => {
     let lastError;
     for (let i = 0; i < retries; i++) {

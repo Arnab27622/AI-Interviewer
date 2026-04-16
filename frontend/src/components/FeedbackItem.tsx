@@ -1,12 +1,7 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
-import type { Question } from "../types/session";
+import type { FeedbackItemProps } from "../types/components";
 import { sanitizeQuestionText, formatIdealAnswer } from "../utils/formatters";
-
-interface FeedbackItemProps {
-    question: Question;
-    index: number;
-}
 
 const FeedbackItem: React.FC<FeedbackItemProps> = ({ question, index }) => {
     return (

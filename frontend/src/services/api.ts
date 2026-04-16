@@ -1,5 +1,9 @@
 import axios from "axios";
 
+/**
+ * Global Axios instance for session-related API calls.
+ * Configured with automatic 401 redirection and credentials support.
+ */
 const API_URL = `${import.meta.env.VITE_API_URL}/sessions`;
 
 const api = axios.create({

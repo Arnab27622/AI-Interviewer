@@ -11,10 +11,19 @@ import type { Session } from "../types/session"
 import { ROLES, LEVELS, TYPES, COUNTS } from "../types/misc"
 
 
-import NewInterviewForm, { type FormChangeEvent } from "../components/NewInterviewForm"
+import NewInterviewForm from "../components/NewInterviewForm"
+import type { FormChangeEvent } from "../types/forms"
 
 import { motion } from "framer-motion"
 
+/**
+ * Dashboard Component
+ * 
+ * The primary control center for the user. It allows users to:
+ * - View a summary of their interview activity (Total, Completed, Pending).
+ * - Initiate new AI-generated interview sessions via the NewInterviewForm.
+ * - Access historical interview records and analytics.
+ */
 const Dashboard = () => {
     const dispatch = useDispatch<AppDispatch>()
     const navigate = useNavigate()

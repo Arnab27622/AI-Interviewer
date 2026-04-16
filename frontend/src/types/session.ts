@@ -1,4 +1,4 @@
-interface Question {
+export interface Question {
     questionText: string;
     questionType: "coding" | "oral";
     isEvaluated: boolean;
@@ -11,7 +11,7 @@ interface Question {
     aiFeedback?: string;
 }
 
-interface Session {
+export interface Session {
     _id: string;
     user: string;
     role: string;
@@ -30,14 +30,14 @@ interface Session {
     updatedAt?: string;
 }
 
-interface Pagination {
+export interface Pagination {
     totalSessions: number;
     totalPages: number;
     currentPage: number;
     pageSize: number;
 }
 
-interface PaginatedSessionsResponse {
+export interface PaginatedSessionsResponse {
     message: string;
     sessions: Session[];
     pagination: Pagination;
@@ -48,7 +48,7 @@ interface PaginatedSessionsResponse {
     };
 }
 
-interface SessionState {
+export interface SessionState {
     sessions: Session[];
     activeSession: Session | null;
     isGenerating: boolean;
@@ -63,11 +63,14 @@ interface SessionState {
     } | null;
 }
 
-export type { Question, Session, SessionState, Pagination, PaginatedSessionsResponse };
-
 export interface SocketUpdatePayload {
     sessionId: string;
     status: string;
     message: string;
     session?: Session;
 }
+
+/**
+ * Structure for locally persisted interview drafts in IndexedDB.
+ */
+export type DraftRecord = Record<number, { code?: string; audio?: Blob }>;

@@ -3,6 +3,11 @@ import User from "../models/User.js";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
 
+/**
+ * Generates a JWT token and sets it as an HttpOnly cookie in the response.
+ * @param {Object} res - Express response object.
+ * @param {string} id - User ID to sign the token for.
+ */
 const generateTokenInCookie = (res, id) => {
     const token = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "3d" });
     res.cookie("jwt", token, {
@@ -13,6 +18,11 @@ const generateTokenInCookie = (res, id) => {
     });
 };
 
+/**
+ * @desc Register a new user with name, email, and password.
+ * @route POST /api/user/register
+ * @access Public
+ */
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
@@ -46,6 +56,11 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 });
 
+/**
+ * @desc Authenticate user and get token.
+ * @route POST /api/user/login
+ * @access Public
+ */
 const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -69,6 +84,11 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 });
 
+/**
+ * @desc Google OAuth Login / Registration.
+ * @route POST /api/user/google-login
+ * @access Public
+ */
 const googleLogin = asyncHandler(async (req, res) => {
     const { token } = req.body;
     if (!token) {
@@ -131,6 +151,11 @@ const googleLogin = asyncHandler(async (req, res) => {
     }
 });
 
+/**
+ * @desc Get user profile data.
+ * @route GET /api/user/profile
+ * @access Private
+ */
 const getUserProfile = asyncHandler(async (req, res) => {
     if (req.user) {
         res.status(200).json({
@@ -145,6 +170,11 @@ const getUserProfile = asyncHandler(async (req, res) => {
     }
 });
 
+/**
+ * @desc Update user profile data.
+ * @route PUT /api/user/profile
+ * @access Private
+ */
 const updateUserProfile = asyncHandler(async (req, res) => {
     if (req.user) {
         const user = await User.findById(req.user._id);
@@ -182,6 +212,11 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     }
 });
 
+/**
+ * @desc Logout user by clearing HTTP-only JWT cookie.
+ * @route POST /api/user/logout
+ * @access Private
+ */
 const logoutUser = asyncHandler(async (req, res) => {
     res.cookie("jwt", "", {
         httpOnly: true,
@@ -192,4 +227,4 @@ const logoutUser = asyncHandler(async (req, res) => {
     res.status(200).json({ message: "Logged out successfully" });
 });
 
-export { registerUser, loginUser, googleLogin, logoutUser, getUserProfile, updateUserProfile };
+export { registerUser, loginUser, googleLogin, logoutUser, getUserProfile, updateUserProfile };

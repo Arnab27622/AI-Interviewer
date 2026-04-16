@@ -1,3 +1,9 @@
+/**
+ * @file server.js
+ * @description Main entry point for the AI Interviewer backend.
+ * Configures Express, Socket.io, Database connections, and Middleware.
+ */
+
 import "dotenv/config";
 import express from "express";
 import http from "http";

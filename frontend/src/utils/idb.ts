@@ -1,4 +1,4 @@
-type DraftRecord = Record<number, { code?: string; audio?: Blob }>;
+import type { DraftRecord } from "../types/session";
 
 const DB_NAME = "ai-interview-db";
 const STORE_NAME = "session-drafts";

@@ -1,22 +1,7 @@
 import React from "react";
 import { ROLES, LEVELS, TYPES, COUNTS } from "../types/misc";
 import CustomSelect from "./CustomSelect";
-
-export type FormChangeEvent = 
-    | React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-    | { target: { name: string; value: string | number } };
-
-interface NewInterviewFormProps {
-    formData: {
-        role: string;
-        level: string;
-        interviewType: string;
-        count: number;
-    };
-    onChange: (e: FormChangeEvent) => void;
-    onSubmit: (e: React.SyntheticEvent) => void;
-    isProcessing: boolean;
-}
+import type { NewInterviewFormProps } from "../types/forms";
 
 const NewInterviewForm: React.FC<NewInterviewFormProps> = ({
     formData,
