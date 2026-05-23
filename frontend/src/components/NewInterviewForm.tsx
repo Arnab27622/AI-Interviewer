@@ -1,5 +1,5 @@
 import React from "react";
-import { ROLES, LEVELS, TYPES, COUNTS } from "../types/misc";
+import { ROLES, LEVELS, TYPES, COUNTS } from "../constants/interview";
 import CustomSelect from "./CustomSelect";
 import type { NewInterviewFormProps } from "../types/forms";
 

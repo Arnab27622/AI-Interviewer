@@ -14,15 +14,7 @@ const EXECUTABLE_LANGUAGES = new Set([
     "elixir", "haskell", "clojure", "fsharp"
 ]);
 
-export interface ExecutionResult {
-    stdout: string;
-    stderr: string;
-    exitCode: number;
-    signal: string | null;
-    timedOut: boolean;
-    cpuTime?: string;
-    memory?: string;
-}
+import type { ExecutionResult } from "../types/codeRunner";
 
 export const isExecutable = (language: string): boolean => {
     return !NON_EXECUTABLE.has(language) && EXECUTABLE_LANGUAGES.has(language);

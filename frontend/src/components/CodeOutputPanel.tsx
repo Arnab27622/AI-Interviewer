@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Play, Square, Terminal, ChevronUp, ChevronDown, Trash2, Clock, AlertTriangle } from "lucide-react";
 import { executeCode, isExecutable } from "../services/codeRunnerService";
-import type { ExecutionResult } from "../services/codeRunnerService";
+import type { ExecutionResult } from "../types/codeRunner";
 
 interface CodeOutputPanelProps {
     language: string;

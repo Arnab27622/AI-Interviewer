@@ -6,3 +6,5 @@ Recording.wav
 **/.env
 __pycache__/
 .planning/
+backend/verify_resume_system.py
+backend/dist*

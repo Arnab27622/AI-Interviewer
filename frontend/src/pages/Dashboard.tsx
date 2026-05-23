@@ -8,11 +8,12 @@ import SessionCard from "../components/SessionCard"
 import SkeletonSessionCard from "../components/SkeletonSessionCard"
 import ConfirmModal from "../components/ConfirmModal"
 import type { Session } from "../types/session"
-import { ROLES, LEVELS, TYPES, COUNTS } from "../types/misc"
+import { ROLES, LEVELS, TYPES, COUNTS } from "../constants/interview"
 
 
 import NewInterviewForm from "../components/NewInterviewForm"
 import type { FormChangeEvent } from "../types/forms"
+import { ResumeHistoryWidget } from "../features/resume/components/ResumeHistoryWidget"
 
 import { motion } from "framer-motion"
 
@@ -174,6 +175,16 @@ const Dashboard = () => {
                         isProcessing={isProcessing}
                     />
                 </div>
+            </motion.div>
+
+            {/* Resume History Widget */}
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="pt-4"
+            >
+                <ResumeHistoryWidget />
             </motion.div>
 
             {/* Interview History Section */}

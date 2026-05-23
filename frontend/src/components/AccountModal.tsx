@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import type { RootState, AppDispatch } from "../app/store";
 import { X, LogOut, User, Mail, Save } from "lucide-react";
 import { motion } from "framer-motion";
-import { ROLES } from "../types/misc";
+import { ROLES } from "../constants/interview";
 import CustomSelect from "./CustomSelect";
 import { toast } from "react-toastify";
 

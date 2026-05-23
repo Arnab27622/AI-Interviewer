@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
+import ResumeAnalyzer from "./pages/ResumeAnalyzer";
 
 function App() {
   useSocket();
@@ -56,6 +57,7 @@ function App() {
                 
                 <Route path="/" element={<PrivateRoute />} >
                   <Route path="/" element={<Dashboard />} />
+                  <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
                   <Route path="/interview/:sessionId" element={<InterviewRunner />} />
                   <Route path="/review/:sessionId" element={<SessionReview />} />
                 </Route>

@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from app.api.interview import router as interview_router
-
+from app.api.v2.resume import router as v2_resume_router
 
 load_dotenv()
 
@@ -46,6 +46,7 @@ def create_app() -> FastAPI:
 
     # Include Routers: Modular API endpoints for generation and evaluation
     app.include_router(interview_router, tags=["Interview"])
+    app.include_router(v2_resume_router)
 
     @app.get("/", tags=["Health"])
     async def root():
