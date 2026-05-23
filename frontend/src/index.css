@@ -51,6 +51,19 @@
       max-width: 100% !important;
       height: auto !important;
     }
+    * {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    .bg-glow {
+      display: none !important;
+    }
+    .glass-card {
+      background-color: var(--color-surface-900) !important;
+      box-shadow: none !important;
+      transform: none !important;
+      border-color: var(--color-surface-800) !important;
+    }
   }
 
   h1, h2, h3, h4, h5, h6 {

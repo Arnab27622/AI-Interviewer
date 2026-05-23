@@ -128,11 +128,11 @@ export const EntityExtractionTab = ({
       className="space-y-8"
     >
       {/* Top Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-surface-800/40 p-4 rounded-xl border border-white/5">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-surface-800/40 p-4 rounded-xl border border-white/5">
+        <div className="flex items-center gap-4 w-full sm:w-auto">
           <button
             onClick={() => setIsEditing(!isEditing)}
-            className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+            className={`w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer text-center ${
               isEditing ? "bg-primary-500 text-white shadow-lg shadow-primary-500/20" : "bg-surface-700 text-surface-300 hover:bg-surface-600 hover:text-white"
             }`}
           >
@@ -143,7 +143,7 @@ export const EntityExtractionTab = ({
         <PDFDownloadLink
           document={<ResumePDF profile={editedProfile} />}
           fileName="Optimized_Resume.pdf"
-          className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white rounded-lg text-sm font-bold uppercase tracking-wider transition-colors flex items-center gap-2 shadow-lg shadow-indigo-500/20"
+          className="w-full sm:w-auto px-4 py-3 sm:py-2 bg-indigo-500 hover:bg-indigo-400 text-white rounded-lg text-sm font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20"
         >
           {({ loading }) => (loading ? "Preparing PDF..." : "📄 Download ATS PDF")}
         </PDFDownloadLink>
@@ -172,10 +172,10 @@ export const EntityExtractionTab = ({
         <h3 className="text-sm font-bold text-white mb-4">Detected Industry & Role</h3>
         
         {/* Primary Industry Card */}
-        <div className="bg-surface-800/40 border border-white/5 rounded-2xl p-8 flex flex-col items-center justify-center mb-4">
-          <span className="text-[10px] font-black uppercase tracking-widest text-surface-400 mb-3">PRIMARY INDUSTRY</span>
-          <h2 className="text-3xl font-black text-indigo-400 mb-4">{primaryIndustry.name}</h2>
-          <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold">
+        <div className="bg-surface-800/40 border border-white/5 rounded-2xl p-5 sm:p-8 flex flex-col items-center justify-center mb-4 text-center">
+          <span className="text-[10px] font-black uppercase tracking-widest text-surface-400 mb-2 sm:mb-3">PRIMARY INDUSTRY</span>
+          <h2 className="text-2xl sm:text-3xl font-black text-indigo-400 mb-3 sm:mb-4">{primaryIndustry.name}</h2>
+          <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold whitespace-nowrap">
             High confidence
           </span>
         </div>
@@ -190,18 +190,20 @@ export const EntityExtractionTab = ({
           )}
           
           <div>
-            <h4 className="text-xs font-bold text-white mb-6">Industry Scores</h4>
+            <h4 className="text-sm font-bold text-white mb-6">Industry Scores</h4>
             <div className="space-y-4">
               {industryScores.map((ind, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <span className="w-40 text-xs font-medium text-surface-300 truncate" title={ind.name}>{ind.name}</span>
-                  <div className="flex-1 h-1.5 bg-surface-700/50 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-linear-to-r from-indigo-500 to-primary-400 rounded-full" 
-                      style={{ width: `${(ind.score / maxIndScore) * 100}%` }}
-                    />
+                <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                  <span className="w-full sm:w-40 text-xs font-medium text-surface-300 truncate" title={ind.name}>{ind.name}</span>
+                  <div className="flex items-center gap-4 w-full sm:flex-1">
+                    <div className="flex-1 h-1.5 bg-surface-700/50 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-linear-to-r from-indigo-500 to-primary-400 rounded-full" 
+                        style={{ width: `${(ind.score / maxIndScore) * 100}%` }}
+                      />
+                    </div>
+                    <span className="w-8 text-right text-xs text-surface-400">{ind.score.toFixed(1)}</span>
                   </div>
-                  <span className="w-8 text-right text-xs text-surface-400">{ind.score.toFixed(1)}</span>
                 </div>
               ))}
             </div>
@@ -395,8 +397,8 @@ export const EntityExtractionTab = ({
                 key={i}
                 className="border-l-2 pl-5 py-4 bg-surface-800/40 border border-white/5 rounded-r-xl pr-5 rounded-l-none border-y-white/5 border-r-white/5"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
+                <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-2 sm:gap-4">
+                  <div className="min-w-0 flex-1 w-full order-2 sm:order-1">
                     {isEditing ? (
                       <div className="space-y-2 mb-3">
                         <input
@@ -459,12 +461,14 @@ export const EntityExtractionTab = ({
                         {exp.description && (
                           <ul className="mt-4 space-y-2">
                             {exp.description.split(/(?:\n|•)/).filter(b => b.trim().length > 3).map((bullet, idx) => (
-                              <li key={idx} className="group flex items-start gap-2 text-xs text-surface-400 leading-relaxed hover:text-surface-200 transition-colors pr-2">
-                                <span className="text-primary-500 mt-0.5">•</span>
-                                <span className="flex-1">{bullet.trim()}</span>
+                              <li key={idx} className="group flex flex-col sm:flex-row items-start gap-2 text-xs text-surface-400 leading-relaxed hover:text-surface-200 transition-colors pr-2">
+                                <div className="flex items-start gap-2 w-full">
+                                  <span className="text-primary-500 mt-0.5">•</span>
+                                  <span className="flex-1">{bullet.trim()}</span>
+                                </div>
                                 <button
                                   onClick={() => handleRewrite(bullet.trim(), i, idx)}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary-500/20 hover:bg-primary-500/40 text-primary-400 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-widest shrink-0 ml-2 cursor-pointer"
+                                  className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-primary-500/20 hover:bg-primary-500/40 text-primary-400 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-widest shrink-0 sm:ml-2 mt-2 sm:mt-0 self-end sm:self-auto cursor-pointer"
                                 >
                                   Rewrite ✨
                                 </button>
@@ -476,7 +480,7 @@ export const EntityExtractionTab = ({
                     )}
                   </div>
                   {!isEditing && exp.duration && (
-                    <span className="text-[10px] font-semibold text-surface-400 bg-surface-800 rounded px-2 py-1 whitespace-nowrap shrink-0 border border-surface-700">
+                    <span className="text-[10px] font-semibold text-surface-400 bg-surface-800 rounded px-2 py-1 whitespace-nowrap shrink-0 border border-surface-700 order-1 sm:order-2 mb-2 sm:mb-0">
                       {exp.duration}
                     </span>
                   )}

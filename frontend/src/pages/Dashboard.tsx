@@ -142,17 +142,17 @@ const Dashboard = () => {
                 </div>
                 
                 <div className="grid grid-cols-2 lg:flex items-center gap-4">
-                    <div className="glass-card px-6 py-4 rounded-3xl flex flex-col gap-1 border-white/5 shadow-inner">
-                        <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em]">Total Pulse</p>
+                    <div className="glass-card px-4 sm:px-6 lg:px-4 py-4 rounded-3xl flex flex-col gap-1 border-white/5 shadow-inner sm:col-span-2 lg:col-span-1">
+                        <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">Total Pulse</p>
                         <p className="text-2xl font-black text-white">{totalSessions}</p>
                     </div>
-                    <div className="glass-card px-6 py-4 rounded-3xl flex flex-col gap-1 border-white/5 border-l-primary-500/30">
-                        <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em]">Completed</p>
+                    <div className="glass-card px-4 py-4 rounded-3xl flex flex-col gap-1 border-white/5 border-l-primary-500/30">
+                        <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">Completed</p>
                         <p className="text-2xl font-black text-emerald-400">{completedSessions}</p>
                     </div>
                     {activeSessions > 0 && (
-                        <div className="glass-card px-6 py-4 rounded-3xl flex flex-col gap-1 border-white/5 border-l-indigo-500/30 animate-pulse">
-                            <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em]">In Queue</p>
+                        <div className="glass-card px-4 py-4 rounded-3xl flex flex-col gap-1 border-white/5 border-l-indigo-500/30 animate-pulse">
+                            <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">In Queue</p>
                             <p className="text-2xl font-black text-indigo-400">{activeSessions}</p>
                         </div>
                     )}

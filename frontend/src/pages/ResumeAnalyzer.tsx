@@ -287,7 +287,7 @@ const ResumeAnalyzer = () => {
           className="space-y-0 pb-12 relative"
         >
           {/* Header Row */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-6">
             <div>
               <p className="text-[11px] text-surface-500 uppercase tracking-wider mb-1">
                 FILE&nbsp;&nbsp;{resumeData?.originalFilename || file?.name || "Processing..."}
@@ -299,9 +299,9 @@ const ResumeAnalyzer = () => {
             {!isUploading && (
               <button
                 onClick={handleResetAll}
-                className="px-5 py-2 border border-surface-600 rounded-lg text-[11px] font-bold text-surface-300 hover:text-white hover:border-surface-400 transition-all cursor-pointer"
+                className="w-full sm:w-auto px-5 py-3 sm:py-2 border border-surface-600 rounded-lg text-[11px] font-bold text-surface-300 hover:text-white hover:border-surface-400 transition-all cursor-pointer whitespace-nowrap"
               >
-                Analyse Another Resume
+                Analyze Another Resume
               </button>
             )}
           </div>
@@ -310,7 +310,7 @@ const ResumeAnalyzer = () => {
           <div className="border-t border-surface-700" />
 
           {/* Tab Bar */}
-          <div className="flex items-center gap-6 border-b border-surface-700 mt-0 overflow-x-auto">
+          <div className="flex items-center gap-6 border-b border-surface-700 mt-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {TABS.map((tab) => {
               // During upload, if we have streaming text, force 'feedback' tab, otherwise 'ats'
               const isTabActive = isUploading ? (streamingFeedbackText ? tab.key === "feedback" : tab.key === "ats") : activeTab === tab.key;

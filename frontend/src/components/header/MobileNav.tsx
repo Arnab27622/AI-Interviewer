@@ -60,14 +60,14 @@ export const MobileNav = ({
                 className="flex items-center space-x-4 mb-4 p-4 bg-white/5 rounded-2xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all"
               >
                 <div className="w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse"></div>
-                <span className="text-base font-black uppercase tracking-widest text-white">
+                <span className="text-sm font-black uppercase tracking-[0.2em] text-white">
                   {user.name}
                 </span>
               </div>
               <Link
                 to="/"
                 onClick={onClose}
-                className={`block py-3 text-lg font-black uppercase tracking-widest transition-colors ${
+                className={`block py-3 text-sm font-black uppercase tracking-[0.2em] transition-colors ${
                   isActive("/") ? "text-primary-400" : "text-surface-400 hover:text-white"
                 }`}
               >
@@ -76,7 +76,7 @@ export const MobileNav = ({
               <Link
                 to="/resume-analyzer"
                 onClick={onClose}
-                className={`block py-3 text-lg font-black uppercase tracking-widest transition-colors ${
+                className={`block py-3 text-sm font-black uppercase tracking-[0.2em] transition-colors ${
                   isActive("/resume-analyzer")
                     ? "text-primary-400"
                     : "text-surface-400 hover:text-white"
@@ -90,7 +90,7 @@ export const MobileNav = ({
               <Link
                 to="/login"
                 onClick={onClose}
-                className={`block py-3 text-lg font-black uppercase tracking-widest transition-colors ${
+                className={`block py-3 text-sm font-black uppercase tracking-[0.2em] transition-colors ${
                   isActive("/login") ? "text-primary-400" : "text-surface-400 hover:text-white"
                 }`}
               >
@@ -99,7 +99,7 @@ export const MobileNav = ({
               <Link
                 to="/register"
                 onClick={onClose}
-                className={`block py-3 text-lg font-black uppercase tracking-widest transition-colors ${
+                className={`block py-3 text-sm font-black uppercase tracking-[0.2em] transition-colors ${
                   isActive("/register") ? "text-primary-400" : "text-surface-400 hover:text-white"
                 }`}
               >

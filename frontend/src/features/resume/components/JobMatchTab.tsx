@@ -262,17 +262,17 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
               <button
                 onClick={handleGenerateCoverLetter}
                 disabled={isGeneratingCL}
-                className={`w-full py-4 rounded-xl bg-linear-to-r from-indigo-500/20 to-primary-500/20 border border-primary-500/30 hover:bg-primary-500/30 text-primary-400 font-bold tracking-widest uppercase transition-all flex items-center justify-center gap-3 ${isGeneratingCL ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                className={`w-full py-3.5 sm:py-4 rounded-xl bg-linear-to-r from-indigo-500/20 to-primary-500/20 border border-primary-500/30 hover:bg-primary-500/30 text-primary-400 font-bold text-[11px] sm:text-sm tracking-wider sm:tracking-widest uppercase transition-all flex items-center justify-center gap-2 sm:gap-3 ${isGeneratingCL ? 'cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 {isGeneratingCL ? (
                   <>
-                    <span className="animate-spin text-xl">✨</span>
-                    Generating Tailored Cover Letter...
+                    <span className="animate-spin text-lg sm:text-xl">✨</span>
+                    <span className="whitespace-nowrap">Generating Tailored Cover Letter...</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-xl">📝</span>
-                    Generate Tailored Cover Letter
+                    <span className="text-lg sm:text-xl">📝</span>
+                    <span className="whitespace-nowrap">Generate Tailored Cover Letter</span>
                   </>
                 )}
               </button>
@@ -282,14 +282,14 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="bg-surface-800 border border-primary-500/30 rounded-2xl p-6 relative"
               >
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-lg font-bold text-primary-400 flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
+                  <h3 className="text-lg font-bold text-primary-400 flex items-center gap-2 whitespace-nowrap">
                     <span>✨</span> Tailored Cover Letter
                   </h3>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 w-full sm:w-auto">
                     <button
                       onClick={copyToClipboard}
-                      className="px-4 py-2 bg-primary-500/10 hover:bg-primary-500/20 text-primary-400 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                      className="flex-1 sm:flex-none px-4 py-2 bg-primary-500/10 hover:bg-primary-500/20 text-primary-400 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-center"
                     >
                       Copy to Clipboard
                     </button>
@@ -297,7 +297,7 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
                       <PDFDownloadLink
                         document={<CoverLetterPDF coverLetterText={coverLetter} personalInfo={resumeData.parsedData.parsedProfile.personal_info} />}
                         fileName="Tailored_Cover_Letter.pdf"
-                        className="px-4 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 text-indigo-400 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-2"
+                        className="flex-1 sm:flex-none px-4 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 text-indigo-400 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2 text-center"
                       >
                         {({ loading }) => (
                           <>

@@ -54,8 +54,8 @@ export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "
     >
       {streamingText || isStreaming ? (
         <div className="space-y-8">
-          <section className="bg-surface-800/40 border border-rose-500/10 rounded-2xl p-8 shadow-xl">
-            <div className="flex items-center gap-3 mb-6">
+          <section className="bg-surface-800/40 border border-rose-500/10 rounded-2xl p-5 sm:p-8 shadow-xl">
+            <div className="flex items-center gap-3 mb-5 sm:mb-6">
               <div className="shrink-0 w-8 h-8 rounded-full border border-rose-500/30 bg-rose-500/10 flex items-center justify-center">
                 <span className="text-rose-400 font-bold text-sm">!</span>
               </div>
@@ -73,8 +73,8 @@ export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "
           </section>
 
           {(strengthsText || (isStreaming && parts?.length > 1)) && (
-            <section className="bg-surface-800/40 border border-primary-500/10 rounded-2xl p-8 shadow-xl">
-              <div className="flex items-center gap-3 mb-6">
+            <section className="bg-surface-800/40 border border-primary-500/10 rounded-2xl p-5 sm:p-8 shadow-xl">
+              <div className="flex items-center gap-3 mb-5 sm:mb-6">
                 <div className="shrink-0 w-8 h-8 rounded-full border border-primary-400/30 bg-primary-400/10 flex items-center justify-center">
                   <span className="text-primary-400 font-bold text-xs">★</span>
                 </div>

@@ -40,7 +40,11 @@ export const formatIdealAnswer = (text: string | undefined) => {
             const code = parsed.code || parsed.codeExample || parsed.example || "";
 
             if (explanation || code) {
-                return `${explanation}\n\n${code}`.trim();
+                let formattedCode = typeof code === 'string' ? code.trim() : JSON.stringify(code, null, 2);
+                if (formattedCode && !formattedCode.startsWith('```')) {
+                    formattedCode = `\`\`\`\n${formattedCode}\n\`\`\``;
+                }
+                return `${explanation}${formattedCode ? `\n\n${formattedCode}` : ''}`.trim();
             }
         }
 

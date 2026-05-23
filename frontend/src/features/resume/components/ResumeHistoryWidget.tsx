@@ -12,7 +12,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import type { TooltipItem } from "chart.js";
+import type { TooltipItem, ChartOptions } from "chart.js";
 import { getUserResumes } from "../../../services/resumeApi";
 import type { ResumeData } from "../types";
 
@@ -84,19 +84,19 @@ export const ResumeHistoryWidget = () => {
         fill: true,
         backgroundColor: "rgba(45, 212, 191, 0.1)", // primary-400
         borderColor: "#2dd4bf", // primary-400
-        borderWidth: 3,
+        borderWidth: 2,
         pointBackgroundColor: "#2dd4bf",
         pointBorderColor: "#fff",
         pointHoverBackgroundColor: "#fff",
         pointHoverBorderColor: "#2dd4bf",
-        pointRadius: 5,
-        pointHoverRadius: 7,
+        pointRadius: chartData.length > 30 ? 1 : (chartData.length > 15 ? 3 : 5),
+        pointHoverRadius: 6,
         tension: 0.4, // smooth curve
       },
     ],
   };
 
-  const options = {
+  const options: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -137,7 +137,10 @@ export const ResumeHistoryWidget = () => {
         },
         ticks: {
           color: "#94a3b8",
-          font: { family: "Inter", size: 11 },
+          font: { family: "Inter", size: 10 },
+          maxTicksLimit: 6,
+          maxRotation: 45,
+          minRotation: 0,
         },
       },
     },
@@ -147,26 +150,26 @@ export const ResumeHistoryWidget = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-card rounded-[3rem] p-8 border-white/5 relative overflow-hidden"
+      className="glass-card rounded-4xl sm:rounded-[3rem] p-5 sm:p-8 border-white/5 relative overflow-hidden w-full"
     >
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none" />
       
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4 sm:gap-0">
         <div>
-          <h2 className="text-xl font-black text-white flex items-center gap-3">
+          <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2 sm:gap-3">
             <span className="p-2 bg-primary-500/10 rounded-xl text-primary-400">📈</span>
             ATS Score History
           </h2>
-          <p className="text-surface-400 text-sm mt-1 font-medium">
+          <p className="text-surface-400 text-xs sm:text-sm mt-1 font-medium">
             Track your resume improvements over time
           </p>
         </div>
-        <div className="px-4 py-1.5 rounded-full bg-surface-800 border border-white/5 text-xs font-bold text-surface-300">
+        <div className="px-3 sm:px-4 py-1.5 rounded-full bg-surface-800 border border-white/5 text-[10px] sm:text-xs font-bold text-surface-300 self-start sm:self-auto whitespace-nowrap">
           {resumes.length} Scans
         </div>
       </div>
 
-      <div className="h-[250px] w-full">
+      <div className="h-[200px] sm:h-[250px] w-full relative">
         <Line data={data} options={options} />
       </div>
     </motion.div>

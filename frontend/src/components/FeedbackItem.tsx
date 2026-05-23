@@ -19,15 +19,15 @@ const FeedbackItem: React.FC<FeedbackItemProps> = ({ question, index }) => {
                         </h4>
                     </div>
                     
-                    <div className="flex gap-3 shrink-0">
-                        <div className="px-5 py-2.5 rounded-2xl border flex items-center gap-3 bg-white/5 border-white/10 group-hover/item:border-primary-500/30 transition-all">
-                            <span className="text-[10px] font-black uppercase text-surface-500 tracking-widest">Mastery</span>
-                            <span className="text-sm font-black text-primary-400">{question.technicalScore}%</span>
+                    <div className="flex gap-2 sm:gap-3 shrink-0 w-full lg:w-auto">
+                        <div className="flex-1 lg:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border flex justify-center items-center gap-1.5 sm:gap-3 bg-white/5 border-white/10 group-hover/item:border-primary-500/30 transition-all">
+                            <span className="text-[8px] sm:text-[10px] font-black uppercase text-surface-500 tracking-widest">Mastery</span>
+                            <span className="text-xs sm:text-sm font-black text-primary-400">{question.technicalScore}%</span>
                         </div>
 
-                        <div className="px-5 py-2.5 rounded-2xl border flex items-center gap-3 bg-white/5 border-white/10 group-hover/item:border-indigo-500/30 transition-all">
-                            <span className="text-[10px] font-black uppercase text-surface-500 tracking-widest">Confidence</span>
-                            <span className="text-sm font-black text-indigo-400">{question.confidenceScore}%</span>
+                        <div className="flex-1 lg:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border flex justify-center items-center gap-1.5 sm:gap-3 bg-white/5 border-white/10 group-hover/item:border-indigo-500/30 transition-all">
+                            <span className="text-[8px] sm:text-[10px] font-black uppercase text-surface-500 tracking-widest">Confidence</span>
+                            <span className="text-xs sm:text-sm font-black text-indigo-400">{question.confidenceScore}%</span>
                         </div>
                     </div>
                 </div>
@@ -43,7 +43,7 @@ const FeedbackItem: React.FC<FeedbackItemProps> = ({ question, index }) => {
                         {question.userSubmittedCode && question.userSubmittedCode !== 'undefined' && (
                             <div className="p-6 sm:p-8 border-b border-white/5 last:border-0 relative">
                                 <div className="absolute top-4 right-6 text-[9px] font-bold text-surface-500 uppercase tracking-widest opacity-50">Log :: Code</div>
-                                <pre className="text-xs sm:text-sm font-mono text-surface-300 whitespace-pre-wrap overflow-x-auto leading-relaxed">
+                                <pre className="text-xs sm:text-sm font-mono text-surface-300 overflow-x-auto custom-scrollbar pb-2 leading-relaxed">
                                     {question.userSubmittedCode}
                                 </pre>
                             </div>
@@ -52,7 +52,7 @@ const FeedbackItem: React.FC<FeedbackItemProps> = ({ question, index }) => {
                         {question.userAnswerText && (
                             <div className="p-6 sm:p-8 relative">
                                 <div className="absolute top-4 right-6 text-[9px] font-bold text-surface-500 uppercase tracking-widest opacity-50">Log :: Audio Transcript</div>
-                                <p className="text-sm sm:text-base text-surface-400 italic leading-relaxed pr-20 font-medium">
+                                <p className="text-sm sm:text-base text-surface-400 italic leading-relaxed font-medium pt-4 sm:pt-0">
                                     « {question.userAnswerText} »
                                 </p>
                             </div>
@@ -89,7 +89,7 @@ const FeedbackItem: React.FC<FeedbackItemProps> = ({ question, index }) => {
                             <span className="text-[10px] font-black text-surface-500 uppercase tracking-[0.3em]">Execution Reference</span>
                         </div>
                         <div className="bg-surface-950 p-6 sm:p-8 rounded-4xl text-xs sm:text-[13px] border border-white/5 overflow-x-auto shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] leading-relaxed group-hover/item:border-indigo-500/20 transition-colors">
-                            <div className="prose prose-invert max-w-none prose-p:my-2 prose-code:text-indigo-400 prose-code:bg-white/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-ul:my-2 prose-li:my-1">
+                            <div className="prose prose-invert max-w-none prose-p:my-2 prose-code:text-indigo-400 prose-code:bg-white/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:font-mono prose-ul:my-2 prose-li:my-1 prose-pre:whitespace-pre prose-pre:overflow-x-auto prose-pre:custom-scrollbar prose-pre:bg-white/5 prose-pre:p-4 prose-pre:rounded-xl">
                                 <ReactMarkdown>
                                     {formatIdealAnswer(question.idealAnswer)}
                                 </ReactMarkdown>
