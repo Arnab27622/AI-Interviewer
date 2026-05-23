@@ -14,6 +14,7 @@ import connectDB from "./config/db.js";
 import sessionRoutes from "./routes/sessionRoutes.js";
 import resumeRoutes from "./routes/resumeRoutes.js";
 import codeRoutes from "./routes/codeRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
 import fs from "fs";
@@ -110,6 +111,7 @@ app.get("/health", async (req: Request, res: Response) => {
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/code", codeRoutes);
+app.use("/api/user", userRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
