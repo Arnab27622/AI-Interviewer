@@ -63,21 +63,22 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
+      
+      console.log(`[CORS DEBUG] Incoming Origin: ${origin}`);
+      console.log(`[CORS DEBUG] Configured FRONTEND_URL: ${process.env.FRONTEND_URL}`);
+      
+      const allowedOrigins = allowOrigin
+        .split(",")
+        .map((o) => o.trim().replace(/\/$/, "")); // Strip trailing slashes
+        
       if (
-        allowOrigin === origin ||
-        allowOrigin
-          .split(",")
-          .map((o) => o.trim())
-          .includes(origin)
+        allowedOrigins.includes(origin) || 
+        process.env.NODE_ENV === "development"
       ) {
         callback(null, true);
       } else {
-        // Allow all origins in development to simplify local testing
-        if (process.env.NODE_ENV === "development") {
-          callback(null, true);
-        } else {
-          callback(new Error("Not allowed by CORS"));
-        }
+        console.error(`CORS Blocked: Origin '${origin}' is not in allowed list '${allowedOrigins.join(', ')}'`);
+        callback(new Error("Not allowed by CORS"));
       }
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
