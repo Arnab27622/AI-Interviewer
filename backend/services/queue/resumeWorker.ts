@@ -128,7 +128,7 @@ const processJob = async (job: Job<ResumeJobData>): Promise<any> => {
       await transitionState(resume, userId, "matching");
 
       try {
-        // Collect all resume skills for FAISS vector comparison
+        // Collect all resume skills for semantic vector comparison
         const resumeSkills = [
           ...(analysisResult.skills?.technical || []),
           ...(analysisResult.skills?.soft || []),

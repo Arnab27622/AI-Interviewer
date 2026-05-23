@@ -87,7 +87,7 @@ class ResumeOrchestratorService:
     @staticmethod
     def match_resume(resume_text: str, resume_skills: list, jd_text: str) -> dict:
         """
-        Coordinates the JD matching via FAISS and semantic scoring.
+        Coordinates the JD matching via deep semantic scoring and contextual evaluation.
         """
         t_start = time.time()
         match_result = ResumeJDMatchingService.match(resume_text, resume_skills, jd_text)

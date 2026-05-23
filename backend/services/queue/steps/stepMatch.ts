@@ -4,7 +4,7 @@ import { getAIServiceUrl } from "./utils.js";
 
 /**
  * STEP 3: analyzing → matching (optional, only if JD text is provided)
- * Send resume + skills to Python AI Service /resume/v2/match (JD parsing + FAISS + Gemini)
+ * Send resume + skills to Python AI Service /resume/v2/match (JD parsing + Gemini semantic matching)
  */
 export const stepMatch = async (resume: any, resumeSkills: string[]): Promise<any> => {
   const AI_SERVICE_URL = getAIServiceUrl();
@@ -14,7 +14,7 @@ export const stepMatch = async (resume: any, resumeSkills: string[]): Promise<an
   const cached = await getCachedResult("match", fingerprint);
   if (cached) return cached;
 
-  console.log(`[Worker] STEP 3/4: Sending resume ${resume._id} for FAISS-based JD matching...`);
+  console.log(`[Worker] STEP 3/4: Sending resume ${resume._id} for Gemini-based semantic JD matching...`);
   const response = await fetch(`${AI_SERVICE_URL}/resume/v2/match`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

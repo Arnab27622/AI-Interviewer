@@ -55,7 +55,7 @@ async def analyze_resume_v2(payload: dict = Body(...)):
 @router.post("/match")
 async def match_resume_v2(payload: dict = Body(...)):
     """
-    [SOA v2] Analyzes JD, runs vector embedding matching via FAISS, and
+    [SOA v2] Analyzes JD, performs semantic contextual matching via Gemini, and
     performs semantic scoring with Gemini contextual cross-referencing.
     """
     resume_text = payload.get("resume_text")

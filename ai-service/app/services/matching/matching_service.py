@@ -33,7 +33,7 @@ class ResumeJDMatchingService:
     def match(resume_text: str, resume_skills: list[str], jd_text: str) -> dict:
         """
         Runs the comprehensive Resume-to-JD matching pipeline.
-        Calculates local semantic vector similarity with FAISS, extracts JD requirements,
+        Calculates semantic match through deep contextual evaluation, extracts JD requirements,
         and uses Gemini reasoning for contextual evaluation.
         """
         logger.info("Executing Resume-JD semantic matching pipeline")
