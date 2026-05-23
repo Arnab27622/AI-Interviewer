@@ -1,5 +1,5 @@
 import logging
-from app.services.matching.embedding_service import EmbeddingService
+
 from app.services.matching.jd_analysis_service import JDAnalysisService
 from app.services.gemini_service import call_gemini, parse_response
 
@@ -8,13 +8,13 @@ logger = logging.getLogger("ResumeJDMatchingService")
 MATCHING_SYSTEM_PROMPT = """
 You are a Senior Technical Recruiter and Career Coach. 
 Your task is to perform a deep semantic comparison between a candidate's resume/skills profile and a Job Description (JD).
-You will be provided with the resume details, the analyzed JD details, and a semantic vector similarity score computed between them.
+You will be provided with the resume details and the analyzed JD details.
 
 ### Output Requirements:
 You MUST return a valid JSON object with the following structure:
 {
   "match_score": number (0-100),
-  "explanation": "string (concise summary of why this score was given, referencing the semantic similarity score)",
+  "explanation": "string (concise summary of why this score was given, analyzing semantic overlap)",
   "missing_skills": ["string (skills or requirements in the JD that are not in the resume)"],
   "matched_skills": ["string (skills in the resume that align with the JD)"],
   "experience_fit": "string (Good / Partial / Poor - assessment of years/level of experience)",
@@ -22,7 +22,7 @@ You MUST return a valid JSON object with the following structure:
 }
 
 ### Guidelines:
-1. Review the provided semantic similarity score and factor it heavily into the final `match_score`.
+1. Review the provided resume and JD and compute an overall `match_score` based on their semantic alignment.
 2. Look beyond keyword matching. Evaluate semantic similarity (e.g., if JD asks for 'Cloud Experience' and resume has 'AWS/Azure', it's a match).
 3. Be realistic. If the JD requires 5 years of React and the resume has 1 year, reflect this in the `experience_fit` and `match_score`.
 4. Provide constructive, specific recommendations.
@@ -44,24 +44,13 @@ class ResumeJDMatchingService:
             preferred_skills = jd_data.get("preferred_skills", [])
             all_jd_skills = required_skills + preferred_skills
             
-            # 2. Compute local vector embedding similarity via FAISS
-            semantic_similarity = 0.0
-            if resume_skills and all_jd_skills:
-                try:
-                    resume_embeddings = EmbeddingService.get_embeddings(resume_skills)
-                    jd_embeddings = EmbeddingService.get_embeddings(all_jd_skills)
-                    semantic_similarity = EmbeddingService.compute_similarity_faiss(resume_embeddings, jd_embeddings)
-                    logger.info(f"FAISS cosine similarity calculated: {semantic_similarity:.4f}")
-                except Exception as emb_err:
-                    logger.warning(f"Failed to calculate FAISS embedding similarity: {str(emb_err)}")
-            
-            # 3. Use Gemini to perform final contextual cross-referencing
+            # 2. Use Gemini to perform final contextual cross-referencing and semantic matching
             user_prompt = (
                 f"### Resume Text:\n{resume_text}\n\n"
                 f"### Resume Extracted Skills:\n{', '.join(resume_skills) if resume_skills else 'None'}\n\n"
                 f"### Job Description Requirements:\n{jd_text}\n\n"
                 f"### Structured JD Analysis:\n{jd_data}\n\n"
-                f"### Computed Semantic Vector Similarity (FAISS Cosine): {semantic_similarity:.4f} (where 1.0 is identical)\n"
+                f"Evaluate the semantic match between the resume and the job description based on the provided details.\n"
             )
             
             from datetime import datetime
@@ -78,7 +67,6 @@ class ResumeJDMatchingService:
             match_report = parse_response(response_text)
             
             # Inject metrics and JD analysis metadata into match results
-            match_report["semantic_similarity"] = round(semantic_similarity, 4)
             match_report["jd_analysis"] = jd_data
             
             logger.info("Resume-JD match report created successfully")
