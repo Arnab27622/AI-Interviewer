@@ -1,0 +1,50 @@
+services:
+  # --- Backend Service ---
+  - type: web
+    name: ai-interviewer-backend
+    env: docker
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free # Change to starter/standard if needed
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Frontend URL for CORS
+      - key: FRONTEND_URL
+        sync: false
+      # MongoDB Connection String
+      - key: MONGO_URI
+        sync: false
+      # Redis Connection String for BullMQ
+      - key: REDIS_URL
+        sync: false
+      # JWT Secrets
+      - key: JWT_SECRET
+        sync: false
+      # Google Auth
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      # OpenRouter API Key
+      - key: OPENROUTER_API_KEY
+        sync: false
+      # AI Service URL
+      - key: AI_SERVICE_URL
+        sync: false
+
+  # --- AI Microservice ---
+  - type: web
+    name: ai-interviewer-ai-service
+    env: docker
+    dockerContext: ./ai-service
+    dockerfilePath: ./ai-service/Dockerfile
+    plan: free # Change to starter/standard if needed
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Allow connections from the backend
+      - key: ALLOWED_ORIGINS
+        sync: false

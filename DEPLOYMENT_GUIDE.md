@@ -49,19 +49,16 @@ This guide explains how to set up the AI Interviewer locally and how to deploy i
 
 ## ☁️ Production Deployment (Free Tier)
 
-### 1. 🤖 AI Service (Render)
-- **New Web Service** -> Connect Repo.
-- **Root Directory**: `ai-service`
-- **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-- **Env Vars**: Add `GEMINI_API_KEY`, `GEMINI_API_KEY_TRANSCRIPTION` (optional second key), `MODEL_NAME=gemini-2.5-flash`, `REQUEST_TIMEOUT=120`.
+### 1. 🚀 Deploy Backend & AI Service (Render)
+We have provided a `render.yaml` Blueprint which automatically configures Docker-based deployments for both services. The AI Service uses Docker to properly install `tesseract-ocr` and `poppler-utils`.
 
-### 2. ⚙️ Backend (Render)
-- **New Web Service** -> Connect Repo.
-- **Root Directory**: `backend`
-- **Build Command**: `npm install`
-- **Start Command**: `node server.js`
-- **Env Vars**: Add `MONGO_URI`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. Set `AI_SERVICE_URL` to your Render AI Service URL.
+1. Go to your Render Dashboard and click **New** -> **Blueprint**.
+2. Connect your GitHub repository.
+3. Render will detect the `render.yaml` file.
+4. Fill in the required environment variables in the Render UI (e.g., `MONGO_URI`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `FRONTEND_URL`, `OPENROUTER_API_KEY`).
+5. Click **Apply**. Render will build and deploy both the `ai-interviewer-backend` and `ai-interviewer-ai-service` automatically using the provided Dockerfiles.
+
+*Note: You can find the AI Service URL in your Render dashboard after deployment. Update your Backend's `AI_SERVICE_URL` environment variable to point to it, and the Backend URL will go in your Frontend's `VITE_API_URL`.*
 
 ### 3. 💻 Frontend (Vercel)
 - **Import Project** -> Connect Repo.
