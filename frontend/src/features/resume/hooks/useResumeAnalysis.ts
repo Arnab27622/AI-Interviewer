@@ -1,3 +1,12 @@
+/**
+ * @file hooks/useResumeAnalysis.ts
+ * @description 
+ * ARCHITECTURE OVERVIEW:
+ * This custom hook acts as the central state manager for the Resume Analysis flow.
+ * Instead of long-polling the backend for ML status updates, it establishes a lightweight 
+ * WebSocket (`Socket.IO`) connection to listen for real-time progress events from the BullMQ workers.
+ * It perfectly synchronizes the UI with the async AI backend pipeline.
+ */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
 import { toast } from "react-toastify";

@@ -8,6 +8,14 @@ import logging
 logger = logging.getLogger("FileProcessingService")
 
 class FileProcessingService:
+    """
+    ARCHITECTURE OVERVIEW:
+    This service is responsible for safely extracting raw text from various document formats (PDF, DOCX, TXT)
+    before they are passed to the LLM for parsing. 
+    It includes an automatic failover to OCR (Tesseract) if the PDF is purely image-based or cannot be parsed
+    natively by PyMuPDF. It also securely strips embedded hyperlinks to preserve data integrity.
+    """
+    
     @staticmethod
     def clean_text(text: str) -> str:
         """Removes excessive newlines and spaces from extracted text."""

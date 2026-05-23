@@ -7,6 +7,14 @@ from app.services.analysis.scoring_service import CandidateScoringService
 from app.services.matching.matching_service import ResumeJDMatchingService
 
 class ResumeOrchestratorService:
+    """
+    ARCHITECTURE OVERVIEW:
+    This class is the "Brain" of the AI pipeline. It orchestrates the flow of data through
+    multiple specialized LLM steps. 
+    It breaks down large complex tasks (like full resume analysis) into modular, independent
+    LLM API calls (Parsing, Scoring, Report Generation) to improve accuracy and prevent hallucinations.
+    """
+    
     @staticmethod
     def process_resume(contents: bytes, filename: str) -> dict:
         """

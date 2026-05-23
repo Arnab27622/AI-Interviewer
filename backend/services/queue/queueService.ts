@@ -1,6 +1,11 @@
 /**
  * @file services/queue/queueService.ts
- * @description BullMQ resume processing queue with TypeScript support
+ * @description BullMQ resume processing queue with TypeScript support.
+ * 
+ * ARCHITECTURE OVERVIEW:
+ * This file handles the Redis-backed Background Job Queue for the heavy ML processes.
+ * It ensures that large PDFs don't block the main Node.js event loop by pushing the
+ * parsing and scoring workloads off to isolated BullMQ worker threads.
  */
 
 import { Queue, Job } from "bullmq";

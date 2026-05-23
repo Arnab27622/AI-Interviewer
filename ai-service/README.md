@@ -4,15 +4,17 @@ The AI microservice backend for Prepify. This service specialized in handling he
 
 ## 🚀 Capabilities
 
-- **🎙️ Cloud-Native Transcription**: Offloads verbal analysis to Gemini Cloud, staying within strict RAM limits (under 512MB) of free-tier hosting.
-- **🧠 Generative Intelligence**: Uses advanced system prompting to generate exactly `n` role-specific questions with JSON output guarantees.
+- **🧠 Generative Intelligence**: Uses advanced system prompting to generate role-specific interview questions with strict JSON schema guarantees.
+- **🎙️ Cloud-Native Transcription**: Offloads verbal audio analysis to Gemini Cloud, staying within strict RAM limits (under 512MB) of free-tier hosting.
 - **🛡️ Security Guardrails**: Implements input sanitization and prompt-injection hardening to prevent malicious behavior through user-provided roles or answers.
 - **⚡ Async Execution**: Built with FastAPI for non-blocking processing of multiple parallel evaluation requests.
+- **📄 Advanced Resume Parsing**: Integrates PyMuPDF for lightning-fast, highly accurate document extraction, powering the ATS scoring and cover letter generation tools.
 
 ## 🏗️ Tech Stack
 
 - **FastAPI**: Asynchronous, high-performance Python framework.
 - **Google Generative AI**: Native SDK for optimized interaction with Gemini models.
+- **PyMuPDF / Tesseract**: High-speed, robust PDF and DOCX file processing.
 - **Uvicorn**: Production-grade ASGI server with worker-based scaling.
 - **Pydantic**: Type-strict data validation for all API requests and responses.
 
@@ -44,9 +46,10 @@ pip install -r requirements.txt
 Create a `.env` file in this directory based on `.env.example`:
 ```env
 PORT=8000
+MODEL_NAME=gemini-2.5-flash
 GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_API_KEY_TRANSCRIPTION=your_gemini_api_key_here
-MODEL_NAME=gemini-2.5-flash
+ALLOWED_ORIGINS=http://localhost:5000,http://localhost:5173
 REQUEST_TIMEOUT=60
 ```
 
@@ -62,6 +65,10 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 ## 📡 API Endpoints (Core)
 
+- `POST /api/v2/resume/process`: Parses uploaded PDFs and structurally extracts text and skills.
+- `POST /api/v2/resume/analyze`: Scores a resume against ATS metrics and industry benchmarks.
+- `POST /api/v2/resume/rewrite-bullet`: AI-rewrites a single resume bullet point for maximum impact.
+- `POST /api/v2/resume/generate-cover-letter`: Generates a professional cover letter dynamically mapped to a job description.
 - `POST /generate-questions`: Batch generation of technical/conceptual questions.
 - `POST /evaluate`: Detailed scoring and feedback for a specific answer/code snippet.
 - `POST /transcribe`: High-speed audio-to-text conversion via Gemini base64 encoding.

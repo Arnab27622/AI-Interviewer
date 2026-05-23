@@ -1,6 +1,12 @@
 /**
  * @file controllers/resumeController.ts
- * @description Resume upload and retrieval controllers with TypeScript support
+ * @description Resume upload and retrieval controllers with TypeScript support.
+ * 
+ * ARCHITECTURE OVERVIEW:
+ * This file acts as the primary API bridge between the Frontend and the Backend ML logic.
+ * - `uploadResume`: Saves the file to disk, creates a Mongo document, and instantly enqueues a background BullMQ job.
+ * - `getResume`: Retrieves the parsed/analyzed resume, using Redis caching for speed.
+ * - `rewriteBullet` & `generateCoverLetter`: Synchronously passes specific ML requests to the FastAPI Python service.
  */
 
 import { Request, Response, NextFunction } from "express";

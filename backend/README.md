@@ -63,14 +63,17 @@ npm start
 - `GET /health`: Health check endpoint for cloud monitoring. Returns database connectivity status.
 - `POST /api/sessions`: Create a new session (Rate limited: 5 req / 15 mins).
 - `GET /api/sessions`: Retrieve paginated interview history.
+- `POST /api/resume/upload`: Upload a resume PDF/DOCX for AI parsing. Spawns a BullMQ background job.
+- `POST /api/resume/:id/cover-letter`: Generate a tailored cover letter from the parsed resume.
 - `POST /api/auth/google`: OAuth login entry point.
 
 ## 📂 Internal Directory Structure
 
 - `controllers/`: Logic for handling API requests.
-- `models/`: Mongoose schemas for Users, Interviews, etc.
+- `models/`: Mongoose schemas for Users, Interviews, Resumes, etc.
 - `routes/`: Express route definitions.
-- `services/`: External service integration (AI Service, Socket logic).
+- `services/`: External service integration (AI Service, Socket logic) and **Queue Workers**.
+  - `queue/`: BullMQ worker definitions and Redis connection orchestration.
 - `middleware/`: Auth, validation, and error handling filters.
 
 ---

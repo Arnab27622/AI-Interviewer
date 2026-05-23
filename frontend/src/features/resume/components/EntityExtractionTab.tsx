@@ -1,3 +1,12 @@
+/**
+ * @file components/EntityExtractionTab.tsx
+ * @description
+ * ARCHITECTURE OVERVIEW:
+ * This component visualizes the structured JSON output returned from the AI Resume Parser.
+ * It provides a fully editable UI where users can tweak the extracted fields (Name, Skills, Experience)
+ * before generating the final ATS-optimized PDF. 
+ * It also handles the "AI Bullet Rewrite" feature by bridging user input to the backend LLM service.
+ */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";

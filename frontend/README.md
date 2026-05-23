@@ -4,12 +4,13 @@ The user-facing application for Prepify. A high-performance, responsive React ap
 
 ## ✨ Features
 
-- **📊 Dynamic Dashboard**: View interview history and stats with professional **Skeleton Shimmer** loading states.
-- **🎙️ Persistent Resume System**: Leveraging **IndexedDB** to store audio blobs and code drafts locally, ensuring no progress is lost if the browser is closed mid-session.
 - **🎤 Interactive Interview Terminal**: Real-time status updates (Transcribing -> Evaluating -> Feedback Ready) via WebSockets.
 - **⏲️ Active Session Timer**: Real-time display of interview duration.
 - **📈 Performance Visualization**: Detailed feedback reports with SVG progress rings and Chart.js mastery calibration charts.
-- **📁 PDF Reporting**: Print-optimized reporting system for exporting interview results.
+- **📊 Dynamic Dashboard**: View interview history and stats with professional **Skeleton Shimmer** loading states.
+- **🎙️ Persistent Resume System**: Leveraging **IndexedDB** to store audio blobs and code drafts locally, ensuring no progress is lost if the browser is closed mid-session.
+- **📄 ATS Resume Analyzer (Bonus)**: Upload and visualize structured parsed data with editable JSON-like forms.
+- **📝 PDF Generation**: Generate beautiful, ATS-optimized Resumes and tailored Cover Letters directly in the browser via `@react-pdf/renderer`.
 
 ## 🏗️ Tech Stack
 
@@ -18,6 +19,7 @@ The user-facing application for Prepify. A high-performance, responsive React ap
 - **Framer Motion**: Smooth micro-animations and layout transitions.
 - **IndexedDB**: Persistent client-side storage for binary audio data.
 - **Chart.js**: Graphical mastery calibration and performance metrics.
+- **React-PDF**: Client-side PDF generation for resumes and cover letters.
 - **Tailwind CSS**: Utility-first CSS for the modern Neo-Dark design system.
 - **Socket.io-client**: Real-time event synchronization.
 
@@ -53,10 +55,10 @@ The app will be available at `http://localhost:5173`.
 
 ## 📂 Core Modules Breakdown
 
-- `src/pages/`: Main view components (Dashboard, Interview, Review).
+- `src/pages/`: Main view components (Dashboard, Interview, Review, Resume Analyzer).
 - `src/components/`: Reusable UI elements, loaders, and card systems.
-- `src/features/`: Feature-sliced logic for the Session Runner and User Auth.
-- `src/hooks/`: Custom hooks for Audio Recording and Socket management.
+- `src/features/`: Feature-sliced logic for the Session Runner, Auth, and Resume Parsing.
+- `src/hooks/`: Custom hooks for Audio Recording, WebSocket synchronization, and API polling.
 - `src/utils/`: IndexedDB handlers and formatting utilities.
 
 ---

@@ -1,6 +1,13 @@
 /**
  * @file src/server.ts
- * @description Main entry point for the AI Interviewer backend with TypeScript support
+ * @description Main entry point for the Node.js / Express backend.
+ * 
+ * ARCHITECTURE OVERVIEW:
+ * 1. Express Setup: Configures CORS, parsers, and global error handling.
+ * 2. Database: Connects to MongoDB via Mongoose (`config/db.ts`).
+ * 3. Routing: Mounts API routers (`/api/sessions`, `/api/resume`, etc.).
+ * 4. Real-time (Socket.IO): Secures WebSocket connections using JWT and handles private user rooms.
+ * 5. Background Jobs: Initializes BullMQ workers (`services/queue/resumeWorker.ts`) to process heavy ML tasks asynchronously.
  */
 
 import "dotenv/config";

@@ -1,7 +1,13 @@
 """
 AI Interviewer Microservice - Entry Point
 Main entry for the modular AI service using FastAPI.
-Handles routing, CORS, and application lifecycle.
+
+ARCHITECTURE OVERVIEW:
+This is the isolated Python Microservice dedicated exclusively to running heavy ML and AI workloads.
+1. It is deliberately detached from the Node.js backend so that memory-intensive models (Whisper, Gemini)
+   don't block the Node event loop.
+2. It handles audio transcription (Whisper), resume parsing (PyMuPDF), and intelligent NLP scoring (Gemini).
+3. The server lazily loads models during the `lifespan` event to conserve RAM during cold boots.
 """
 import os
 import uvicorn
