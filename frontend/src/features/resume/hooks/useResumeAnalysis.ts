@@ -43,13 +43,17 @@ export const useResumeAnalysis = ({ userId }: UseResumeAnalysisProps) => {
       socket.emit("joinRoom", { userId });
     });
 
-    socket.on("resume:status", (data: { status?: string; type?: string; chunk?: string; resumeId: string }) => {
+    socket.on("resume:status", (data: { status?: string; type?: string; chunk?: string; resumeId: string; error?: string }) => {
       if (data.type === "feedback_stream" && data.chunk) {
         setStreamingFeedbackText(prev => prev + data.chunk!);
       } else if (data.status) {
         setStatus(data.status);
         if (data.status === "completed") {
           fetchResumeDetails(data.resumeId);
+        } else if (data.status === "failed") {
+          toast.error(`Analysis failed: ${data.error || "Unknown error"}`);
+          setIsUploading(false);
+          setStatus(null);
         }
       }
     });
