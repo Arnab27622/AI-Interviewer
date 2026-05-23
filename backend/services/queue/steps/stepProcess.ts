@@ -39,11 +39,16 @@ export const stepProcess = async (resume: any): Promise<any> => {
     contentType: finalContentType,
   });
 
+  const headers: any = typeof formData.getHeaders === "function" ? formData.getHeaders() : {};
+  if (typeof formData.getLengthSync === "function") {
+    headers["Content-Length"] = formData.getLengthSync().toString();
+  }
+
   console.log(`[Worker] STEP 1/4: Sending resume ${resume._id} for processing + parsing...`);
   const response = await fetch(`${AI_SERVICE_URL}/resume/v2/process`, {
     method: "POST",
     body: formData,
-    headers: (formData as any).getHeaders?.() || {},
+    headers,
   });
 
   if (!response.ok) {
