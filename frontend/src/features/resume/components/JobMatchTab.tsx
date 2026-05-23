@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 import type { AppDispatch } from "../../../app/store";
 import { createSession } from "../../session/sessionSlice";
 import type { ResumeData } from "../types";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { CoverLetterPDF } from "./CoverLetterPDF";
 
 interface JobMatchTabProps {
   resumeData: ResumeData;
@@ -284,12 +286,27 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
                   <h3 className="text-lg font-bold text-primary-400 flex items-center gap-2">
                     <span>✨</span> Tailored Cover Letter
                   </h3>
-                  <button
-                    onClick={copyToClipboard}
-                    className="px-4 py-2 bg-primary-500/10 hover:bg-primary-500/20 text-primary-400 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
-                  >
-                    Copy to Clipboard
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={copyToClipboard}
+                      className="px-4 py-2 bg-primary-500/10 hover:bg-primary-500/20 text-primary-400 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                    >
+                      Copy to Clipboard
+                    </button>
+                    {coverLetter && resumeData?.parsedData?.parsedProfile && (
+                      <PDFDownloadLink
+                        document={<CoverLetterPDF coverLetterText={coverLetter} personalInfo={resumeData.parsedData.parsedProfile.personal_info} />}
+                        fileName="Tailored_Cover_Letter.pdf"
+                        className="px-4 py-2 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 text-indigo-400 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-2"
+                      >
+                        {({ loading }) => (
+                          <>
+                            <span>{loading ? "Generating..." : "Download PDF"}</span>
+                          </>
+                        )}
+                      </PDFDownloadLink>
+                    )}
+                  </div>
                 </div>
                 <div className="prose prose-invert max-w-none text-surface-300 text-sm leading-relaxed whitespace-pre-wrap">
                   {coverLetter}
