@@ -8,3 +8,5 @@ __pycache__/
 .planning/
 backend/verify_resume_system.py
 backend/dist*
+.venv
+
