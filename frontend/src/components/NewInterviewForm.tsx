@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ROLES, LEVELS, TYPES, COUNTS } from "../constants/interview";
 import CustomSelect from "./CustomSelect";
 import type { NewInterviewFormProps } from "../types/forms";
+import type { ResumeData } from "../features/resume/types";
+import { getUserResumes } from "../services/resumeApi";
+import { toast } from "react-toastify";
 
 const NewInterviewForm: React.FC<NewInterviewFormProps> = ({
     formData,
@@ -12,6 +15,27 @@ const NewInterviewForm: React.FC<NewInterviewFormProps> = ({
     const handleCustomChange = (name: string, value: string | number) => {
         onChange({ target: { name, value } });
     };
+
+    const [resumes, setResumes] = useState<ResumeData[]>([]);
+
+    useEffect(() => {
+        const fetchResumes = async () => {
+            try {
+                const data = await getUserResumes();
+                // Filter only completed resumes that have text/analysis
+                setResumes(data.filter((r: ResumeData) => r.status === 'completed' || r.parsedData));
+            } catch (error) {
+                console.error("Failed to fetch resumes:", error);
+                toast.error("Failed to load your resumes. Please try again later.");
+            }
+        };
+        fetchResumes();
+    }, []);
+
+    const resumeOptions = [
+        { label: "None (Standard Interview)", value: "" },
+        ...resumes.map(r => ({ label: r.originalFilename || "Unnamed Resume", value: r._id }))
+    ];
 
     return (
         <div className="glass-card rounded-[2.5rem] group/form relative z-10">
@@ -26,7 +50,7 @@ const NewInterviewForm: React.FC<NewInterviewFormProps> = ({
                     <div className="w-2 h-2 rounded-full bg-green-500/20"></div>
                 </div>
             </div>
-            <form onSubmit={onSubmit} className="p-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+            <form onSubmit={onSubmit} className="p-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <CustomSelect
                     label="Professional Role"
                     name="role"
@@ -59,7 +83,15 @@ const NewInterviewForm: React.FC<NewInterviewFormProps> = ({
                     onChange={handleCustomChange}
                 />
 
-                <div className="pt-5.5">
+                <CustomSelect
+                    label="Resume (Optional)"
+                    name="resumeId"
+                    options={resumeOptions}
+                    value={formData.resumeId || ""}
+                    onChange={handleCustomChange}
+                />
+
+                <div className="pt-5.5 lg:col-span-1 md:col-span-2">
                     <button
                         type="submit"
                         disabled={isProcessing}

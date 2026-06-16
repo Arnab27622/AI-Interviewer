@@ -17,6 +17,7 @@ export interface NewInterviewFormProps {
         level: string;
         interviewType: string;
         count: number;
+        resumeId?: string;
     };
     onChange: (e: FormChangeEvent) => void;
     onSubmit: (e: SyntheticEvent) => void;

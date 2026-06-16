@@ -36,6 +36,7 @@ const Dashboard = () => {
         level: LEVELS[0],
         interviewType: TYPES[1].value,
         count: COUNTS[0],
+        resumeId: "",
     })
 
     const [modalConfig, setModalConfig] = useState({

@@ -37,6 +37,7 @@ export interface ISession extends Document {
     avgTechnical: number;
     avgConfidence: number;
   };
+  resumeId?: mongoose.Types.ObjectId;
   questions: mongoose.Types.DocumentArray<IQuestion & mongoose.Document>;
   startTime: Date;
   endTime?: Date | null;
@@ -144,6 +145,11 @@ const sessionSchema = new Schema<ISession, ISessionModel>(
         type: Number,
         default: 0,
       },
+    },
+    resumeId: {
+      type: Schema.Types.ObjectId,
+      ref: "Resume",
+      required: false,
     },
     questions: [questionSchema],
     startTime: {

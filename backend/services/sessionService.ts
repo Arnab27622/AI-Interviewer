@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import Session from "../models/Session.js";
+import { Resume } from "../models/Resume.js";
 import { aiService } from "./aiService.js";
 import { pushSocketUpdate } from "./socketService.js";
 
@@ -11,6 +12,7 @@ export const sessionService = {
     level: string,
     interviewType: string,
     count: number,
+    resumeId: string | undefined,
     io: any
   ) {
     const session = await Session.create({
@@ -18,6 +20,7 @@ export const sessionService = {
       role,
       level,
       interviewType,
+      resumeId,
       status: "pending",
     });
 
@@ -32,11 +35,28 @@ export const sessionService = {
           `Generating ${count} questions for ${role}...`
         );
 
+        let resumeText = undefined;
+        if (resumeId && /^[0-9a-fA-F]{24}$/.test(resumeId)) {
+          try {
+            const resume = await Resume.findById(resumeId);
+            if (resume) {
+              resumeText = resume.parsedData?.rawText;
+              // Or extract projects specifically if you prefer, but rawText gives full context
+              if (!resumeText && resume.analysisReport?._v2?.report?.recruiter_summary) {
+                resumeText = resume.analysisReport._v2.report.recruiter_summary;
+              }
+            }
+          } catch (err: any) {
+            console.error("Error fetching resume for session:", err.message);
+          }
+        }
+
         const aiData = await aiService.generateQuestions({
           role,
           level,
           interviewType,
           count,
+          resumeText,
         });
         const codingCount =
           interviewType === "coding-mix" ? Math.floor(count * 0.2) : 0;

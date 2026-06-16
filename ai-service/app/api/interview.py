@@ -24,6 +24,7 @@ class QuestionRequest(BaseModel):
     level: str = Field(default="Junior", max_length=50)
     count: int = Field(default=5, gt=0, le=20)
     interview_type: str = Field(default="coding-mix", max_length=50)
+    resume_text: Optional[str] = Field(default=None, max_length=20000)
 
 class QuestionItem(BaseModel):
     question: str
@@ -60,7 +61,7 @@ async def generate_questions(req: QuestionRequest):
             f"The next {req.count - int(req.count * 0.2)} questions should be conceptual questions."
         ) if req.interview_type == "coding-mix" else "All questions should be conceptual questions. No runnable coding questions."
 
-        user_prompt = get_generation_user_prompt(req.count, req.role, req.level, instruction)
+        user_prompt = get_generation_user_prompt(req.count, req.role, req.level, instruction, req.resume_text)
         text_output = call_gemini(GENERATION_SYSTEM_PROMPT, user_prompt, as_json=True)
         
         parsed = parse_response(text_output)

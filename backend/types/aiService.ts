@@ -8,6 +8,7 @@ export interface GenerateQuestionsParams {
   level: string;
   interviewType: string;
   count: number;
+  resumeText?: string;
 }
 
 export interface GenerateQuestionsResponse {

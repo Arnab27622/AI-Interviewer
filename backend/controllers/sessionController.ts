@@ -14,7 +14,7 @@ import { AuthenticatedRequest } from "../types/express.js";
  * @route POST /api/sessions
  */
 export const createSession = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const { role, level, interviewType, count } = req.body;
+  const { role, level, interviewType, count, resumeId } = req.body;
   const userId = req.user?.id || req.user?._id;
   const io = req.app.get("io");
 
@@ -29,6 +29,7 @@ export const createSession = asyncHandler(async (req: AuthenticatedRequest, res:
     level,
     interviewType,
     count,
+    resumeId,
     io
   );
 
