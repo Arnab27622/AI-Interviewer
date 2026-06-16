@@ -27,12 +27,13 @@ graph TD
 
 ## ✨ Key Features
 
-- **🎯 Role-Specific AI Interviews**: Tailored questions based on job roles, seniority levels, and specific tech stacks generated dynamically by Gemini.
+- **🎯 Role & Resume-Specific AI Interviews**: Tailored questions based on job roles, seniority levels, specific tech stacks, and optional user-uploaded resumes (creating personalized real-world project questions) generated dynamically by Gemini.
 - **🎙️ Live Interview Terminal**: Interactive coder interface with real-time timers, code execution (JDoodle), and draft persistence.
 - **🧠 Intelligent Evaluation**: Comprehensive feedback on answer quality, communication skills, and technical proficiency.
 - **💾 Persistent Recording & WebSocket Sync**: Audio recordings are persisted in **IndexedDB**. Heavy AI tasks communicate real-time loading progress directly to the UI via Socket.io.
 - **📄 ATS Resume Analyzer (Bonus Feature)**: Upload and visualize structured parsed data, with instant ATS scoring, missing keyword detection, and detailed industry alignment metrics.
 - **📝 Automated Cover Letters & PDF Export**: One-click generation of beautifully formatted ATS-optimized Resumes and tailored cover letters dynamically matched to a provided Job Description.
+- **🔄 Continuous Integration (CI/CD)**: Fully automated testing (Vitest, Jest, Pytest) and Python linting (Ruff, Mypy) pipelines orchestrated by GitHub Actions.
 
 ---
 
@@ -40,10 +41,10 @@ graph TD
 
 | Component | Technologies |
 | :--- | :--- |
-| **Frontend** | React, Vite, TypeScript, Framer Motion, IndexedDB, Socket.io-client, React-PDF |
-| **Backend** | Node.js, Express, MongoDB, Redis, BullMQ, Socket.io, JWT |
-| **AI Service** | Python, FastAPI, PyMuPDF, Google Gemini API, Pydantic |
-| **Deployment** | Render (Services), Vercel (Frontend), MongoDB Atlas, Upstash Redis |
+| **Frontend** | React, Vite, TypeScript, Framer Motion, IndexedDB, Socket.io-client, React-PDF, Vitest |
+| **Backend** | Node.js, Express, MongoDB, Redis, BullMQ, Socket.io, JWT, Jest, Supertest |
+| **AI Service** | Python, FastAPI, PyMuPDF, Google Gemini API, Pydantic, Pytest, Ruff |
+| **Deployment / CI** | Render (Services), Vercel (Frontend), MongoDB Atlas, Upstash Redis, GitHub Actions |
 
 ---
 

@@ -4,9 +4,9 @@ The AI microservice backend for Prepify. This service specialized in handling he
 
 ## 🚀 Capabilities
 
-- **🧠 Generative Intelligence**: Uses advanced system prompting to generate role-specific interview questions with strict JSON schema guarantees.
+- **🧠 Generative Intelligence**: Uses advanced system prompting to generate role-specific interview questions with strict JSON schema guarantees. Now integrates user resume text to create real-world, project-specific scenario questions.
 - **🎙️ Cloud-Native Transcription**: Offloads verbal audio analysis to Gemini Cloud, staying within strict RAM limits (under 512MB) of free-tier hosting.
-- **🛡️ Security Guardrails**: Implements input sanitization and prompt-injection hardening to prevent malicious behavior through user-provided roles or answers.
+- **🛡️ Security Guardrails**: Implements input sanitization and prompt-injection hardening to prevent malicious behavior through user-provided roles, resumes, or answers.
 - **⚡ Async Execution**: Built with FastAPI for non-blocking processing of multiple parallel evaluation requests.
 - **📄 Advanced Resume Parsing**: Integrates PyMuPDF for lightning-fast, highly accurate document extraction, powering the ATS scoring and cover letter generation tools.
 
@@ -17,6 +17,7 @@ The AI microservice backend for Prepify. This service specialized in handling he
 - **PyMuPDF / Tesseract**: High-speed, robust PDF and DOCX file processing.
 - **Uvicorn**: Production-grade ASGI server with worker-based scaling.
 - **Pydantic**: Type-strict data validation for all API requests and responses.
+- **Pytest & Ruff**: Integrated testing suite and high-speed rust-based code linting.
 
 ## 🛠️ Installation & Setup
 

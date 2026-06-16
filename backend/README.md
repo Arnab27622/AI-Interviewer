@@ -5,7 +5,7 @@ The core orchestrator for Prepify. This Node.js service manages the API, user au
 ## 🚀 Key Responsibilities
 
 - **🔐 User Management**: Handles Google OAuth 2.0 and JWT-based session management using HttpOnly cookies.
-- **🔄 Session Orchestration**: Manages the lifecycle of an interview session, from question generation to final evaluation.
+- **🔄 Session Orchestration**: Manages the lifecycle of an interview session, from question generation to final evaluation. Forwards structured user resume context to the AI service.
 - **📡 Real-time Updates**: Uses Socket.io to provide live progress feedback during heavy AI processing tasks.
 - **🛡️ Request Throttling**: Implements API rate limiting to prevent resource exhaustion and abuse.
 - **💾 Data Persistence**: Manages user profiles, interview history, and evaluation results using MongoDB.
@@ -18,6 +18,7 @@ The core orchestrator for Prepify. This Node.js service manages the API, user au
 - **Passport.js**: Authentication middleware for Google OAuth.
 - **JWT**: Secure token-based authorization.
 - **Express-rate-limit**: Protective middleware against brute-force and DoS.
+- **Jest & Supertest**: Robust API testing and assertions.
 
 ## 🛠️ Installation & Setup
 

@@ -11,6 +11,7 @@ The user-facing application for Prepify. A high-performance, responsive React ap
 - **🎙️ Persistent Resume System**: Leveraging **IndexedDB** to store audio blobs and code drafts locally, ensuring no progress is lost if the browser is closed mid-session.
 - **📄 ATS Resume Analyzer (Bonus)**: Upload and visualize structured parsed data with editable JSON-like forms.
 - **📝 PDF Generation**: Generate beautiful, ATS-optimized Resumes and tailored Cover Letters directly in the browser via `@react-pdf/renderer`.
+- **🎯 Resume-Driven Interviews**: Initiate new interviews using context from your previously uploaded and parsed resumes to generate project-specific questions.
 
 ## 🏗️ Tech Stack
 
@@ -22,6 +23,7 @@ The user-facing application for Prepify. A high-performance, responsive React ap
 - **React-PDF**: Client-side PDF generation for resumes and cover letters.
 - **Tailwind CSS**: Utility-first CSS for the modern Neo-Dark design system.
 - **Socket.io-client**: Real-time event synchronization.
+- **Vitest & React Testing Library**: Component testing and test runners.
 
 ## 🛠️ Installation & Setup
 
