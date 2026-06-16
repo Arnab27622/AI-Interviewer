@@ -8,5 +8,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    env: {
+      VITE_API_URL: 'http://localhost:5000/api'
+    }
   }
 })

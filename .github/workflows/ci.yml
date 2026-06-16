@@ -27,7 +27,7 @@ jobs:
         cache-dependency-path: "./backend/package-lock.json"
 
     - name: Install NPM dependencies
-      run: npm ci
+      run: npm install
 
     - name: Run Backend Tests
       run: npm run test -- --passWithNoTests
@@ -55,7 +55,7 @@ jobs:
         cache-dependency-path: "./frontend/package-lock.json"
 
     - name: Install NPM dependencies
-      run: npm ci
+      run: npm install
 
     - name: Lint Frontend
       run: npm run lint
