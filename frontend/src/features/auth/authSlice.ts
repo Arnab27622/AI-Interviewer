@@ -24,7 +24,7 @@ export const register = createAsyncThunk<User, User, { rejectValue: string }>(
     "auth/register",
     async (user, thunkAPI) => {
         try {
-            const response = await authApi.post<User>(`register`, user);
+            const response = await authApi.post<User>(`user/register`, user);
             if (response.data) {
                 localStorage.setItem("user", JSON.stringify(response.data));
             }
@@ -43,7 +43,7 @@ export const login = createAsyncThunk<User, User, { rejectValue: string }>(
     "auth/login",
     async (user, thunkAPI) => {
         try {
-            const response = await authApi.post<User>(`login`, user);
+            const response = await authApi.post<User>(`user/login`, user);
             if (response.data) {
                 localStorage.setItem("user", JSON.stringify(response.data));
             }
@@ -62,7 +62,7 @@ export const googleLogin = createAsyncThunk<User, string, { rejectValue: string 
     "auth/googleLogin",
     async (token, thunkAPI) => {
         try {
-            const response = await authApi.post<User>(`google`, { token });
+            const response = await authApi.post<User>(`user/google`, { token });
             if (response.data) {
                 localStorage.setItem("user", JSON.stringify(response.data));
             }
@@ -83,7 +83,7 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
         try {
             localStorage.removeItem("user");
             try {
-                await authApi.post(`logout`);
+                await authApi.post(`user/logout`);
             } catch {
                 // Ignore API error on logout if endpoint doesn't exist
             }
@@ -102,7 +102,7 @@ export const updateProfile = createAsyncThunk<User, User, { rejectValue: string;
     async (user, thunkAPI) => {
         try {
             const token = thunkAPI.getState().auth.user?.token;
-            const response = await authApi.put<User>(`profile`, user);
+            const response = await authApi.put<User>(`user/profile`, user);
             if (response.data) {
                 const updatedUser: User = { ...response.data, token: token || "" };
                 localStorage.setItem("user", JSON.stringify(updatedUser));
