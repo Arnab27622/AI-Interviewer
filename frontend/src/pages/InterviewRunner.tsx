@@ -134,9 +134,10 @@ const InterviewRunner = () => {
 
             {isWhiteboardOpen && (
                 <WhiteboardModal
+                    initialElements={currentDraft.diagramElements}
                     onClose={() => setIsWhiteboardOpen(false)}
-                    onSubmit={(blob) => {
-                        updateDraftDiagram(blob);
+                    onSubmit={(blob, elements) => {
+                        updateDraftDiagram(blob, elements);
                         setIsWhiteboardOpen(false);
                     }}
                 />

@@ -79,9 +79,15 @@ async def generate_questions(req: QuestionRequest):
             )
             instruction = (
                 f"Generate exactly {coding_count} coding questions requiring the user to write code, "
-                f"and {req.count - coding_count} conceptual questions. "
-                "Ensure that you explicitly set the `question_type` to 'coding' for coding questions, and 'oral' for conceptual questions."
+                f"and {req.count - coding_count} conceptual/system-design questions. "
             )
+            if req.level.lower() in ["senior", "architect"]:
+                instruction += (
+                    "Since this is a senior role, you MUST include at least one high-level system design/architecture question. "
+                    "Ensure that you explicitly set `question_type` to 'coding' for coding questions, 'system-design' for system design questions, and 'oral' for general conceptual questions."
+                )
+            else:
+                instruction += "Ensure that you explicitly set the `question_type` to 'coding' for coding questions, and 'oral' for conceptual questions."
         else:
             instruction = "All questions should be conceptual questions. No runnable coding questions. Set `question_type` to 'oral' for all of them."
 
@@ -142,6 +148,7 @@ async def evaluate_answer(req: EvaluationRequest):
     Evaluate a user's answer (text or code) for technical accuracy and confidence.
     Uses separate system prompts for coding and conceptual evaluation.
     """
+    image_base64 = None
     if req.question_type == "coding":
         if not req.user_code or not req.user_code.strip():
             raise HTTPException(
@@ -153,10 +160,21 @@ async def evaluate_answer(req: EvaluationRequest):
         )
     elif req.question_type == "system-design":
         system_prompt = EVALUATION_SYSTEM_PROMPT_SYSTEM_DESIGN
+        if req.diagram_payload and req.diagram_payload.startswith("http"):
+            import requests
+            import base64
+
+            try:
+                img_resp = requests.get(req.diagram_payload, timeout=10)
+                img_resp.raise_for_status()
+                image_base64 = base64.b64encode(img_resp.content).decode("utf-8")
+            except Exception as e:
+                print(f"Error fetching diagram: {e}")
+
         user_prompt = get_evaluation_user_prompt_system_design(
             req.question,
             req.user_answer or "No text answer provided.",
-            req.diagram_payload,
+            "Diagram attached inline." if image_base64 else req.diagram_payload,
         )
     else:
         if not req.user_answer or not req.user_answer.strip():
@@ -170,7 +188,9 @@ async def evaluate_answer(req: EvaluationRequest):
         )
 
     try:
-        text_output = call_gemini(system_prompt, user_prompt, as_json=True)
+        text_output = call_gemini(
+            system_prompt, user_prompt, as_json=True, image_base64=image_base64
+        )
         parsed = parse_response(text_output)
 
         if not isinstance(parsed, dict):

@@ -34,7 +34,7 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
     const [submittedLocal, setSubmittedLocal] = useState<Record<number, boolean>>({});
 
     // Initial drafts state from IDB with empty fallback
-    const [drafts, setDrafts] = useState<Record<number, { code?: string; audio?: Blob; diagram?: Blob }>>({});
+    const [drafts, setDrafts] = useState<Record<number, { code?: string; audio?: Blob; diagram?: Blob; diagramElements?: readonly unknown[] }>>({});
 
     useEffect(() => {
         if (!sessionId) return;
@@ -47,7 +47,7 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
                 if (savedStr) {
                     try {
                         const parsed = JSON.parse(savedStr);
-                        const migrated: Record<number, { code?: string; audio?: Blob; diagram?: Blob }> = {};
+                        const migrated: Record<number, { code?: string; audio?: Blob; diagram?: Blob; diagramElements?: readonly unknown[] }> = {};
                         Object.keys(parsed).forEach(key => {
                             migrated[parseInt(key)] = { code: parsed[key] };
                         });
@@ -120,10 +120,10 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
         }));
     };
 
-    const updateDraftDiagram = (diagramBlob: Blob) => {
+    const updateDraftDiagram = (diagramBlob: Blob, elements: readonly unknown[]) => {
         setDrafts(prev => ({
             ...prev,
-            [currentQuestionIndex]: { ...prev[currentQuestionIndex], diagram: diagramBlob }
+            [currentQuestionIndex]: { ...prev[currentQuestionIndex], diagram: diagramBlob, diagramElements: elements }
         }));
     };
 

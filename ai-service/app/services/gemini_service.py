@@ -9,7 +9,7 @@ from fastapi import HTTPException
 # ============================================================================
 # Global Rate Limiter
 # ============================================================================
-# Gemini free-tier limits: 15 RPM for gemini-2.5-flash.
+# Gemini free-tier limits: 15 RPM for gemini-3.1-flash-lite.
 # One resume analysis fires 5-7 calls in quick succession, easily exceeding
 # the limit. This enforcer serialises calls and adds a configurable gap.
 # ============================================================================
@@ -41,9 +41,10 @@ def call_gemini(
     user_prompt: str,
     as_json: bool = False,
     audio_base64: str = None,
+    image_base64: str = None,
     api_key: str = None,
 ) -> str:
-    """Shared helper to call the Gemini API. Supports text or text+audio."""
+    """Shared helper to call the Gemini API. Supports text, audio, and images."""
     model_name = os.getenv("MODEL_NAME")
     # Use override key if provided, otherwise fallback to default env var
     actual_api_key = api_key or os.getenv("GEMINI_API_KEY")
@@ -62,6 +63,15 @@ def call_gemini(
                 "inline_data": {
                     "mime_type": "audio/webm",  # Most browsers record in webm
                     "data": audio_base64,
+                }
+            }
+        )
+    if image_base64:
+        parts.append(
+            {
+                "inline_data": {
+                    "mime_type": "image/png",
+                    "data": image_base64,
                 }
             }
         )

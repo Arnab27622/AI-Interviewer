@@ -65,7 +65,7 @@ export const sessionService = {
         const questions = (aiData.questions || []).map((qInfo: any) => ({
           questionText: qInfo.question,
           idealAnswer: qInfo.ideal_answer,
-          questionType: qInfo.question_type === "coding" ? "coding" : "oral",
+          questionType: ["coding", "system-design"].includes(qInfo.question_type) ? qInfo.question_type : "oral",
           isEvaluated: false,
           isSubmitted: false,
         }));

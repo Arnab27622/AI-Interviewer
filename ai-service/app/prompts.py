@@ -99,7 +99,7 @@ def get_generation_user_prompt(
             "Blend these personalized deep-dive questions with the role-specific questions. "
         )
 
-    prompt += "For each question, provide a concise ideal answer and specify the question_type as either 'coding' or 'oral'. Return ONLY raw JSON."
+    prompt += "For each question, provide a concise ideal answer and specify the question_type as either 'coding', 'oral', or 'system-design'. Return ONLY raw JSON."
     return prompt
 
 

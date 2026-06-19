@@ -47,7 +47,7 @@ pip install -r requirements.txt
 Create a `.env` file in this directory based on `.env.example`:
 ```env
 PORT=8000
-MODEL_NAME=gemini-2.5-flash
+MODEL_NAME=gemini-3.1-flash-lite
 GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_API_KEY_TRANSCRIPTION=your_gemini_api_key_here
 ALLOWED_ORIGINS=http://localhost:5000,http://localhost:5173

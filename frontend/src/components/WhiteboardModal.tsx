@@ -6,12 +6,18 @@ import { X, Check } from "lucide-react";
 import { toast } from "react-toastify";
 interface WhiteboardModalProps {
   onClose: () => void;
-  onSubmit: (blob: Blob) => void;
+  onSubmit: (blob: Blob, elements: readonly unknown[]) => void;
+  initialElements?: readonly unknown[];
 }
 
-const WhiteboardModal: React.FC<WhiteboardModalProps> = ({ onClose, onSubmit }) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
+interface ExcalidrawAPIRef {
+  getSceneElements: () => readonly unknown[];
+  getAppState: () => Record<string, unknown>;
+  getFiles: () => Record<string, unknown>;
+}
+
+const WhiteboardModal: React.FC<WhiteboardModalProps> = ({ onClose, onSubmit, initialElements }) => {
+  const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawAPIRef | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
   const handleSubmit = async () => {
@@ -44,7 +50,7 @@ const WhiteboardModal: React.FC<WhiteboardModalProps> = ({ onClose, onSubmit }) 
         return;
       }
 
-      onSubmit(blob);
+      onSubmit(blob, elements);
     } catch (err) {
       console.error("Error exporting whiteboard:", err);
       toast.error("Failed to export whiteboard diagram.");
@@ -78,7 +84,8 @@ const WhiteboardModal: React.FC<WhiteboardModalProps> = ({ onClose, onSubmit }) 
 
         <div className="flex-1 relative w-full h-full custom-excalidraw">
           <Excalidraw
-            excalidrawAPI={(api) => setExcalidrawAPI(api)}
+            initialData={initialElements && initialElements.length > 0 ? { elements: initialElements as never } : undefined}
+            excalidrawAPI={(api: unknown) => setExcalidrawAPI(api as ExcalidrawAPIRef)}
             theme="dark"
             UIOptions={{
               canvasActions: {
