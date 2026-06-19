@@ -5,20 +5,20 @@ import { sanitizeQuestionText, formatIdealAnswer } from "../utils/formatters";
 
 const FeedbackItem: React.FC<FeedbackItemProps> = ({ question, index }) => {
     return (
-        <div className="glass-card rounded-[2.5rem] overflow-hidden group/item transition-all duration-700 hover:shadow-[0_0_50px_rgba(20,184,166,0.05)] border-white/5">
-            <div className="p-8 sm:p-12 space-y-10 group-hover/item:border-white/10 transition-colors">
+        <div className="bg-surface-800/40 border border-surface-600/30 rounded-[2.5rem] shadow-2xl shadow-black/40 backdrop-blur-md overflow-hidden group/item transition-all duration-700 hover:shadow-[0_0_50px_rgba(20,184,166,0.05)] transform-gpu">
+            <div className="p-8 sm:p-12 space-y-10 transition-colors">
                 {/* Question Header */}
                 <div className="flex flex-col lg:flex-row justify-between items-start gap-8">
                     <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-3">
-                             <span className="px-3 py-1 rounded-lg bg-primary-500/10 border border-primary-500/20 text-[10px] font-black uppercase tracking-widest text-primary-400">Terminal Q{index + 1}</span>
-                             <div className="h-px w-12 bg-white/5"></div>
+                            <span className="px-3 py-1 rounded-lg bg-primary-500/10 border border-primary-500/20 text-[10px] font-black uppercase tracking-widest text-primary-400">Terminal Q{index + 1}</span>
+                            <div className="h-px w-12 bg-white/5"></div>
                         </div>
-                        <h4 className="text-xl sm:text-2xl font-black text-white leading-tight">
+                        <h4 className="text-xl sm:text-2xl font-black text-white leading-tight font-display">
                             {sanitizeQuestionText(question.questionText)}
                         </h4>
                     </div>
-                    
+
                     <div className="flex gap-2 sm:gap-3 shrink-0 w-full lg:w-auto">
                         <div className="flex-1 lg:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl border flex justify-center items-center gap-1.5 sm:gap-3 bg-white/5 border-white/10 group-hover/item:border-primary-500/30 transition-all">
                             <span className="text-[8px] sm:text-[10px] font-black uppercase text-surface-500 tracking-widest">Mastery</span>
@@ -38,7 +38,7 @@ const FeedbackItem: React.FC<FeedbackItemProps> = ({ question, index }) => {
                         <span className="text-[10px] font-black text-surface-500 uppercase tracking-[0.3em]">Candidacy Submission</span>
                         <div className="h-px grow bg-white/5"></div>
                     </div>
-                    
+
                     <div className="bg-surface-950/50 rounded-4xl border border-white/5 overflow-hidden transition-all group-hover/item:border-white/10">
                         {question.userSubmittedCode && question.userSubmittedCode !== 'undefined' && (
                             <div className="p-6 sm:p-8 border-b border-white/5 last:border-0 relative">

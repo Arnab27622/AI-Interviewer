@@ -33,17 +33,17 @@ const SessionReview = () => {
                 </div>
                 <h2 className="text-2xl font-black text-white mb-4 tracking-tighter uppercase">Assessment In Progress</h2>
                 <p className="text-surface-500 mb-10 font-bold text-xs uppercase tracking-widest leading-relaxed">
-                    Our AI is currently synthesizing your performance data.<br/>Please check back in a few moments.
+                    Our AI is currently synthesizing your performance data.<br />Please check back in a few moments.
                 </p>
                 <Link to="/" className="btn-primary inline-flex items-center gap-3">
                     Return to Home
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
                 </Link>
             </div>
         );
     }
 
-    const { overallScore, metrics, role, level, questions, startTime, endTime } = activeSession;
+    const { overallScore, metrics, role, level, questions, startTime, endTime, company } = activeSession;
     const finalMetrics = metrics || {};
 
     const barData = {
@@ -62,29 +62,35 @@ const SessionReview = () => {
             <div className="flex flex-col gap-8">
                 <div className="w-full">
                     <span className="text-primary-400 font-black uppercase tracking-[0.4rem] text-[10px] bg-primary-500/10 px-4 py-1.5 rounded-full border border-primary-500/20 shadow-[0_0_15px_rgba(20,184,166,0.1)]">Report Terminal</span>
-                    <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tighter mt-6 uppercase leading-[1.1] sm:leading-tight">
+                    <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tighter mt-6 uppercase leading-[1.1] sm:leading-tight flex items-center gap-4 flex-wrap font-display">
                         {role} <span className="text-surface-600 font-bold block sm:inline whitespace-nowrap">/ {level}</span>
+                        {company && company !== 'general' && (
+                            <span className="text-sm bg-primary-500/20 text-primary-400 border border-primary-500/30 px-3 py-1 rounded-lg tracking-widest self-center mt-2 sm:mt-0">
+                                {company.toUpperCase()}
+                            </span>
+                        )}
                     </h1>
                 </div>
                 <div className="flex gap-4 shrink-0 flex-col sm:flex-row sm:justify-end">
-                     <span className="text-[10px] font-black uppercase tracking-widest text-surface-500 border border-white/5 px-4 py-2 rounded-xl flex items-center justify-center whitespace-nowrap">Session ID: {sessionId?.slice(-8)}</span>
-                     <button onClick={() => window.print()} className="btn-secondary flex items-center justify-center gap-2 px-6! py-2! text-[10px] tracking-widest uppercase font-black print:hidden cursor-pointer hover:bg-white/10 transition-colors rounded-xl border border-white/5 whitespace-nowrap">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-surface-500 border border-white/5 px-4 py-2 rounded-xl flex items-center justify-center whitespace-nowrap">Session ID: {sessionId?.slice(-8)}</span>
+
+                    <button onClick={() => window.print()} className="btn-secondary flex items-center justify-center gap-2 px-6! py-2! text-[10px] tracking-widest uppercase font-black print:hidden cursor-pointer hover:bg-white/10 transition-colors rounded-xl border border-white/5 whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
                         Export Report
-                     </button>
+                    </button>
                 </div>
             </div>
 
-            <SessionReviewStats 
+            <SessionReviewStats
                 overallScore={overallScore || 0}
                 avgTechnical={finalMetrics.avgTechnical || 0}
                 avgConfidence={finalMetrics.avgConfidence || 0}
                 duration={formatDuration(startTime, endTime)}
             />
 
-            <div className="glass-card px-3 py-6 sm:p-10 rounded-3xl sm:rounded-[3rem] relative group break-inside-avoid print:bg-surface-900 print:shadow-none">
+            <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl sm:rounded-[3rem] shadow-2xl shadow-black/40 backdrop-blur-md px-3 py-6 sm:p-10 relative group break-inside-avoid print:bg-surface-900 print:shadow-none transform-gpu">
                 <div className="absolute top-0 right-0 p-5 sm:p-10 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity print:hidden hidden sm:block">
-                    <svg className="w-32 h-32 sm:w-48 sm:h-48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20V16"/></svg>
+                    <svg className="w-32 h-32 sm:w-48 sm:h-48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20V16" /></svg>
                 </div>
                 <h3 className="text-[10px] font-black text-surface-500 mb-6 sm:mb-10 uppercase tracking-[0.3rem] flex items-center gap-3">
                     <span className="w-1.5 h-4 bg-indigo-500 rounded-full"></span>
@@ -92,9 +98,9 @@ const SessionReview = () => {
                 </h3>
                 <div className="relative w-full">
                     {/* Sticky Y-Axis Overlay */}
-                    <div className="absolute left-0 top-0 bottom-4 w-[45px] z-10 bg-surface-900/90 backdrop-blur-md border-r border-white/5 overflow-hidden pointer-events-none">
-                        <div 
-                            className="h-64 sm:h-80" 
+                    <div className="absolute left-0 top-0 bottom-4 w-[45px] z-10 bg-transparent border-r border-white/5 overflow-hidden pointer-events-none">
+                        <div
+                            className="h-64 sm:h-80"
                             style={{ width: `${Math.max(100, (questions?.length || 0) * 40)}px` }}
                         >
                             <Bar data={{
@@ -110,14 +116,14 @@ const SessionReview = () => {
                                 responsive: true,
                                 plugins: { legend: { display: false }, tooltip: { enabled: false } },
                                 scales: {
-                                    y: { 
-                                        beginAtZero: true, 
-                                        max: 100, 
+                                    y: {
+                                        beginAtZero: true,
+                                        max: 100,
                                         grid: { display: false },
                                         border: { display: false },
                                         ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10, weight: 'bold' } }
                                     },
-                                    x: { 
+                                    x: {
                                         grid: { display: false },
                                         border: { display: false },
                                         ticks: { color: 'transparent', font: { size: 10, weight: 'bold' } }
@@ -128,9 +134,9 @@ const SessionReview = () => {
                     </div>
 
                     {/* Scrolling Chart */}
-                    <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
-                        <div 
-                            className="h-64 sm:h-80 relative print:max-w-[180mm] print:mx-auto pl-[45px]" 
+                    <div className="w-full overflow-x-auto pb-4 custom-scrollbar" style={{ maskImage: 'linear-gradient(to right, transparent 0px, transparent 45px, black 45px, black 100%)', WebkitMaskImage: 'linear-gradient(to right, transparent 0px, transparent 45px, black 45px, black 100%)' }}>
+                        <div
+                            className="h-64 sm:h-80 relative print:max-w-[180mm] print:mx-auto pl-[45px]"
                             style={{ minWidth: `${Math.max(100, (questions?.length || 0) * 40) + 45}px` }}
                         >
                             <Bar data={barData} options={{
@@ -139,14 +145,14 @@ const SessionReview = () => {
                                 responsive: true,
                                 plugins: { legend: { display: false } },
                                 scales: {
-                                    y: { 
-                                        beginAtZero: true, 
-                                        max: 100, 
+                                    y: {
+                                        beginAtZero: true,
+                                        max: 100,
                                         grid: { color: 'rgba(255,255,255,0.03)' },
                                         border: { display: false },
                                         ticks: { display: false }
                                     },
-                                    x: { 
+                                    x: {
                                         grid: { display: false },
                                         ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10, weight: 'bold' } }
                                     }
@@ -159,7 +165,7 @@ const SessionReview = () => {
 
             <div className="space-y-12">
                 <div className="flex items-center gap-6 break-inside-avoid">
-                    <h2 className="text-xl font-black uppercase tracking-widest text-white">Question Narrative</h2>
+                    <h2 className="text-xl font-black uppercase tracking-widest text-white font-display">Question Narrative</h2>
                     <div className="h-px grow bg-white/5"></div>
                 </div>
                 <div className="grid gap-10">

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import asyncHandler from "express-async-handler";
 import { AppError } from "../types/errors.js";
 import logger from "../utils/logger.js";
@@ -45,7 +45,7 @@ export const executeCode = asyncHandler(async (req: AuthenticatedRequest, res: R
   }
 
   const jdoodleLanguage = languageMap[language.toLowerCase()];
-  
+
   // If the language isn't natively supported, fallback to trying the exact string
   const executeLanguage = jdoodleLanguage || language.toLowerCase();
 

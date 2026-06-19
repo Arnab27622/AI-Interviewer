@@ -2,7 +2,7 @@
  * @file src/controllers/sessionController.ts
  * @description Thin session controllers for question generation, answer submissions, and evaluation.
  */
-import { Request, Response } from "express";
+import { Response } from "express";
 import asyncHandler from "express-async-handler";
 import path from "path";
 import { sessionService } from "../services/sessionService.js";
@@ -29,7 +29,9 @@ export const createSession = asyncHandler(async (req: AuthenticatedRequest, res:
     level,
     interviewType,
     count,
-    resumeId,
+    undefined,
+    undefined,
+    resumeId || undefined,
     io
   );
 
@@ -112,7 +114,7 @@ export const deleteSession = asyncHandler(async (req: AuthenticatedRequest, res:
  */
 export const submitAnswer = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const sessionId = req.params.sessionId as string;
-  const { questionIndex, code, language } = req.body;
+  const { questionIndex, code, language, diagramImageUrl } = req.body;
   const userId = req.user?.id || req.user?._id;
   if (!userId) {
     res.status(401);
@@ -121,7 +123,7 @@ export const submitAnswer = asyncHandler(async (req: AuthenticatedRequest, res: 
 
   try {
     const audioFilePath = req.file ? path.join(process.cwd(), req.file.path) : null;
-    
+
     await sessionService.submitSessionAnswer(
       sessionId,
       userId,
@@ -129,6 +131,7 @@ export const submitAnswer = asyncHandler(async (req: AuthenticatedRequest, res: 
       code,
       language,
       audioFilePath,
+      diagramImageUrl || null,
       req.app.get("io")
     );
 

@@ -12,6 +12,15 @@ export interface IUser extends Document {
   password?: string;
   googleId?: string;
   preferredRole: string;
+  // --- Gamification fields (denormalized cache) ---
+  // These fields mirror the Gamification model for quick access and efficient queries.
+  // Updates to these fields MUST be handled atomically alongside Gamification records (see gamificationService.ts).
+  // IMPORTANT: For repairing inconsistencies between Gamification and User records,
+  // use the reconcile utility endpoint: POST /api/gamification/reconcile.
+  xp: number;
+  currentLevel: number;
+  streakDays: number;
+  lastActiveDate: Date;
   createdAt: Date;
   updatedAt: Date;
   matchPassword(password: string): Promise<boolean>;
@@ -43,6 +52,22 @@ const userSchema = new Schema<IUser>(
     preferredRole: {
       type: String,
       default: "Full Stack Developer",
+    },
+    xp: {
+      type: Number,
+      default: 0,
+    },
+    currentLevel: {
+      type: Number,
+      default: 1,
+    },
+    streakDays: {
+      type: Number,
+      default: 0,
+    },
+    lastActiveDate: {
+      type: Date,
+      default: Date.now,
     },
   },
   {

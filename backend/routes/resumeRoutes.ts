@@ -13,6 +13,7 @@ import {
   getResumeStatus,
   rewriteBullet,
   generateCoverLetter,
+  deleteResume,
 } from "../controllers/resumeController.js";
 
 const router: Router = express.Router();
@@ -21,7 +22,7 @@ router.route("/").get(protect, getUserResumes);
 
 router.route("/upload").post(protect, uploadSingleResume, uploadResume);
 
-router.route("/:id").get(protect, getResume);
+router.route("/:id").get(protect, getResume).delete(protect, deleteResume);
 
 router.route("/:id/status").get(protect, getResumeStatus);
 

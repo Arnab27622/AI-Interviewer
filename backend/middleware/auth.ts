@@ -3,7 +3,7 @@
  * @description Authentication middleware with TypeScript support
  */
 
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
 import { User } from "../models/User.js";
@@ -20,7 +20,7 @@ import { AuthenticatedRequest } from "../types/express.js";
  */
 export const protect = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
-    let token = req.cookies.jwt;
+    const token = req.cookies.jwt;
 
     if (token) {
       try {

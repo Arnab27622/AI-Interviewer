@@ -1,19 +1,19 @@
-import { 
-    Layout, 
-    Server, 
-    Cloud, 
-    BarChart3, 
-    Palette, 
-    Smartphone, 
-    Cpu, 
-    ShieldCheck, 
-    Gamepad2, 
-    Database, 
+import {
+    Layout,
+    Server,
+    Cloud,
+    BarChart3,
+    Palette,
+    Smartphone,
+    Cpu,
+    ShieldCheck,
+    Gamepad2,
+    Database,
     // eslint-disable-next-line no-shadow-restricted-names
-    Infinity, 
-    Code2, 
-    Box, 
-    Atom, 
+    Infinity,
+    Code2,
+    Box,
+    Atom,
     Hexagon,
     Terminal,
     Coffee,
@@ -29,7 +29,7 @@ const SessionCard = ({ session, onClick, onDelete }: SessionCardProps) => {
         const role = session.role || '';
         const size = 28;
         const className = "transition-transform group-hover:scale-110 duration-500";
-        
+
         if (role.includes('Python')) return <Code2 size={size} className={className} />
         if (role.includes('Java')) return <Coffee size={size} className={className} />
         if (role.includes('C++') || role.includes('C#')) return <Terminal size={size} className={className} />
@@ -50,7 +50,7 @@ const SessionCard = ({ session, onClick, onDelete }: SessionCardProps) => {
         if (role.includes('Backend')) return <Server size={size} className={className} />
         if (role.includes('Full Stack') || role.includes('MERN') || role.includes('MEAN')) return <Workflow size={size} className={className} />
         if (role.includes('Design') || role.includes('UI/UX')) return <Palette size={size} className={className} />
-        
+
         return <Terminal size={size} className={className} />
     }
 
@@ -63,29 +63,37 @@ const SessionCard = ({ session, onClick, onDelete }: SessionCardProps) => {
     return (
         <div
             onClick={() => onClick(session)}
-            className="group glass-card rounded-4xl p-6 flex flex-col items-stretch gap-6 transition-all hover:-translate-y-1 hover:border-white/20 active:scale-[0.99] cursor-pointer relative will-change-transform"
+            className="group bg-surface-800/40 border border-surface-600/30 rounded-3xl shadow-2xl shadow-black/40 backdrop-blur-md p-6 flex flex-col items-stretch gap-6 transition-all hover:-translate-y-1 hover:border-white/20 active:scale-[0.99] cursor-pointer relative will-change-transform"
         >
             {/* Background pattern */}
             <div className="absolute top-0 right-0 w-24 h-24 bg-primary-500/5 blur-2xl -mr-8 -mt-8"></div>
-            
+
             <div className="flex items-center gap-5 relative z-10">
-                <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center shadow-inner border border-white/5 ${iconBg}`}>
+                <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/5 ${iconBg}`}>
                     {renderIcon()}
                 </div>
                 <div className="overflow-hidden grow">
-                    <h3 className="font-extrabold text-white text-lg truncate tracking-tight group-hover:text-primary-400 transition-colors">
+                    <h3 className="font-extrabold text-white text-lg truncate tracking-tight group-hover:text-primary-400 transition-colors font-display">
                         {session.role}
                     </h3>
-                    <div className="flex items-center gap-2 text-[10px] font-black text-surface-500 mt-1 uppercase tracking-widest">
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-black text-surface-500 mt-1 uppercase tracking-widest">
                         <span>{session.createdAt ? new Date(session.createdAt).toLocaleDateString() : 'N/A'}</span>
                         <span className="w-1 h-1 rounded-full bg-surface-700"></span>
                         <span className="text-surface-400">
                             {session.level}
                         </span>
+                        {session.company && session.company !== 'general' && (
+                            <>
+                                <span className="w-1 h-1 rounded-full bg-surface-700"></span>
+                                <span className="text-primary-400 px-1.5 py-0.5 rounded-md border border-primary-500/20 bg-primary-500/10">
+                                    {session.company.toUpperCase()}
+                                </span>
+                            </>
+                        )}
                     </div>
                 </div>
-                <button 
-                    onClick={(e) => { e.stopPropagation(); if (isDeletable) onDelete(e, session._id) }} 
+                <button
+                    onClick={(e) => { e.stopPropagation(); if (isDeletable) onDelete(e, session._id) }}
                     className="p-2.5 text-surface-600 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-red-500/20"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>

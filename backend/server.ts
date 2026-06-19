@@ -11,17 +11,28 @@
  */
 
 import "dotenv/config";
+import { validateEnv } from "./config/envValidator.js";
+
+// Validate environment variables early before other imports that might rely on them
+validateEnv();
+
 import express, { Express, Request, Response } from "express";
 import http from "http";
 import { Server as SocketIOServer } from "socket.io";
 import jwt from "jsonwebtoken";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import mongoose from "mongoose";
 import connectDB from "./config/db.js";
 import sessionRoutes from "./routes/sessionRoutes.js";
 import resumeRoutes from "./routes/resumeRoutes.js";
 import codeRoutes from "./routes/codeRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
+import diagramRoutes from "./routes/diagramRoutes.js";
+
+import gamificationRoutes from "./routes/gamificationRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
 import fs from "fs";
@@ -55,7 +66,7 @@ connectDB();
 
 const app: Express = express();
 const server = http.createServer(app);
-const allowOrigin = process.env.FRONTEND_URL || "http://localhost:3000";
+const allowOrigin = process.env.FRONTEND_URL || "";
 const io = new SocketIOServer(server, {
   cors: {
     origin: allowOrigin,
@@ -66,20 +77,32 @@ const io = new SocketIOServer(server, {
 });
 
 // --- Middlewares & Configuration ---
+app.use(helmet());
+
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // Limit each IP to 100 requests per window
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+});
+app.use("/api", globalLimiter);
+
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      
-      console.log(`[CORS DEBUG] Incoming Origin: ${origin}`);
-      console.log(`[CORS DEBUG] Configured FRONTEND_URL: ${process.env.FRONTEND_URL}`);
-      
+
+      if (process.env.NODE_ENV !== "production") {
+        logger.debug(`[CORS DEBUG] Incoming Origin: ${origin}`);
+        logger.debug(`[CORS DEBUG] Configured FRONTEND_URL: ${process.env.FRONTEND_URL}`);
+      }
+
       const allowedOrigins = allowOrigin
         .split(",")
         .map((o) => o.trim().replace(/\/$/, "")); // Strip trailing slashes
-        
+
       if (
-        allowedOrigins.includes(origin) || 
+        allowedOrigins.includes(origin) ||
         process.env.NODE_ENV === "development"
       ) {
         callback(null, true);
@@ -120,6 +143,10 @@ app.use("/api/sessions", sessionRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/code", codeRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/diagrams", diagramRoutes);
+
+app.use("/api/gamification", gamificationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

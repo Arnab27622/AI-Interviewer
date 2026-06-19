@@ -51,6 +51,10 @@ const transitionState = async (
 // ============================================================================
 
 const processJob = async (job: Job<ResumeJobData>): Promise<any> => {
+  if (job.name !== "parse-resume") {
+    console.warn(`[Worker] Ignoring job with unknown name: ${job.name}`);
+    return;
+  }
   const { resumeId } = job.data;
   console.log(`[Worker] ═══════════════════════════════════════════════`);
   console.log(`[Worker] Started state-machine pipeline for resume: ${resumeId}`);
@@ -189,7 +193,7 @@ const processJob = async (job: Job<ResumeJobData>): Promise<any> => {
 };
 
 export const startResumeWorker = (): Worker => {
-  const worker = new Worker("resume-processing", processJob, { connection });
+  const worker = new Worker("resume-processing", processJob, { connection: connection as any });
 
   worker.on("completed", (job) => {
     console.log(`[Worker] Job ${job.id} completed!`);

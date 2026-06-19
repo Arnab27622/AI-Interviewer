@@ -88,7 +88,7 @@ export const useResumeAnalysis = ({ userId }: UseResumeAnalysisProps) => {
       default:
         return "Processing…";
     }
-    };
+  };
 
   const handleResetAnalysis = () => {
     setResumeData(null);
@@ -111,5 +111,6 @@ export const useResumeAnalysis = ({ userId }: UseResumeAnalysisProps) => {
     handleResetAnalysis,
     streamingFeedbackText,
     setStreamingFeedbackText,
+    fetchResumeDetails,
   };
 };

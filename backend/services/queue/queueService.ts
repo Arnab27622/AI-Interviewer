@@ -35,7 +35,9 @@ export interface ResumeJobData {
   jdText?: string;
 }
 
-export const resumeQueue = new Queue<ResumeJobData>("resume-processing", { connection });
+const resumeQueue = new Queue<ResumeJobData>("resume-processing", {
+  connection: connection as any,
+});
 
 /**
  * Enqueue a resume processing job
@@ -43,7 +45,7 @@ export const resumeQueue = new Queue<ResumeJobData>("resume-processing", { conne
  * @returns {Promise<Job<ResumeJobData>>}
  */
 export const addResumeJob = async (resumeId: string): Promise<Job<ResumeJobData>> => {
-  const job = await resumeQueue.add("process-resume", { resumeId }, {
+  const job = await resumeQueue.add("parse-resume" as any, { resumeId }, {
     attempts: 3,
     backoff: {
       type: "exponential",

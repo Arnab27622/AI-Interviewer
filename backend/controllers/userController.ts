@@ -1,27 +1,49 @@
 import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
-import { User, IUser } from "../models/User.js";
+import { User } from "../models/User.js";
 import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { RefreshToken } from "../models/RefreshToken.js";
 
 // Augment Express Request interface to include the user
 import { AuthenticatedRequest } from "../types/express.js";
 
 /**
- * Generates a JWT token and sets it as an HttpOnly cookie in the response.
+ * Generates a JWT access token and a refresh token, saves the refresh token to DB,
+ * and sets them as HttpOnly cookies in the response.
  * @param {Response} res - Express response object.
  * @param {string} id - User ID to sign the token for.
  */
-const generateTokenInCookie = (res: Response, id: string) => {
+const generateTokenInCookie = async (res: Response, id: string) => {
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) throw new Error("JWT_SECRET is not defined");
 
-    const token = jwt.sign({ id }, jwtSecret, { expiresIn: "3d" });
-    res.cookie("jwt", token, {
+    // Short-lived access token
+    const accessToken = jwt.sign({ id }, jwtSecret, { expiresIn: "15m" });
+
+    // Long-lived refresh token
+    const refreshTokenString = crypto.randomBytes(40).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    await RefreshToken.create({
+        userId: id,
+        token: refreshTokenString,
+        expiresAt,
+    });
+
+    res.cookie("jwt", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV !== "development",
         sameSite: process.env.NODE_ENV !== "development" ? "none" : "lax",
-        maxAge: 3 * 24 * 60 * 60 * 1000,
+        maxAge: 15 * 60 * 1000, // 15 mins
+    });
+
+    res.cookie("refresh_jwt", refreshTokenString, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== "development",
+        sameSite: process.env.NODE_ENV !== "development" ? "none" : "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 };
 
@@ -51,7 +73,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     });
 
     if (user) {
-        generateTokenInCookie(res, (user._id as any).toString());
+        await generateTokenInCookie(res, (user._id as any).toString());
         res.status(201).json({
             _id: user._id,
             name: user.name,
@@ -78,7 +100,7 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
-        generateTokenInCookie(res, (user._id as any).toString());
+        await generateTokenInCookie(res, (user._id as any).toString());
         res.json({
             _id: user._id,
             name: user.name,
@@ -138,7 +160,7 @@ const googleLogin = asyncHandler(async (req: Request, res: Response) => {
             user.googleId = googleId;
             await user.save();
         }
-        generateTokenInCookie(res, (user._id as any).toString());
+        await generateTokenInCookie(res, (user._id as any).toString());
         res.json({
             _id: user._id,
             name: user.name,
@@ -153,7 +175,7 @@ const googleLogin = asyncHandler(async (req: Request, res: Response) => {
         });
 
         if (user) {
-            generateTokenInCookie(res, (user._id as any).toString());
+            await generateTokenInCookie(res, (user._id as any).toString());
             res.status(201).json({
                 _id: user._id,
                 name: user.name,
@@ -231,18 +253,74 @@ const updateUserProfile = asyncHandler(async (req: Request, res: Response) => {
 });
 
 /**
+ * @desc Refresh access token using refresh token.
+ * @route POST /api/user/refresh
+ * @access Public
+ */
+const refreshUserToken = asyncHandler(async (req: Request, res: Response) => {
+    const incomingRefreshToken = req.cookies.refresh_jwt;
+
+    if (!incomingRefreshToken) {
+        res.status(401);
+        throw new Error("Refresh token not found");
+    }
+
+    // Validate refresh token in DB
+    const storedToken = await RefreshToken.findOne({ token: incomingRefreshToken });
+
+    if (!storedToken) {
+        // Token was not found. For security, we just clear the cookies.
+        res.cookie("jwt", "", { maxAge: 0 });
+        res.cookie("refresh_jwt", "", { maxAge: 0 });
+        res.status(401);
+        throw new Error("Invalid refresh token");
+    }
+
+    // Token exists, is it expired?
+    if (new Date() > storedToken.expiresAt) {
+        await RefreshToken.deleteOne({ _id: storedToken._id });
+        res.cookie("jwt", "", { maxAge: 0 });
+        res.cookie("refresh_jwt", "", { maxAge: 0 });
+        res.status(401);
+        throw new Error("Refresh token expired");
+    }
+
+    // Valid. Delete the old refresh token (rotation) and issue a new pair
+    await RefreshToken.deleteOne({ _id: storedToken._id });
+
+    // Generate new pair
+    await generateTokenInCookie(res, storedToken.userId.toString());
+
+    res.status(200).json({ message: "Token refreshed successfully" });
+});
+
+/**
  * @desc Logout user by clearing HTTP-only JWT cookie.
  * @route POST /api/user/logout
  * @access Private
  */
 const logoutUser = asyncHandler(async (req: Request, res: Response) => {
+    const incomingRefreshToken = req.cookies.refresh_jwt;
+    if (incomingRefreshToken) {
+        // Remove token from database to prevent reuse
+        await RefreshToken.deleteOne({ token: incomingRefreshToken });
+    }
+
     res.cookie("jwt", "", {
         httpOnly: true,
         secure: process.env.NODE_ENV !== "development",
         sameSite: process.env.NODE_ENV !== "development" ? "none" : "lax",
         expires: new Date(0),
     });
+
+    res.cookie("refresh_jwt", "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV !== "development",
+        sameSite: process.env.NODE_ENV !== "development" ? "none" : "lax",
+        expires: new Date(0),
+    });
+
     res.status(200).json({ message: "Logged out successfully" });
 });
 
-export { registerUser, loginUser, googleLogin, logoutUser, getUserProfile, updateUserProfile };
+export { registerUser, loginUser, googleLogin, logoutUser, getUserProfile, updateUserProfile, refreshUserToken };

@@ -1,23 +1,6 @@
-import axios from "axios";
+import apiClient from "./apiClient";
 
-const API_BASE_URL = `${import.meta.env.VITE_API_URL}/resume`;
-
-const resumeApi = axios.create({
-    baseURL: API_BASE_URL,
-    withCredentials: true,
-});
-
-// Reuse the same auth interceptor
-resumeApi.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem("user");
-            window.location.href = "/login";
-        }
-        return Promise.reject(error);
-    }
-);
+const resumeApi = apiClient;
 
 export const uploadResume = async (file: File, jdText?: string) => {
     const formData = new FormData();
@@ -26,7 +9,7 @@ export const uploadResume = async (file: File, jdText?: string) => {
         formData.append("jdText", jdText);
     }
 
-    const response = await resumeApi.post("/upload", formData, {
+    const response = await resumeApi.post("/resume/upload", formData, {
         headers: {
             "Content-Type": "multipart/form-data",
         },
@@ -34,20 +17,31 @@ export const uploadResume = async (file: File, jdText?: string) => {
     return response.data;
 };
 
-export const getUserResumes = async () => {
-    const response = await resumeApi.get("/");
-    return response.data?.data ?? response.data;
+export const getUserResumes = async (page = 1, limit = 20) => {
+    const response = await resumeApi.get(`/resume/?page=${page}&limit=${limit}`);
+    const payload = response.data;
+    return {
+        data: payload?.data ?? payload,
+        hasMore: payload?.hasMore ?? false,
+        total: payload?.total ?? 0,
+    };
 };
 
 export const getResume = async (id: string) => {
-    const response = await resumeApi.get(`/${id}`);
+    const response = await resumeApi.get(`/resume/${id}`);
     // Backend wraps in { success, data: resumeDoc } — unwrap it
     return response.data?.data ?? response.data;
 };
 
 export const getResumeStatus = async (id: string) => {
-    const response = await resumeApi.get(`/${id}/status`);
+    const response = await resumeApi.get(`/resume/${id}/status`);
     return response.data?.data ?? response.data;
 };
 
+export const deleteResume = async (id: string) => {
+    const response = await resumeApi.delete(`/resume/${id}`);
+    return response.data;
+};
+
 export default resumeApi;
+

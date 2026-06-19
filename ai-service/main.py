@@ -9,6 +9,7 @@ This is the isolated Python Microservice dedicated exclusively to running heavy 
 2. It handles audio transcription (Whisper), resume parsing (PyMuPDF), and intelligent NLP scoring (Gemini).
 3. The server lazily loads models during the `lifespan` event to conserve RAM during cold boots.
 """
+
 import os
 import uvicorn
 from fastapi import FastAPI
@@ -20,6 +21,7 @@ from app.api.v2.resume import router as v2_resume_router
 
 load_dotenv()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -28,6 +30,7 @@ async def lifespan(app: FastAPI):
     """
     yield
     # Cleanup logic (if any) can go here
+
 
 def create_app() -> FastAPI:
     """
@@ -38,7 +41,7 @@ def create_app() -> FastAPI:
         title="AI Interviewer Microservice",
         description="Refactored microservice for generating and evaluating interview questions.",
         version="2.0.0",
-        lifespan=lifespan
+        lifespan=lifespan,
     )
 
     # Configure CORS: Restricted to development or specific production origins
@@ -51,8 +54,11 @@ def create_app() -> FastAPI:
     )
 
     # Include Routers: Modular API endpoints for generation and evaluation
+    from app.api.speech import router as speech_router
+
     app.include_router(interview_router, tags=["Interview"])
     app.include_router(v2_resume_router)
+    app.include_router(speech_router, prefix="/speech", tags=["Speech"])
 
     @app.get("/", tags=["Health"])
     async def root():
@@ -60,6 +66,7 @@ def create_app() -> FastAPI:
         return {"message": "AI Interviewer Microservice is running (Modular Version)"}
 
     return app
+
 
 app = create_app()
 

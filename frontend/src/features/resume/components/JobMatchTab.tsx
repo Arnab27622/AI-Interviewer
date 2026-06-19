@@ -8,6 +8,7 @@ import { createSession } from "../../session/sessionSlice";
 import type { ResumeData } from "../types";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { CoverLetterPDF } from "./CoverLetterPDF";
+import apiClient from "../../../services/apiClient";
 
 interface JobMatchTabProps {
   resumeData: ResumeData;
@@ -26,19 +27,8 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
     if (!resumeData._id) return;
     try {
       setIsGeneratingCL(true);
-      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/resume/${resumeData._id}/cover-letter`;
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: "include"
-      });
-
-      if (!response.ok) throw new Error("Failed to generate cover letter");
-
-      const data = await response.json();
+      const response = await apiClient.post(`/resume/${resumeData._id}/cover-letter`);
+      const data = response.data;
       setCoverLetter(data.cover_letter);
       toast.success("Cover letter generated!");
     } catch (error) {
@@ -116,54 +106,55 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
       className="space-y-6"
     >
       {!resumeData?.jdMatchReport && !resumeData?.jdText ? (
-        <div className="flex flex-col items-center justify-center py-24 bg-surface-800/40 border border-white/5 rounded-2xl">
-          <div className="w-16 h-16 rounded-full bg-surface-800 border border-white/5 flex items-center justify-center mb-4">
+        <div className="flex flex-col items-center justify-center py-24 bg-surface-800/40 border border-surface-600/30 rounded-3xl shadow-2xl shadow-black/40 backdrop-blur-md">
+          <div className="w-16 h-16 rounded-2xl bg-surface-900/50 border border-surface-700/50 flex items-center justify-center mb-4 shadow-inner shadow-black/20">
             <svg className="w-7 h-7 text-surface-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h3 className="text-lg font-bold text-surface-200">No Job Description Provided</h3>
-          <p className="text-sm text-surface-500 mt-2 max-w-md text-center">
+          <h3 className="text-lg font-black text-surface-200 tracking-tight">No Job Description Provided</h3>
+          <p className="text-sm text-surface-500 mt-2 max-w-md text-center font-medium">
             To see your match score and keyword gap analysis, please upload your resume again and paste a job description.
           </p>
         </div>
       ) : (
         <div className="space-y-6">
           {/* Top Match Score Card */}
-          <div className="bg-surface-800/60 border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row items-center md:items-stretch gap-6">
-            <div className={`flex flex-col items-center justify-center w-32 h-24 rounded-xl border ${borderClass} ${bgLightClass}`}>
-              <span className={`text-5xl font-black ${colorClass}`}>{matchScore}</span>
-              <span className="text-[10px] text-surface-500 font-bold mt-1 uppercase tracking-widest">/ 100</span>
+          <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 flex flex-col md:flex-row items-center md:items-stretch gap-8 shadow-2xl shadow-black/40 backdrop-blur-md">
+            <div className={`flex flex-col items-center justify-center w-36 h-28 rounded-2xl border ${borderClass} ${bgLightClass} shadow-inner shadow-black/20 relative overflow-hidden`}>
+              <div className={`absolute inset-0 bg-linear-to-b from-${bgClass.replace('bg-', '')}/10 to-transparent pointer-events-none`} />
+              <span className={`text-6xl font-black ${colorClass} font-display relative z-10 leading-none`}>{matchScore}</span>
+              <span className="text-[10px] text-surface-500 font-bold mt-2 uppercase tracking-widest relative z-10">/ 100</span>
             </div>
             <div className="flex-1 flex flex-col justify-center w-full">
-              <div className="mb-4">
-                <span className={`px-3 py-1 rounded-full border ${borderClass} ${colorClass} text-[10px] font-bold tracking-wider uppercase`}>
+              <div className="mb-5">
+                <span className={`px-4 py-1.5 rounded-full border ${borderClass} ${colorClass} text-[10px] font-black tracking-widest uppercase shadow-[0_0_15px_rgba(45,212,191,0.1)]`}>
                   {label}
                 </span>
               </div>
-              <div className="w-full h-1.5 bg-surface-700 rounded-full overflow-hidden mb-3">
-                <div className={`h-full ${bgClass} rounded-full transition-all duration-1000`} style={{ width: `${matchScore}%` }} />
+              <div className="w-full h-2 bg-surface-900/60 rounded-full overflow-hidden mb-4 shadow-inner shadow-black/40">
+                <div className={`h-full ${bgClass} rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(45,212,191,0.5)]`} style={{ width: `${matchScore}%` }} />
               </div>
-              <p className="text-sm text-surface-400">{explanation}</p>
+              <p className="text-[13px] font-medium text-surface-300 leading-relaxed">{explanation}</p>
             </div>
           </div>
 
           {/* JD Keyword Coverage & Recommendation */}
           <div className="space-y-4">
-            <div className="bg-surface-800/60 border border-white/5 rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-white mb-4">JD Keyword Coverage</h3>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-surface-400 font-medium">Keywords Matched</span>
-                <span className="text-xs font-bold text-primary-400">{matchedKws.length} / {totalKws}</span>
+            <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden">
+              <h3 className="text-xs font-black tracking-widest text-surface-400 uppercase mb-5">JD Keyword Coverage</h3>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-[13px] text-surface-300 font-bold">Keywords Matched</span>
+                <span className="text-[13px] font-black text-primary-400">{matchedKws.length} / {totalKws}</span>
               </div>
-              <div className="w-full h-2 bg-surface-700 rounded-full overflow-hidden mb-2">
-                <div className="h-full bg-linear-to-r from-indigo-500 to-primary-400 rounded-full transition-all duration-1000" style={{ width: `${coverage}%` }} />
+              <div className="w-full h-2.5 bg-surface-900/60 rounded-full overflow-hidden mb-3 shadow-inner shadow-black/40">
+                <div className="h-full bg-linear-to-r from-indigo-500 to-primary-400 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(45,212,191,0.5)]" style={{ width: `${coverage}%` }} />
               </div>
-              <span className="text-xs font-bold text-primary-400">{coverage}%</span>
+              <span className="text-xs font-black text-primary-400">{coverage}%</span>
             </div>
-            <div className="bg-surface-800/60 border border-white/5 rounded-xl p-6 border-l-4 border-l-indigo-500">
-              <h4 className="text-xs font-bold text-white mb-2">Recommendation</h4>
-              <p className="text-sm text-surface-300">
+            <div className="bg-surface-800/40 border border-surface-600/30 rounded-2xl p-6 border-l-4 border-l-indigo-500 shadow-lg shadow-black/20">
+              <h4 className="text-xs font-black tracking-widest text-surface-400 uppercase mb-3">Recommendation</h4>
+              <p className="text-[13px] font-medium text-surface-200 leading-relaxed">
                 {coverage >= 80 ? `Excellent keyword coverage (${coverage}%). Your resume aligns very well with the job description.` :
                   coverage >= 50 ? `Moderate keyword coverage (${coverage}%). Add more role-specific terms from the job description to improve your chances.` :
                     `Low keyword coverage (${coverage}%). Consider heavily tailoring your resume to include the missing keywords below.`}
@@ -174,17 +165,17 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
           {/* Keyword Gap Analysis (Matched / Missing) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Matched Panel */}
-            <div className="bg-surface-800/60 border border-white/5 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <h3 className="text-sm font-bold text-primary-400">Matched</h3>
-                <span className="px-2 py-0.5 rounded-full bg-primary-400/10 text-primary-400 text-xs font-bold">{matchedKws.length}</span>
+            <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 shadow-2xl shadow-black/40 backdrop-blur-md">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xs font-black tracking-widest text-primary-400 uppercase">Matched</h3>
+                <span className="px-3 py-1 rounded-full bg-primary-400/10 border border-primary-400/20 text-primary-400 text-[10px] font-black">{matchedKws.length}</span>
               </div>
               {matchedKws.length === 0 ? (
-                <p className="text-sm text-surface-500 italic">No matched keywords.</p>
+                <p className="text-[13px] text-surface-500 font-medium italic">No matched keywords.</p>
               ) : (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2.5">
                   {matchedKws.map((kw, i) => (
-                    <span key={i} className="px-3 py-1.5 rounded-lg border border-primary-400/20 bg-primary-400/5 text-xs font-semibold text-primary-400">
+                    <span key={i} className="px-3 py-1.5 rounded-lg border border-primary-400/20 bg-primary-400/5 text-xs font-bold text-primary-400 shadow-sm shadow-primary-400/5">
                       {kw}
                     </span>
                   ))}
@@ -193,23 +184,23 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
             </div>
 
             {/* Missing Panel */}
-            <div className="bg-surface-800/60 border border-white/5 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <h3 className="text-sm font-bold text-rose-400">Missing</h3>
-                <span className="px-2 py-0.5 rounded-full bg-rose-400/10 text-rose-400 text-xs font-bold">{missingKws.length}</span>
+            <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 shadow-2xl shadow-black/40 backdrop-blur-md">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xs font-black tracking-widest text-rose-400 uppercase">Missing</h3>
+                <span className="px-3 py-1 rounded-full bg-rose-400/10 border border-rose-400/20 text-rose-400 text-[10px] font-black">{missingKws.length}</span>
               </div>
               {missingKws.length === 0 ? (
-                <p className="text-sm text-surface-500 italic">No missing keywords found.</p>
+                <p className="text-[13px] text-surface-500 font-medium italic">No missing keywords found.</p>
               ) : (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2.5">
                   {missingKws.map((kw, i) => (
-                    <span key={i} className="group flex items-center gap-2 px-3 py-1.5 rounded-lg border border-rose-400/20 bg-rose-400/5 text-xs font-semibold text-rose-400 cursor-default">
+                    <span key={i} className="group flex items-center gap-2 px-3 py-1.5 rounded-lg border border-rose-400/20 bg-rose-400/5 text-xs font-bold text-rose-400 cursor-default shadow-sm shadow-rose-400/5 transition-all hover:bg-rose-400/10">
                       {kw}
                       <button
                         onClick={() => handlePractice(kw)}
                         disabled={loadingKeyword === kw}
                         title={`Start an AI Mock Interview focusing on ${kw}`}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 bg-rose-400/20 hover:bg-rose-400/40 text-rose-400 rounded px-2 py-0.5 text-[10px] uppercase tracking-wider cursor-pointer disabled:opacity-50"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 bg-rose-400/20 hover:bg-rose-400/40 text-rose-400 rounded px-2 py-0.5 text-[10px] font-black uppercase tracking-widest cursor-pointer disabled:opacity-50"
                       >
                         {loadingKeyword === kw ? '⏳' : 'Practice ⚡'}
                       </button>
@@ -222,31 +213,32 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
 
           {/* Score Projection */}
           <div>
-            <h3 className="text-sm font-bold text-white mb-4">Score Projection</h3>
-            <div className="bg-surface-800/60 border border-white/5 rounded-2xl p-6">
-              <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-                <div className="flex-1 w-full bg-surface-900/50 border border-white/5 rounded-xl p-5 flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-surface-400 font-black uppercase tracking-widest mb-2">CURRENT SCORE</span>
-                  <span className="text-4xl font-black text-white">{baseScore}</span>
+            <h3 className="text-xs font-black tracking-widest text-surface-400 uppercase mb-4 ml-1">Score Projection</h3>
+            <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden">
+              <div className="flex flex-col md:flex-row items-center gap-6 mb-8">
+                <div className="flex-1 w-full bg-surface-900/60 border border-surface-700/50 rounded-2xl p-6 flex flex-col items-center justify-center shadow-inner shadow-black/20">
+                  <span className="text-[10px] text-surface-400 font-black uppercase tracking-widest mb-3">CURRENT SCORE</span>
+                  <span className="text-5xl font-black text-white font-display">{baseScore}</span>
                 </div>
-                <svg className="w-6 h-6 text-surface-500 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-surface-600 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-                <div className="flex-1 w-full bg-primary-400/5 border border-primary-400/20 rounded-xl p-5 flex flex-col items-center justify-center">
-                  <span className="text-[10px] text-primary-400 font-black uppercase tracking-widest mb-2">WITH MISSING KEYWORDS</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl font-black text-primary-400">{projectedScore}</span>
-                    <span className="px-2 py-1 bg-primary-400/20 text-primary-400 text-xs font-bold rounded">+{projectedScore - baseScore}</span>
+                <div className="flex-1 w-full bg-primary-500/10 border border-primary-500/20 rounded-2xl p-6 flex flex-col items-center justify-center shadow-inner shadow-primary-500/10 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-linear-to-tr from-primary-500/5 to-transparent pointer-events-none" />
+                  <span className="text-[10px] text-primary-400 font-black uppercase tracking-widest mb-3 relative z-10">WITH MISSING KEYWORDS</span>
+                  <div className="flex items-center gap-3 relative z-10">
+                    <span className="text-5xl font-black text-primary-400 font-display">{projectedScore}</span>
+                    <span className="px-2 py-1 bg-primary-400/20 text-primary-400 text-xs font-black rounded-lg">+{projectedScore - baseScore}</span>
                   </div>
                 </div>
               </div>
 
               {missingKws.length > 0 && (
                 <div>
-                  <p className="text-[10px] text-surface-400 font-bold uppercase tracking-widest mb-3">TOP KEYWORDS TO ADD:</p>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="text-[10px] text-surface-400 font-black uppercase tracking-widest mb-4">TOP KEYWORDS TO ADD:</p>
+                  <div className="flex flex-wrap gap-2.5">
                     {missingKws.slice(0, 5).map((kw, i) => (
-                      <span key={i} className="px-3 py-1.5 rounded-lg border border-primary-400/30 bg-primary-400/10 text-xs font-semibold text-primary-400">
+                      <span key={i} className="px-3 py-1.5 rounded-lg border border-primary-400/30 bg-primary-400/10 text-xs font-bold text-primary-400 shadow-sm shadow-primary-400/10">
                         {kw}
                       </span>
                     ))}

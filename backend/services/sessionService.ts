@@ -1,9 +1,9 @@
 import fs from "fs";
-import path from "path";
 import Session from "../models/Session.js";
 import { Resume } from "../models/Resume.js";
 import { aiService } from "./aiService.js";
 import { pushSocketUpdate } from "./socketService.js";
+import { gamificationService } from "./gamificationService.js";
 
 export const sessionService = {
   async createInterviewSession(
@@ -12,6 +12,8 @@ export const sessionService = {
     level: string,
     interviewType: string,
     count: number,
+    company: string | undefined,
+    companyTrack: string | undefined,
     resumeId: string | undefined,
     io: any
   ) {
@@ -20,6 +22,8 @@ export const sessionService = {
       role,
       level,
       interviewType,
+      company,
+      companyTrack,
       resumeId,
       status: "pending",
     });
@@ -58,13 +62,10 @@ export const sessionService = {
           count,
           resumeText,
         });
-        const codingCount =
-          interviewType === "coding-mix" ? Math.floor(count * 0.2) : 0;
-
-        const questions = (aiData.questions || []).map((qInfo: any, index: number) => ({
+        const questions = (aiData.questions || []).map((qInfo: any) => ({
           questionText: qInfo.question,
           idealAnswer: qInfo.ideal_answer,
-          questionType: index < codingCount ? "coding" : "oral",
+          questionType: qInfo.question_type === "coding" ? "coding" : "oral",
           isEvaluated: false,
           isSubmitted: false,
         }));
@@ -160,6 +161,7 @@ export const sessionService = {
     code: string | null,
     language: string | null,
     audioFilePath: string | null,
+    diagramImageUrl: string | null,
     io: any
   ) {
     const session = await Session.findOne({ _id: sessionId, user: userId });
@@ -176,7 +178,6 @@ export const sessionService = {
     session.questions[qIdx].isSubmitted = true;
     await session.save();
 
-    // Offload actual AI work to the background task
     this.evaluateAnswerAsync(
       io,
       userId.toString(),
@@ -184,7 +185,8 @@ export const sessionService = {
       qIdx,
       code,
       language,
-      audioFilePath
+      audioFilePath,
+      diagramImageUrl
     );
   },
 
@@ -195,7 +197,8 @@ export const sessionService = {
     questionIdx: number,
     codeSubmission: string | null,
     language: string | null,
-    audioFilePath: string | null
+    audioFilePath: string | null,
+    diagramImageUrl: string | null
   ) {
     try {
       const session = await Session.findById(sessionId);
@@ -204,16 +207,20 @@ export const sessionService = {
       const question = session.questions[questionIdx];
       if (!question) throw new Error("Question not found");
 
+      let speechMetrics: any = null;
       let transcription = "";
 
-      // Stage 1: Transcription (if audio exists)
+      // Stage 1: Transcription & Speech Analysis (if audio exists)
       if (audioFilePath) {
         try {
-          pushSocketUpdate(io, userId, sessionId, "AI_TRANSCRIBING", `Transcribing answer...`);
+          pushSocketUpdate(io, userId, sessionId, "AI_TRANSCRIBING", `Analyzing speech patterns...`);
           const audioBuffer = await fs.promises.readFile(audioFilePath);
-          transcription = await aiService.transcribeAudio(audioBuffer);
+
+          const analysisResult = await aiService.analyzeSpeech(audioBuffer);
+          transcription = analysisResult.transcript || "";
+          speechMetrics = analysisResult.metrics || null;
         } catch (error: any) {
-          console.error("Transcription Error:", error.message);
+          console.error("Speech Analysis/Transcription Error:", error.message);
         } finally {
           // Ensure temp file is deleted even if transcription fails
           if (fs.existsSync(audioFilePath)) {
@@ -229,34 +236,60 @@ export const sessionService = {
 
       const evaluation = await aiService.evaluateAnswer({
         question: question.questionText,
-        question_type: question.questionType as "coding" | "oral",
+        question_type: question.questionType as "coding" | "oral" | "system-design",
         user_answer: transcription || "No verbal answer provided.",
         user_code: codeSubmission || "",
         selected_language: language || "plaintext",
+        diagram_payload: diagramImageUrl || undefined,
         role: session.role,
         level: session.level,
         interview_type: session.interviewType,
       });
 
+      const updateFields: any = {
+        [`questions.${questionIdx}.userAnswerText`]: transcription,
+        [`questions.${questionIdx}.userSubmittedCode`]: codeSubmission || "",
+        [`questions.${questionIdx}.diagramImageUrl`]: diagramImageUrl || "",
+        [`questions.${questionIdx}.idealAnswer`]: evaluation.ideal_answer,
+        [`questions.${questionIdx}.technicalScore`]: evaluation.technical_score,
+        [`questions.${questionIdx}.confidenceScore`]: evaluation.confidence_score,
+        [`questions.${questionIdx}.aiFeedback`]: evaluation.ai_feedback,
+        [`questions.${questionIdx}.isEvaluated`]: true,
+        [`questions.${questionIdx}.isSubmitted`]: true,
+      };
+
+      if (speechMetrics) {
+        const PACE_SLOW = 110;
+        const PACE_FAST = 160;
+        const CLARITY_FILLER_PENALTY = 2;
+        const CLARITY_PAUSE_PENALTY = 1.5;
+
+        updateFields[`questions.${questionIdx}.speechMetrics`] = {
+          fillerWordCount: speechMetrics.filler_words_count || 0,
+          fillerWords: [],
+          speakingPaceWpm: speechMetrics.pace_wpm || 0,
+          paceRating: (speechMetrics.pace_wpm < PACE_SLOW) ? 'Slow' : (speechMetrics.pace_wpm > PACE_FAST) ? 'Fast' : 'Good',
+          totalPauseDurationMs: (speechMetrics.pause_time_seconds || 0) * 1000,
+          pauseCount: speechMetrics.pause_count || 0,
+          clarityScore: Math.max(0, 100 - ((speechMetrics.filler_words_count || 0) * CLARITY_FILLER_PENALTY) - ((speechMetrics.pause_count || 0) * CLARITY_PAUSE_PENALTY)),
+        };
+      }
+
       // Stage 3: Atomic Update
       const updatedSession = await Session.findOneAndUpdate(
         { _id: sessionId },
-        {
-          $set: {
-            [`questions.${questionIdx}.userAnswerText`]: transcription,
-            [`questions.${questionIdx}.userSubmittedCode`]: codeSubmission || "",
-            [`questions.${questionIdx}.idealAnswer`]: evaluation.ideal_answer,
-            [`questions.${questionIdx}.technicalScore`]: evaluation.technical_score,
-            [`questions.${questionIdx}.confidenceScore`]: evaluation.confidence_score,
-            [`questions.${questionIdx}.aiFeedback`]: evaluation.ai_feedback,
-            [`questions.${questionIdx}.isEvaluated`]: true,
-            [`questions.${questionIdx}.isSubmitted`]: true,
-          },
-        },
+        { $set: updateFields },
         { returnDocument: "after" }
       );
 
       if (!updatedSession) throw new Error("Failed to update session during evaluation");
+
+      // Add XP for answering a question
+      try {
+        await gamificationService.addXP(userId, 'question_answered');
+      } catch (err) {
+        console.error(`[Gamification] Failed to add XP for question:`, err);
+      }
 
       // Check if this was the last question
       const allEvaluated = updatedSession.questions.every((q: any) => q.isEvaluated);
@@ -280,14 +313,29 @@ export const sessionService = {
           { returnDocument: "after" }
         );
 
-        pushSocketUpdate(
-          io,
-          userId,
-          sessionId,
-          "session completed",
-          "Evaluation complete",
-          finalSession
-        );
+        // Add session completion XP and flush all buffered XP to MongoDB
+        let levelUpInfo = null;
+        try {
+          await gamificationService.addXP(userId, 'session_completed');
+          await gamificationService.updateStreak(userId);
+          levelUpInfo = await gamificationService.flushXPToMongo(userId);
+        } catch (err) {
+          console.error(`[Gamification] Failed to flush XP on session completion:`, err);
+        }
+
+        // Include gamification updates in the socket payload
+        if (finalSession) {
+          const payload = { ...finalSession.toObject(), gamification: levelUpInfo };
+
+          pushSocketUpdate(
+            io,
+            userId,
+            sessionId,
+            "session completed",
+            "Evaluation complete",
+            payload
+          );
+        }
       } else {
         pushSocketUpdate(
           io,
@@ -340,13 +388,22 @@ export const sessionService = {
     session.endTime = new Date();
     await session.save();
 
+    let levelUpInfo = null;
+    try {
+      await gamificationService.addXP(userId.toString(), 'session_completed');
+      await gamificationService.updateStreak(userId.toString());
+      levelUpInfo = await gamificationService.flushXPToMongo(userId.toString());
+    } catch (err) {
+      console.error(`[Gamification] Failed to flush XP on manual session completion:`, err);
+    }
+
     pushSocketUpdate(
       io,
       userId.toString(),
       sessionId,
       "session completed",
       "Session ended",
-      session
+      { ...session.toObject(), gamification: levelUpInfo }
     );
 
     return session;

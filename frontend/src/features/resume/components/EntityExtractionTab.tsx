@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import type { ResumeData, ParsedProfile } from "../types";
 import { ResumePDF } from "./ResumePDF";
+import apiClient from "../../../services/apiClient";
 
 interface EntityExtractionTabProps {
   resumeData: ResumeData;
@@ -35,7 +36,7 @@ export const EntityExtractionTab = ({
 }: EntityExtractionTabProps) => {
   const [rewritingBullet, setRewritingBullet] = useState<{ bullet: string; expIndex: number; bulletIndex: number } | null>(null);
   const [variations, setVariations] = useState<string[] | null>(null);
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<ParsedProfile & { skills?: { technical?: string[]; soft?: string[] } }>(() => ({
     ...(profile || resumeData.parsedData?.parsedProfile || {}),
@@ -51,18 +52,8 @@ export const EntityExtractionTab = ({
     try {
       setRewritingBullet({ bullet, expIndex, bulletIndex });
       setVariations(null);
-      const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/resume/${resumeData._id}/rewrite`;
-      
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ bullet })
-      });
-      
-      if (!response.ok) throw new Error("Failed to rewrite bullet");
-      
-      const data = await response.json();
+      const response = await apiClient.post(`/resume/${resumeData._id}/rewrite`, { bullet });
+      const data = response.data;
       setVariations(data.variations);
     } catch (error) {
       toast.error("Error rewriting bullet point");
@@ -73,7 +64,7 @@ export const EntityExtractionTab = ({
 
   const applyVariation = (variation: string) => {
     if (!rewritingBullet) return;
-    
+
     setEditedProfile(prev => {
       const newExp = [...(prev.experience || [])];
       const targetExp = { ...newExp[rewritingBullet.expIndex] };
@@ -83,7 +74,7 @@ export const EntityExtractionTab = ({
       newExp[rewritingBullet.expIndex] = targetExp;
       return { ...prev, experience: newExp };
     });
-    
+
     toast.success("Applied to experience section!");
     setRewritingBullet(null);
     setVariations(null);
@@ -104,7 +95,7 @@ export const EntityExtractionTab = ({
     { name: "Cloud / DevOps", keywords: ["aws", "docker", "kubernetes", "ci/cd", "cloud", "azure", "deployment", "infrastructure", "devops"] },
     { name: "Cybersecurity", keywords: ["security", "penetration", "vulnerability", "firewall", "auth", "encryption", "threat"] },
   ];
-  
+
   const industryScores = industries.map(ind => ({
     name: ind.name,
     score: ind.keywords.reduce((count, kw) => count + (allText.match(new RegExp(`\\b${kw}\\b`, 'g'))?.length || 0), 0)
@@ -113,7 +104,7 @@ export const EntityExtractionTab = ({
   if (industryScores.length === 0) {
     industryScores.push({ name: "General/Other", score: 1 });
   }
-  
+
   const primaryIndustry = industryScores[0];
   const secondaryIndustry = industryScores.length > 1 ? industryScores[1] : null;
   const maxIndScore = Math.max(...industryScores.map(i => i.score));
@@ -128,22 +119,21 @@ export const EntityExtractionTab = ({
       className="space-y-8"
     >
       {/* Top Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-surface-800/40 p-4 rounded-xl border border-white/5">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-surface-800/40 p-5 rounded-3xl border border-surface-600/30 shadow-2xl shadow-black/40 backdrop-blur-md">
         <div className="flex items-center gap-4 w-full sm:w-auto">
           <button
             onClick={() => setIsEditing(!isEditing)}
-            className={`w-full sm:w-auto px-4 py-3 sm:py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-colors cursor-pointer text-center ${
-              isEditing ? "bg-primary-500 text-white shadow-lg shadow-primary-500/20" : "bg-surface-700 text-surface-300 hover:bg-surface-600 hover:text-white"
-            }`}
+            className={`w-full sm:w-auto px-6 py-3 sm:py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-colors cursor-pointer text-center ${isEditing ? "bg-primary-500 text-white shadow-lg shadow-primary-500/20" : "bg-surface-700/50 text-surface-300 hover:bg-surface-600 hover:text-white"
+              }`}
           >
             {isEditing ? "Done Editing" : "Edit Mode"}
           </button>
         </div>
-        
+
         <PDFDownloadLink
           document={<ResumePDF profile={editedProfile} />}
           fileName="Optimized_Resume.pdf"
-          className="w-full sm:w-auto px-4 py-3 sm:py-2 bg-indigo-500 hover:bg-indigo-400 text-white rounded-lg text-sm font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20"
+          className="w-full sm:w-auto px-6 py-3 sm:py-2 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/50 text-indigo-300 rounded-xl text-[11px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/10"
         >
           {({ loading }) => (loading ? "Preparing PDF..." : "📄 Download ATS PDF")}
         </PDFDownloadLink>
@@ -151,44 +141,45 @@ export const EntityExtractionTab = ({
 
       {/* Profile Summary */}
       {editedProfile.summary !== undefined && (
-        <section className="bg-surface-800/40 border border-white/5 rounded-xl p-5">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-primary-400 mb-3">
+        <section className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 shadow-2xl shadow-black/40 backdrop-blur-md">
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-primary-400 mb-4">
             Profile Summary
           </h3>
           {isEditing ? (
             <textarea
-              className="w-full bg-surface-900 border border-surface-600 rounded-lg p-3 text-sm text-white focus:outline-hidden focus:border-primary-500 min-h-[100px]"
+              className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-4 text-sm text-white focus:outline-hidden focus:border-primary-500 min-h-[100px]"
               value={editedProfile.summary}
               onChange={(e) => setEditedProfile(p => ({ ...p, summary: e.target.value }))}
             />
           ) : (
-            <p className="text-sm text-surface-300 leading-relaxed">{editedProfile.summary}</p>
+            <p className="text-sm text-surface-200 font-medium leading-relaxed">{editedProfile.summary}</p>
           )}
         </section>
       )}
 
       {/* Detected Industry & Role */}
       <section>
-        <h3 className="text-sm font-bold text-white mb-4">Detected Industry & Role</h3>
-        
+        <h3 className="text-xs font-black tracking-widest text-surface-400 uppercase mb-4 ml-1">Detected Industry & Role</h3>
+
         {/* Primary Industry Card */}
-        <div className="bg-surface-800/40 border border-white/5 rounded-2xl p-5 sm:p-8 flex flex-col items-center justify-center mb-4 text-center">
-          <span className="text-[10px] font-black uppercase tracking-widest text-surface-400 mb-2 sm:mb-3">PRIMARY INDUSTRY</span>
-          <h2 className="text-2xl sm:text-3xl font-black text-indigo-400 mb-3 sm:mb-4">{primaryIndustry.name}</h2>
-          <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold whitespace-nowrap">
+        <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 sm:p-10 flex flex-col items-center justify-center mb-6 text-center shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden">
+          <div className="absolute inset-0 bg-linear-to-b from-indigo-500/5 to-transparent pointer-events-none" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-surface-500 mb-3 relative z-10">PRIMARY INDUSTRY</span>
+          <h2 className="text-2xl sm:text-4xl font-black text-indigo-400 mb-4 relative z-10 font-display">{primaryIndustry.name}</h2>
+          <span className="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-black uppercase tracking-widest whitespace-nowrap relative z-10 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
             High confidence
           </span>
         </div>
 
         {/* Secondary Industry & Scores */}
-        <div className="bg-surface-800/40 border border-white/5 rounded-xl p-6 space-y-6">
+        <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 space-y-6 shadow-2xl shadow-black/40 backdrop-blur-md">
           {secondaryIndustry && (
-            <div className="flex items-center gap-2 pb-6 border-b border-white/5">
-              <span className="text-sm font-bold text-white">Secondary:</span>
-              <span className="text-sm text-surface-300">{secondaryIndustry.name}</span>
+            <div className="flex items-center gap-3 pb-6 border-b border-surface-600/30">
+              <span className="text-[11px] font-black uppercase tracking-widest text-surface-400">Secondary:</span>
+              <span className="text-[13px] font-bold text-surface-200">{secondaryIndustry.name}</span>
             </div>
           )}
-          
+
           <div>
             <h4 className="text-sm font-bold text-white mb-6">Industry Scores</h4>
             <div className="space-y-4">
@@ -197,8 +188,8 @@ export const EntityExtractionTab = ({
                   <span className="w-full sm:w-40 text-xs font-medium text-surface-300 truncate" title={ind.name}>{ind.name}</span>
                   <div className="flex items-center gap-4 w-full sm:flex-1">
                     <div className="flex-1 h-1.5 bg-surface-700/50 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-linear-to-r from-indigo-500 to-primary-400 rounded-full" 
+                      <div
+                        className="h-full bg-linear-to-r from-indigo-500 to-primary-400 rounded-full"
                         style={{ width: `${(ind.score / maxIndScore) * 100}%` }}
                       />
                     </div>
@@ -213,52 +204,52 @@ export const EntityExtractionTab = ({
 
       {/* Contact Information */}
       <section>
-        <h3 className="text-sm font-bold text-white mb-4">Contact Information</h3>
+        <h3 className="text-xs font-black tracking-widest text-surface-400 uppercase mb-4 ml-1">Contact Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-surface-800/40 border border-white/5 rounded-xl p-4">
-            <span className="text-[10px] font-black uppercase tracking-widest text-primary-400 mb-2 block">NAME</span>
+          <div className="bg-surface-800/40 border border-surface-600/30 rounded-2xl p-6 shadow-lg shadow-black/20 backdrop-blur-md">
+            <span className="text-[10px] font-black uppercase tracking-widest text-surface-500 mb-3 block">NAME</span>
             {isEditing ? (
               <input
-                className="w-full bg-surface-900 border border-surface-600 rounded p-2 text-sm text-white"
+                className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-white font-bold"
                 value={editedProfile.personal_info?.name || ""}
                 onChange={(e) => setEditedProfile(p => ({ ...p, personal_info: { ...p.personal_info, name: e.target.value } }))}
               />
             ) : (
-              <p className="text-sm text-white font-medium">{editedProfile.personal_info?.name || "Not Found"}</p>
+              <p className="text-lg text-white font-black font-display">{editedProfile.personal_info?.name || "Not Found"}</p>
             )}
           </div>
-          <div className="bg-surface-800/40 border border-white/5 rounded-xl p-4">
-            <span className="text-[10px] font-black uppercase tracking-widest text-primary-400 mb-2 block">EMAIL</span>
+          <div className="bg-surface-800/40 border border-surface-600/30 rounded-2xl p-6 shadow-lg shadow-black/20 backdrop-blur-md">
+            <span className="text-[10px] font-black uppercase tracking-widest text-surface-500 mb-3 block">EMAIL</span>
             {isEditing ? (
               <input
-                className="w-full bg-surface-900 border border-surface-600 rounded p-2 text-sm text-white"
+                className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-white font-bold"
                 value={editedProfile.personal_info?.email || ""}
                 onChange={(e) => setEditedProfile(p => ({ ...p, personal_info: { ...p.personal_info, email: e.target.value } }))}
               />
             ) : (
-              <p className="text-sm text-white font-medium">{editedProfile.personal_info?.email || "Not Found"}</p>
+              <p className="text-[13px] text-surface-200 font-medium break-all">{editedProfile.personal_info?.email || "Not Found"}</p>
             )}
           </div>
-          <div className="bg-surface-800/40 border border-white/5 rounded-xl p-4">
-            <span className="text-[10px] font-black uppercase tracking-widest text-primary-400 mb-2 block">PHONE</span>
+          <div className="bg-surface-800/40 border border-surface-600/30 rounded-2xl p-6 shadow-lg shadow-black/20 backdrop-blur-md">
+            <span className="text-[10px] font-black uppercase tracking-widest text-surface-500 mb-3 block">PHONE</span>
             {isEditing ? (
               <input
-                className="w-full bg-surface-900 border border-surface-600 rounded p-2 text-sm text-white"
+                className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-white font-bold"
                 value={editedProfile.personal_info?.phone || ""}
                 onChange={(e) => setEditedProfile(p => ({ ...p, personal_info: { ...p.personal_info, phone: e.target.value } }))}
               />
             ) : (
-              <p className="text-sm text-white font-medium">{editedProfile.personal_info?.phone || "Not Found"}</p>
+              <p className="text-[14.5px] text-surface-200 font-medium">{editedProfile.personal_info?.phone || "Not Found"}</p>
             )}
           </div>
         </div>
 
         {/* Links */}
         {isEditing ? (
-          <div className="bg-surface-800/40 border border-white/5 rounded-xl p-4 mt-4">
-            <span className="text-[10px] font-black uppercase tracking-widest text-primary-400 mb-2 block">LINKS (COMMA SEPARATED)</span>
+          <div className="bg-surface-800/40 border border-surface-600/30 rounded-2xl p-6 mt-4 shadow-lg shadow-black/20 backdrop-blur-md">
+            <span className="text-[10px] font-black uppercase tracking-widest text-surface-500 mb-3 block">LINKS (COMMA SEPARATED)</span>
             <input
-              className="w-full bg-surface-900 border border-surface-600 rounded p-2 text-sm text-white"
+              className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-white"
               value={editedProfile.personal_info?.links?.join(", ") || ""}
               onChange={(e) => setEditedProfile(p => ({
                 ...p,
@@ -275,10 +266,10 @@ export const EntityExtractionTab = ({
             <div className="flex flex-wrap gap-4 mt-4">
               {(() => {
                 const links = editedProfile.personal_info.links || [];
-                
+
                 // Find primary LinkedIn link
                 const linkedinLink = links.find(link => link.toLowerCase().includes('linkedin.com'));
-                
+
                 // Find primary GitHub link (prioritize profile links over repo links)
                 const githubLinks = links.filter(link => link.toLowerCase().includes('github.com'));
                 let githubLink = githubLinks.find(link => {
@@ -291,7 +282,7 @@ export const EntityExtractionTab = ({
                     return false;
                   }
                 });
-                
+
                 // Fallback to first GitHub link if no pure profile link is found
                 if (!githubLink && githubLinks.length > 0) {
                   githubLink = githubLinks[0];
@@ -303,12 +294,12 @@ export const EntityExtractionTab = ({
                 ].filter(Boolean) as { url: string, type: 'github' | 'linkedin' }[];
 
                 return displayLinks.map((item, i) => (
-                  <a 
+                  <a
                     key={i}
                     href={item.url.startsWith('http') ? item.url : `https://${item.url}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-surface-800/40 border border-white/5 hover:border-primary-500/50 hover:bg-surface-800 rounded-xl transition-all"
+                    className="flex items-center gap-3 px-5 py-2.5 bg-surface-800/40 border border-surface-600/30 hover:border-primary-500/50 hover:bg-surface-800 rounded-xl transition-all shadow-lg shadow-black/20"
                   >
                     {item.type === 'github' && (
                       <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" /></svg>
@@ -316,7 +307,7 @@ export const EntityExtractionTab = ({
                     {item.type === 'linkedin' && (
                       <svg className="w-5 h-5 text-[#0A66C2]" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
                     )}
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-[13px] font-bold text-surface-200">
                       {item.type === 'github' ? "GitHub" : "LinkedIn"}
                     </span>
                   </a>
@@ -330,23 +321,23 @@ export const EntityExtractionTab = ({
       {/* Technical Skills */}
       {editedProfile.skills?.technical && editedProfile.skills.technical.length > 0 && (
         <section>
-          <h3 className="text-sm font-bold text-white mb-3">Technical Skills</h3>
-          <div className="bg-surface-800/40 border border-white/5 rounded-xl p-5">
+          <h3 className="text-xs font-black tracking-widest text-surface-400 uppercase mb-4 ml-1">Technical Skills</h3>
+          <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 shadow-2xl shadow-black/40 backdrop-blur-md">
             {isEditing ? (
-               <textarea
-                 className="w-full bg-surface-900 border border-surface-600 rounded-lg p-3 text-sm text-white focus:outline-hidden focus:border-primary-500 min-h-[80px]"
-                 value={editedProfile.skills.technical.join(", ")}
-                 onChange={(e) => setEditedProfile(p => ({
-                   ...p,
-                   skills: { ...p.skills, technical: e.target.value.split(",").map(s => s.trim()).filter(Boolean) }
-                 }))}
-               />
+              <textarea
+                className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-4 text-sm text-white focus:outline-hidden focus:border-primary-500 min-h-[80px]"
+                value={editedProfile.skills.technical.join(", ")}
+                onChange={(e) => setEditedProfile(p => ({
+                  ...p,
+                  skills: { ...p.skills, technical: e.target.value.split(",").map(s => s.trim()).filter(Boolean) }
+                }))}
+              />
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {editedProfile.skills.technical.map((s: string, i: number) => (
                   <span
                     key={i}
-                    className="px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/30 rounded-lg text-xs font-semibold text-indigo-300"
+                    className="px-4 py-2 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-[13px] font-bold text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.1)]"
                   >
                     {s}
                   </span>
@@ -360,23 +351,23 @@ export const EntityExtractionTab = ({
       {/* Extracted Keywords (Soft Skills / Others) */}
       {editedProfile.skills?.soft && editedProfile.skills.soft.length > 0 && (
         <section>
-          <h3 className="text-sm font-bold text-white mb-3">Extracted Keywords</h3>
-          <div className="bg-surface-800/40 border border-white/5 rounded-xl p-5">
+          <h3 className="text-xs font-black tracking-widest text-surface-400 uppercase mb-4 ml-1">Extracted Keywords</h3>
+          <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 shadow-2xl shadow-black/40 backdrop-blur-md">
             {isEditing ? (
-               <textarea
-                 className="w-full bg-surface-900 border border-surface-600 rounded-lg p-3 text-sm text-white focus:outline-hidden focus:border-primary-500 min-h-[80px]"
-                 value={editedProfile.skills.soft.join(", ")}
-                 onChange={(e) => setEditedProfile(p => ({
-                   ...p,
-                   skills: { ...p.skills, soft: e.target.value.split(",").map(s => s.trim()).filter(Boolean) }
-                 }))}
-               />
+              <textarea
+                className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-4 text-sm text-white focus:outline-hidden focus:border-primary-500 min-h-[80px]"
+                value={editedProfile.skills.soft.join(", ")}
+                onChange={(e) => setEditedProfile(p => ({
+                  ...p,
+                  skills: { ...p.skills, soft: e.target.value.split(",").map(s => s.trim()).filter(Boolean) }
+                }))}
+              />
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {editedProfile.skills.soft.map((s: string, i: number) => (
                   <span
                     key={i}
-                    className="px-3 py-1.5 bg-surface-700/50 border border-surface-600 rounded-lg text-xs font-semibold text-surface-300"
+                    className="px-4 py-2 bg-surface-800/50 border border-surface-600/30 rounded-xl text-[13px] font-bold text-surface-300 shadow-[0_0_15px_rgba(0,0,0,0.2)]"
                   >
                     {s}
                   </span>
@@ -390,20 +381,20 @@ export const EntityExtractionTab = ({
       {/* Work Experience */}
       {editedProfile.experience && editedProfile.experience.length > 0 && (
         <section>
-          <h3 className="text-sm font-bold text-white mb-4">Work Experience</h3>
-          <div className="space-y-3">
+          <h3 className="text-xs font-black tracking-widest text-surface-400 uppercase mb-4 ml-1">Work Experience</h3>
+          <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[31px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-linear-to-b before:from-transparent before:via-surface-600 before:to-transparent z-10">
             {editedProfile.experience.map((exp, i) => (
               <div
                 key={i}
-                className="border-l-2 pl-5 py-4 bg-surface-800/40 border border-white/5 rounded-r-xl pr-5 rounded-l-none border-y-white/5 border-r-white/5"
+                className="relative bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 shadow-2xl shadow-black/40 backdrop-blur-md"
               >
-                <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-2 sm:gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-4">
                   <div className="min-w-0 flex-1 w-full order-2 sm:order-1">
                     {isEditing ? (
                       <div className="space-y-2 mb-3">
                         <input
                           type="text"
-                          className="w-full bg-surface-900 border border-surface-600 rounded p-2 text-sm font-bold text-white"
+                          className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm font-bold text-white"
                           value={exp.role || exp.title || ""}
                           onChange={(e) => {
                             const newExp = [...editedProfile.experience!];
@@ -415,7 +406,7 @@ export const EntityExtractionTab = ({
                         <div className="flex gap-2">
                           <input
                             type="text"
-                            className="flex-1 bg-surface-900 border border-surface-600 rounded p-2 text-xs text-primary-400 font-semibold"
+                            className="flex-1 bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-primary-400 font-bold"
                             value={exp.company || ""}
                             onChange={(e) => {
                               const newExp = [...editedProfile.experience!];
@@ -426,7 +417,7 @@ export const EntityExtractionTab = ({
                           />
                           <input
                             type="text"
-                            className="flex-1 bg-surface-900 border border-surface-600 rounded p-2 text-xs text-surface-400"
+                            className="flex-1 bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-surface-400"
                             value={exp.duration || ""}
                             onChange={(e) => {
                               const newExp = [...editedProfile.experience!];
@@ -437,7 +428,7 @@ export const EntityExtractionTab = ({
                           />
                         </div>
                         <textarea
-                          className="w-full bg-surface-900 border border-surface-600 rounded p-2 text-xs text-surface-300 min-h-[100px]"
+                          className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-surface-300 min-h-[100px]"
                           value={exp.description || ""}
                           onChange={(e) => {
                             const newExp = [...editedProfile.experience!];
@@ -449,28 +440,28 @@ export const EntityExtractionTab = ({
                       </div>
                     ) : (
                       <>
-                        <h4 className="text-sm font-bold text-white">
+                        <h4 className="text-xl font-black text-white font-display">
                           {exp.role || exp.title || "Role"}
                         </h4>
                         {exp.company && (
-                          <p className="text-xs text-primary-400 font-semibold mt-1 mb-1">{exp.company}</p>
+                          <p className="text-[13px] text-primary-400 font-bold mt-2 mb-1">{exp.company}</p>
                         )}
                         {exp.location && (
-                          <p className="text-xs text-surface-500">{exp.location}</p>
+                          <p className="text-[11px] font-bold uppercase tracking-widest text-surface-500">{exp.location}</p>
                         )}
                         {exp.description && (
-                          <ul className="mt-4 space-y-2">
+                          <ul className="mt-6 space-y-3">
                             {exp.description.split(/(?:\n|•)/).filter(b => b.trim().length > 3).map((bullet, idx) => (
-                              <li key={idx} className="group flex flex-col sm:flex-row items-start gap-2 text-xs text-surface-400 leading-relaxed hover:text-surface-200 transition-colors pr-2">
-                                <div className="flex items-start gap-2 w-full">
-                                  <span className="text-primary-500 mt-0.5">•</span>
+                              <li key={idx} className="group flex flex-col sm:flex-row items-start gap-3 text-[14.5px] text-surface-300 font-medium leading-relaxed hover:text-surface-100 transition-colors">
+                                <div className="flex items-start gap-3 w-full">
+                                  <span className="text-primary-500 mt-1">✨</span>
                                   <span className="flex-1">{bullet.trim()}</span>
                                 </div>
                                 <button
                                   onClick={() => handleRewrite(bullet.trim(), i, idx)}
-                                  className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-primary-500/20 hover:bg-primary-500/40 text-primary-400 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-widest shrink-0 sm:ml-2 mt-2 sm:mt-0 self-end sm:self-auto cursor-pointer"
+                                  className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-primary-500/20 hover:bg-primary-500/40 text-primary-400 rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-widest shrink-0 sm:ml-2 mt-2 sm:mt-0 self-end sm:self-auto cursor-pointer shadow-[0_0_15px_rgba(45,212,191,0.1)]"
                                 >
-                                  Rewrite ✨
+                                  Rewrite
                                 </button>
                               </li>
                             ))}
@@ -480,7 +471,7 @@ export const EntityExtractionTab = ({
                     )}
                   </div>
                   {!isEditing && exp.duration && (
-                    <span className="text-[10px] font-semibold text-surface-400 bg-surface-800 rounded px-2 py-1 whitespace-nowrap shrink-0 border border-surface-700 order-1 sm:order-2 mb-2 sm:mb-0">
+                    <span className="text-[10px] font-black tracking-widest text-surface-400 uppercase bg-surface-800/50 rounded-full px-3 py-1.5 whitespace-nowrap shrink-0 border border-surface-600/30 order-1 sm:order-2 mb-2 sm:mb-0 shadow-inner shadow-black/20">
                       {exp.duration}
                     </span>
                   )}
@@ -493,21 +484,22 @@ export const EntityExtractionTab = ({
 
       {/* Education */}
       {editedProfile.education && editedProfile.education.length > 0 && (
-        <section>
-          <h3 className="text-sm font-bold text-white mb-4">Education</h3>
-          <div className="space-y-3">
+        <section className="pb-8">
+          <h3 className="text-xs font-black tracking-widest text-surface-400 uppercase mb-4 ml-1">Education</h3>
+          <div className="space-y-6">
             {editedProfile.education.map((edu, i) => (
               <div
                 key={i}
-                className="border-l-2 border-indigo-400 pl-5 py-4 bg-surface-800/40 border rounded-r-xl pr-5 rounded-l-none border-y-white/5 border-r-white/5"
+                className="bg-surface-800/40 border border-indigo-500/20 rounded-3xl p-8 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden"
               >
+                <div className="absolute left-0 top-0 bottom-0 w-2 bg-indigo-500/50" />
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     {isEditing ? (
                       <div className="space-y-2 mb-3">
                         <input
                           type="text"
-                          className="w-full bg-surface-900 border border-surface-600 rounded p-2 text-sm font-bold text-white"
+                          className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm font-bold text-white"
                           value={edu.institution || edu.school || ""}
                           onChange={(e) => {
                             const newEdu = [...editedProfile.education!];
@@ -519,7 +511,7 @@ export const EntityExtractionTab = ({
                         <div className="flex gap-2">
                           <input
                             type="text"
-                            className="flex-1 bg-surface-900 border border-surface-600 rounded p-2 text-xs text-indigo-400 font-semibold"
+                            className="flex-1 bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-indigo-400 font-bold"
                             value={edu.degree || ""}
                             onChange={(e) => {
                               const newEdu = [...editedProfile.education!];
@@ -530,7 +522,7 @@ export const EntityExtractionTab = ({
                           />
                           <input
                             type="text"
-                            className="flex-1 bg-surface-900 border border-surface-600 rounded p-2 text-xs text-surface-400"
+                            className="flex-1 bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-surface-400"
                             value={edu.year || ""}
                             onChange={(e) => {
                               const newEdu = [...editedProfile.education!];
@@ -543,11 +535,11 @@ export const EntityExtractionTab = ({
                       </div>
                     ) : (
                       <>
-                        <h4 className="text-sm font-bold text-white">
+                        <h4 className="text-xl font-black text-white font-display">
                           {edu.institution || edu.school || "School"}
                         </h4>
                         {(edu.degree || edu.field) && (
-                          <p className="text-xs text-indigo-400 font-semibold mt-1 mb-1">
+                          <p className="text-[13px] text-indigo-400 font-bold mt-2 mb-1">
                             {edu.degree} {edu.field ? `in ${edu.field}` : ""}
                           </p>
                         )}
@@ -555,7 +547,7 @@ export const EntityExtractionTab = ({
                     )}
                   </div>
                   {!isEditing && edu.year && (
-                    <span className="text-[10px] font-semibold text-surface-400 bg-surface-800 rounded px-2 py-1 whitespace-nowrap shrink-0 border border-surface-700">
+                    <span className="text-[10px] font-black tracking-widest text-surface-400 uppercase bg-surface-800/50 rounded-full px-3 py-1.5 whitespace-nowrap shrink-0 border border-surface-600/30 shadow-inner shadow-black/20">
                       {edu.year}
                     </span>
                   )}
@@ -581,13 +573,13 @@ export const EntityExtractionTab = ({
               exit={{ scale: 0.95, y: 20 }}
               className="bg-surface-800 border border-primary-500/30 rounded-2xl p-6 max-w-2xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto"
             >
-              <button 
+              <button
                 onClick={() => { setRewritingBullet(null); setVariations(null); }}
                 className="absolute top-4 right-4 text-surface-500 hover:text-white"
               >
                 ✕
               </button>
-              
+
               <h3 className="text-lg font-black text-white flex items-center gap-2 mb-2">
                 <span className="text-primary-400">✨</span> AI STAR Rewriter
               </h3>
@@ -612,13 +604,13 @@ export const EntityExtractionTab = ({
                     <div key={i} className="group relative p-4 bg-primary-500/5 hover:bg-primary-500/10 border border-primary-500/20 rounded-xl transition-colors">
                       <p className="text-sm text-surface-200 pr-32">{v}</p>
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 flex gap-2 transition-opacity">
-                        <button 
+                        <button
                           onClick={() => copyToClipboard(v)}
                           className="bg-surface-600 hover:bg-surface-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors"
                         >
                           Copy
                         </button>
-                        <button 
+                        <button
                           onClick={() => applyVariation(v)}
                           className="bg-primary-500 hover:bg-primary-400 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-lg shadow-primary-500/20"
                         >

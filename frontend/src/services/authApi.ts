@@ -1,8 +1,5 @@
-import axios from "axios";
+import apiClient from "./apiClient";
 
-const authApi = axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}/user/`,
-    withCredentials: true,
-});
+const authApi = apiClient;
 
 export default authApi;

@@ -29,7 +29,7 @@ export interface ErrorResponse {
 export interface ValidationError {
   field: string;
   message: string;
-  value?: any;
+  value?: unknown;
 }
 
 export interface ApiResponse<T> {
@@ -41,13 +41,16 @@ export interface ApiResponse<T> {
 }
 
 export class AppError extends Error {
-  constructor(
-    public code: ErrorCode,
-    public message: string,
-    public details?: ErrorDetails,
-    public statusCode: number = 500
-  ) {
+  code: ErrorCode;
+  details?: ErrorDetails;
+  statusCode: number;
+
+  constructor(code: ErrorCode, message: string, details?: ErrorDetails, statusCode: number = 500) {
     super(message);
-    this.name = "AppError";
+    this.name = this.constructor.name;
+    this.code = code;
+    this.details = details;
+    this.statusCode = statusCode;
+    Error.captureStackTrace(this, this.constructor);
   }
 }

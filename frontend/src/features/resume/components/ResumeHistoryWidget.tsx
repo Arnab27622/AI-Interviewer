@@ -34,9 +34,9 @@ export const ResumeHistoryWidget = () => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const data = await getUserResumes();
+        const { data } = await getUserResumes();
         // Sort chronologically (oldest to newest) for the line chart
-        const sorted = data.sort((a: ResumeData, b: ResumeData) => 
+        const sorted = data.sort((a: ResumeData, b: ResumeData) =>
           new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime()
         );
         setResumes(sorted);
@@ -51,7 +51,7 @@ export const ResumeHistoryWidget = () => {
 
   if (isLoading) {
     return (
-      <div className="glass-card rounded-[3rem] p-8 min-h-[300px] flex items-center justify-center animate-pulse border-white/5">
+      <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 min-h-[300px] flex items-center justify-center animate-pulse shadow-2xl shadow-black/40 backdrop-blur-md">
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin mb-4" />
           <span className="text-surface-500 text-sm font-bold uppercase tracking-widest">Loading History...</span>
@@ -150,14 +150,18 @@ export const ResumeHistoryWidget = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-card rounded-4xl sm:rounded-[3rem] p-5 sm:p-8 border-white/5 relative overflow-hidden w-full"
+      className="bg-surface-800/40 border border-surface-600/30 rounded-3xl sm:rounded-[3rem] p-6 sm:p-8 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden w-full"
     >
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none" />
-      
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4 sm:gap-0">
         <div>
-          <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2 sm:gap-3">
-            <span className="p-2 bg-primary-500/10 rounded-xl text-primary-400">📈</span>
+          <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2 sm:gap-3 font-display">
+            <span className="p-3 bg-surface-800/40 border border-surface-600/30 shadow-[0_0_15px_rgba(0,0,0,0.5)] rounded-2xl flex items-center justify-center backdrop-blur-md">
+              <svg className="w-6 h-6 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              </svg>
+            </span>
             ATS Score History
           </h2>
           <p className="text-surface-400 text-xs sm:text-sm mt-1 font-medium">

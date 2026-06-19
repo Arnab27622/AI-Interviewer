@@ -14,7 +14,7 @@ import { ROLES, LEVELS, TYPES, COUNTS } from "../constants/interview"
 import NewInterviewForm from "../components/NewInterviewForm"
 import type { FormChangeEvent } from "../types/forms"
 import { ResumeHistoryWidget } from "../features/resume/components/ResumeHistoryWidget"
-
+import { GamificationWidget } from "../features/gamification/components/GamificationWidget"
 import { motion } from "framer-motion"
 
 /**
@@ -36,6 +36,8 @@ const Dashboard = () => {
         level: LEVELS[0],
         interviewType: TYPES[1].value,
         count: COUNTS[0],
+        company: "general",
+        companyTrack: "general",
         resumeId: "",
     })
 
@@ -121,53 +123,53 @@ const Dashboard = () => {
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-16">
             {/* Header Section */}
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="flex flex-col sm:flex-row sm:items-end justify-between gap-8 pb-4"
             >
                 <div className="space-y-4">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-500/10 border border-primary-500/20">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/20 shadow-[0_0_15px_rgba(45,212,191,0.1)]">
                         <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
                         </span>
                         <span className="text-[10px] font-black uppercase tracking-widest text-primary-400">Terminal Active</span>
                     </div>
-                    <h1 className="text-4xl sm:text-6xl font-black tracking-tighter leading-none">
-                        Welcome, <span className="text-gradient pr-4">{user?.name?.split(' ')[0]}</span>
+                    <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-none font-display">
+                        Welcome, <span className="text-transparent bg-clip-text bg-linear-to-r from-primary-400 to-indigo-400 pr-4">{user?.name?.split(' ')[0]}</span>
                     </h1>
                     <p className="text-surface-400 text-base sm:text-lg font-medium max-w-md leading-relaxed">
                         Precision practice for high-stakes interviews. Level up your performance today.
                     </p>
                 </div>
-                
+
                 <div className="grid grid-cols-2 lg:flex items-center gap-4">
-                    <div className="glass-card px-4 sm:px-6 lg:px-4 py-4 rounded-3xl flex flex-col gap-1 border-white/5 shadow-inner sm:col-span-2 lg:col-span-1">
+                    <div className="bg-surface-800/40 border border-surface-600/30 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 sm:col-span-2 lg:col-span-1 min-w-[140px]">
                         <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">Total Pulse</p>
-                        <p className="text-2xl font-black text-white">{totalSessions}</p>
+                        <p className="text-3xl font-black text-white font-display">{totalSessions}</p>
                     </div>
-                    <div className="glass-card px-4 py-4 rounded-3xl flex flex-col gap-1 border-white/5 border-l-primary-500/30">
+                    <div className="bg-surface-800/40 border border-surface-600/30 border-l-primary-500/50 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 min-w-[140px]">
                         <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">Completed</p>
-                        <p className="text-2xl font-black text-emerald-400">{completedSessions}</p>
+                        <p className="text-3xl font-black text-emerald-400 font-display">{completedSessions}</p>
                     </div>
                     {activeSessions > 0 && (
-                        <div className="glass-card px-4 py-4 rounded-3xl flex flex-col gap-1 border-white/5 border-l-indigo-500/30 animate-pulse">
+                        <div className="bg-surface-800/40 border border-surface-600/30 border-l-indigo-500/50 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 animate-pulse min-w-[140px]">
                             <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">In Queue</p>
-                            <p className="text-2xl font-black text-indigo-400">{activeSessions}</p>
+                            <p className="text-3xl font-black text-indigo-400 font-display">{activeSessions}</p>
                         </div>
                     )}
                 </div>
             </motion.div>
 
             {/* New Interview Card */}
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
                 className="relative group z-20"
             >
-                <div className="absolute -inset-1 bg-linear-to-r from-primary-500/20 to-indigo-500/20 rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+                <div className="absolute -inset-1 bg-linear-to-r from-primary-500/10 to-indigo-500/10 rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-50 transition duration-1000"></div>
                 <div className="relative">
                     <NewInterviewForm
                         formData={formData}
@@ -175,6 +177,18 @@ const Dashboard = () => {
                         onSubmit={onSubmit}
                         isProcessing={isProcessing}
                     />
+                </div>
+            </motion.div>
+
+            {/* Gamification Widget */}
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="pt-4"
+            >
+                <div className="mb-8">
+                    <GamificationWidget />
                 </div>
             </motion.div>
 
@@ -189,15 +203,19 @@ const Dashboard = () => {
             </motion.div>
 
             {/* Interview History Section */}
-            <motion.div 
+            <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
                 className="space-y-8 pb-12"
             >
                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-black flex items-center gap-4 text-white">
-                        <span className="p-2.5 glass-card rounded-xl flex items-center justify-center text-xl shadow-inner border-white/5">📋</span>
+                    <h2 className="text-2xl font-black flex items-center gap-4 text-white font-display">
+                        <span className="p-3 bg-surface-800/40 border border-surface-600/30 shadow-[0_0_15px_rgba(0,0,0,0.5)] rounded-2xl flex items-center justify-center backdrop-blur-md">
+                            <svg className="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                        </span>
                         Interview <span className="text-surface-500">History</span>
                     </h2>
                     <div className="h-px grow mx-6 bg-white/5 hidden sm:block"></div>
@@ -212,7 +230,7 @@ const Dashboard = () => {
                         </div>
                     ) : (
                         (!sessions || !Array.isArray(sessions) || sessions.length === 0) ? (
-                            <motion.div 
+                            <motion.div
                                 variants={itemVariants}
                                 className="glass-card rounded-[3rem] py-24 text-center border-dashed border-white/10 group/empty"
                             >
@@ -241,7 +259,7 @@ const Dashboard = () => {
 
                 {pagination && pagination.currentPage < pagination.totalPages && (
                     <div className="flex justify-center pt-8">
-                        <button 
+                        <button
                             onClick={loadMore}
                             disabled={isLoading}
                             className="btn-secondary px-8 py-3 text-[10px] font-black uppercase tracking-widest disabled:opacity-50 cursor-pointer"

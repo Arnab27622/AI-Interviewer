@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAudioRecorder } from "../hooks/useAudioRecorder";
 import { useInterviewSession } from "../hooks/useInterviewSession";
+
 import ConfirmModal from "../components/ConfirmModal";
 import InterviewHeader from "../components/InterviewHeader";
 import QuestionSection from "../components/QuestionSection";
@@ -9,17 +10,21 @@ import CodeEditorSection from "../components/CodeEditorSection";
 import CodeOutputPanel from "../components/CodeOutputPanel";
 import AIFeedbackSection from "../components/AIFeedbackSection";
 import InterviewLoading from "../components/InterviewLoading";
+import WhiteboardModal from "../components/WhiteboardModal";
 
 const InterviewRunner = () => {
     const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
-    
-    const { 
-        isRecording, 
-        recordingTime, 
-        startRecording, 
+    const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
+    const [isFinishing, setIsFinishing] = useState(false);
+
+    const {
+        isRecording,
+        recordingTime,
+        startRecording,
         stopRecording,
         setRecordingTime
     } = useAudioRecorder();
+
 
     const {
         activeSession,
@@ -36,13 +41,30 @@ const InterviewRunner = () => {
         handleNavigation,
         updateDraftCode,
         updateDraftAudio,
+        updateDraftDiagram,
         deleteDraftAudio,
         handleSubmitAnswer,
         confirmFinishInterview
     } = useInterviewSession(stopRecording, setRecordingTime);
 
-    if (!activeSession || !activeSession.questions || activeSession.questions.length === 0) {
-        return <InterviewLoading sessionMessage={sessionMessage} />;
+
+
+    const handleConfirmFinish = async () => {
+        if (isFinishing) return;
+        setIsFinishing(true);
+        setIsFinishModalOpen(false);
+        try {
+
+            await confirmFinishInterview();
+        } catch (error) {
+            console.error("Failed to finish interview:", error);
+            setIsFinishing(false);
+            alert("Failed to finalize session. Please try again or refresh.");
+        }
+    };
+
+    if (!activeSession || !activeSession.questions || activeSession.questions.length === 0 || isFinishing) {
+        return <InterviewLoading sessionMessage={isFinishing ? "Uploading recording and finalizing interview..." : sessionMessage} />;
     }
 
     const currentDraft = drafts[currentQuestionIndex] || {};
@@ -50,7 +72,7 @@ const InterviewRunner = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-4 pb-32">
-            <InterviewHeader 
+            <InterviewHeader
                 role={activeSession.role}
                 startTime={activeSession.createdAt || activeSession.updatedAt || new Date().toISOString()}
                 questions={activeSession.questions}
@@ -60,30 +82,31 @@ const InterviewRunner = () => {
                 handleFinishInterview={() => setIsFinishModalOpen(true)}
                 isLoading={isLoading}
                 questionsCount={activeSession.questions.length}
+                company={activeSession.company}
             />
 
-            <QuestionSection 
+            <QuestionSection
                 index={currentQuestionIndex}
                 text={currentQuestion?.questionText || ""}
             />
 
             {isCodingQuestion ? (
                 <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-                    <CodeEditorSection 
+                    <CodeEditorSection
                         language={selectedLanguage}
                         code={currentDraft.code || ""}
                         isQuestionLocked={isQuestionLocked}
                         setLanguage={setSelectedLanguage}
                         updateCode={updateDraftCode}
                     />
-                    <CodeOutputPanel 
+                    <CodeOutputPanel
                         language={selectedLanguage}
                         code={currentDraft.code || ""}
                     />
                 </div>
             ) : (
                 <div className="grid gap-6 grid-cols-1">
-                    <VerbalRecorder 
+                    <VerbalRecorder
                         isRecording={isRecording}
                         recordingTime={recordingTime}
                         hasAudio={!!currentDraft.audio}
@@ -92,19 +115,44 @@ const InterviewRunner = () => {
                         stopRecording={stopRecording}
                         deleteDraftAudio={deleteDraftAudio}
                     />
+                    {currentQuestion?.questionType === 'system-design' && (
+                        <div className="flex justify-center mt-2">
+                            <button
+                                onClick={() => setIsWhiteboardOpen(true)}
+                                disabled={isQuestionLocked}
+                                className="px-6 py-3 rounded-xl bg-surface-800 border border-white/10 hover:border-primary-500 text-sm font-black uppercase tracking-widest text-white transition-all hover:bg-surface-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
+                            >
+                                <svg className="w-5 h-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                                {currentDraft.diagram ? 'Edit Whiteboard Diagram' : 'Open System Design Whiteboard'}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
-            <AIFeedbackSection 
+            {isWhiteboardOpen && (
+                <WhiteboardModal
+                    onClose={() => setIsWhiteboardOpen(false)}
+                    onSubmit={(blob) => {
+                        updateDraftDiagram(blob);
+                        setIsWhiteboardOpen(false);
+                    }}
+                />
+            )}
+
+            <AIFeedbackSection
                 isEvaluated={!!currentQuestion?.isEvaluated}
                 feedback={currentQuestion?.aiFeedback || ""}
                 score={currentQuestion?.technicalScore || 0}
+                speechMetrics={currentQuestion?.speechMetrics}
             />
 
             <div className="fixed bottom-0 left-0 right-0 glass-card border-x-0 border-b-0 p-5 px-6 md:px-12 flex justify-between items-center z-50">
-                <button 
-                    onClick={() => handleNavigation(currentQuestionIndex - 1)} 
-                    disabled={currentQuestionIndex === 0} 
+                <button
+                    onClick={() => handleNavigation(currentQuestionIndex - 1)}
+                    disabled={currentQuestionIndex === 0}
                     className="text-surface-500 font-black text-[10px] uppercase tracking-widest hover:text-white disabled:opacity-20 cursor-pointer transition-colors"
                 >
                     ← Back
@@ -117,18 +165,18 @@ const InterviewRunner = () => {
                         </div>
                     )}
 
-                    <button 
-                        onClick={handleSubmitAnswer} 
-                        disabled={isQuestionLocked} 
+                    <button
+                        onClick={handleSubmitAnswer}
+                        disabled={isQuestionLocked}
                         className={`px-10 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest text-white shadow-xl transition-all active:scale-[0.98] ${isProcessing ? 'bg-surface-800 cursor-wait' : currentQuestion?.isEvaluated ? 'bg-emerald-600 shadow-emerald-900/20' : isQuestionLocked ? 'bg-surface-800' : 'bg-primary-600 hover:bg-primary-500 shadow-primary-900/20 cursor-pointer'}`}
                     >
                         {isProcessing ? 'Analyzing...' : currentQuestion?.isEvaluated ? 'Submitted' : isQuestionLocked ? 'Locked' : 'Commit Answer'}
                     </button>
                 </div>
 
-                <button 
-                    onClick={() => handleNavigation(currentQuestionIndex + 1)} 
-                    disabled={currentQuestionIndex === (activeSession?.questions?.length || 0) - 1} 
+                <button
+                    onClick={() => handleNavigation(currentQuestionIndex + 1)}
+                    disabled={currentQuestionIndex === (activeSession?.questions?.length || 0) - 1}
                     className="text-surface-500 font-black text-[10px] uppercase tracking-widest hover:text-white disabled:opacity-20 cursor-pointer transition-colors"
                 >
                     Next →
@@ -141,7 +189,7 @@ const InterviewRunner = () => {
                 message="Are you sure you want to end this interview session? You won't be able to change your answers after this."
                 confirmText="Finish"
                 cancelText="Keep Going"
-                onConfirm={confirmFinishInterview}
+                onConfirm={handleConfirmFinish}
                 onCancel={() => setIsFinishModalOpen(false)}
                 isDanger={false}
             />

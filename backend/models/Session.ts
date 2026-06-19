@@ -10,15 +10,26 @@ import mongoose, { Schema, Document, Model } from "mongoose";
  */
 export interface IQuestion {
   questionText: string;
-  questionType: "oral" | "coding";
+  questionType: "oral" | "coding" | "system-design";
   idealAnswer: string;
   userAnswerText?: string;
   userSubmittedCode?: string;
+  userSubmittedDiagram?: string;
+  diagramImageUrl?: string;
   isSubmitted: boolean;
   isEvaluated: boolean;
   technicalScore?: number;
   confidenceScore?: number;
   aiFeedback?: string;
+  speechMetrics?: {
+    fillerWordCount: number;
+    fillerWords: { word: string; count: number }[];
+    speakingPaceWpm: number;
+    paceRating: string;
+    totalPauseDurationMs: number;
+    pauseCount: number;
+    clarityScore: number;
+  };
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -30,7 +41,9 @@ export interface ISession extends Document {
   user: mongoose.Types.ObjectId;
   role: string;
   level: string;
-  interviewType: "oral-only" | "coding-mix";
+  interviewType: "oral-only" | "coding-mix" | "company-specific";
+  company?: string;
+  companyTrack?: string;
   status: "pending" | "in-progress" | "completed" | "cancelled" | "failed";
   overallScore: number;
   metrics: {
@@ -39,6 +52,7 @@ export interface ISession extends Document {
   };
   resumeId?: mongoose.Types.ObjectId;
   questions: mongoose.Types.DocumentArray<IQuestion & mongoose.Document>;
+
   startTime: Date;
   endTime?: Date | null;
   createdAt: Date;
@@ -64,7 +78,7 @@ const questionSchema = new Schema<IQuestion & mongoose.Document>(
     },
     questionType: {
       type: String,
-      enum: ["oral", "coding"],
+      enum: ["oral", "coding", "system-design"],
       required: true,
     },
     idealAnswer: {
@@ -101,6 +115,23 @@ const questionSchema = new Schema<IQuestion & mongoose.Document>(
       type: String,
       default: "",
     },
+    userSubmittedDiagram: {
+      type: String,
+      default: "",
+    },
+    diagramImageUrl: {
+      type: String,
+      default: "",
+    },
+    speechMetrics: {
+      fillerWordCount: { type: Number, default: 0 },
+      fillerWords: [{ word: String, count: Number }],
+      speakingPaceWpm: { type: Number, default: 0 },
+      paceRating: { type: String },
+      totalPauseDurationMs: { type: Number, default: 0 },
+      pauseCount: { type: Number, default: 0 },
+      clarityScore: { type: Number, default: 0 },
+    },
   },
   { timestamps: true }
 );
@@ -123,8 +154,15 @@ const sessionSchema = new Schema<ISession, ISessionModel>(
     },
     interviewType: {
       type: String,
-      enum: ["oral-only", "coding-mix"],
+      enum: ["oral-only", "coding-mix", "company-specific"],
       required: true,
+    },
+    company: {
+      type: String,
+      index: { sparse: true },
+    },
+    companyTrack: {
+      type: String,
     },
     status: {
       type: String,
@@ -152,6 +190,7 @@ const sessionSchema = new Schema<ISession, ISessionModel>(
       required: false,
     },
     questions: [questionSchema],
+
     startTime: {
       type: Date,
       default: Date.now,
@@ -220,6 +259,14 @@ sessionSchema.statics.calculateScoreSummary = async function (
   return result[0] || { overallScore: 0, avgTechnical: 0, avgConfidence: 0 };
 };
 
-export const Session = mongoose.model<ISession, ISessionModel>("Session", sessionSchema);
+sessionSchema.pre("save", async function () {
+  if (this.interviewType === "company-specific") {
+    if (!this.company || !this.companyTrack) {
+      throw new Error("Both 'company' and 'companyTrack' are required when interviewType is 'company-specific'.");
+    }
+  }
+});
+
+const Session = mongoose.model<ISession, ISessionModel>("Session", sessionSchema);
 
 export default Session;

@@ -7,6 +7,8 @@ import { getSessionById, submitAnswer, endSession } from "../features/session/se
 import { ROLE_LANGUAGE_MAP } from "../constants/interview";
 import { saveDrafts, getDrafts, deleteDrafts } from "../utils/idb";
 
+import api from "../services/api";
+
 /**
  * Custom hook to manage the lifecycle of an interview session runner.
  * Handles question state, draft persistence (via IDB), answer submission logic, 
@@ -14,6 +16,7 @@ import { saveDrafts, getDrafts, deleteDrafts } from "../utils/idb";
  * 
  * @param stopRecording - Callback to stop the active audio recorder.
  * @param setRecordingTime - Callback to reset timer UI.
+ * @param recordingStartTime - Unix timestamp of when the session recording began.
  */
 export const useInterviewSession = (stopRecording: () => void, setRecordingTime: (time: number) => void) => {
     const { sessionId } = useParams<{ sessionId: string }>();
@@ -31,7 +34,7 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
     const [submittedLocal, setSubmittedLocal] = useState<Record<number, boolean>>({});
 
     // Initial drafts state from IDB with empty fallback
-    const [drafts, setDrafts] = useState<Record<number, { code?: string; audio?: Blob }>>({});
+    const [drafts, setDrafts] = useState<Record<number, { code?: string; audio?: Blob; diagram?: Blob }>>({});
 
     useEffect(() => {
         if (!sessionId) return;
@@ -40,11 +43,11 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
                 setDrafts(saved);
             } else {
                 // LocalStorage Migration Fallback
-                const savedStr = localStorage.getItem(`draft_code_${sessionId}`); 
+                const savedStr = localStorage.getItem(`draft_code_${sessionId}`);
                 if (savedStr) {
                     try {
                         const parsed = JSON.parse(savedStr);
-                        const migrated: Record<number, { code?: string; audio?: Blob }> = {};
+                        const migrated: Record<number, { code?: string; audio?: Blob; diagram?: Blob }> = {};
                         Object.keys(parsed).forEach(key => {
                             migrated[parseInt(key)] = { code: parsed[key] };
                         });
@@ -97,11 +100,16 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
         }
     };
 
+
+
     const updateDraftCode = (newCode: string | undefined) => {
         if (isQuestionLocked) return;
+
+        const codeText = newCode ?? "";
+
         setDrafts(prev => ({
             ...prev,
-            [currentQuestionIndex]: { ...prev[currentQuestionIndex], code: newCode ?? "" }
+            [currentQuestionIndex]: { ...prev[currentQuestionIndex], code: codeText }
         }));
     };
 
@@ -109,6 +117,13 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
         setDrafts(prev => ({
             ...prev,
             [currentQuestionIndex]: { ...prev[currentQuestionIndex], audio: audioBlob }
+        }));
+    };
+
+    const updateDraftDiagram = (diagramBlob: Blob) => {
+        setDrafts(prev => ({
+            ...prev,
+            [currentQuestionIndex]: { ...prev[currentQuestionIndex], diagram: diagramBlob }
         }));
     };
 
@@ -126,8 +141,9 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
         const draft = drafts[currentQuestionIndex] || {};
         const code = draft.code || "";
         const audio = draft.audio || null;
+        const diagram = draft.diagram || null;
 
-        if (!code && !audio) {
+        if (!code && !audio && !diagram) {
             toast.error("Please provide an answer before submitting.");
             return;
         }
@@ -136,11 +152,31 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
             ...prev, [currentQuestionIndex]: true
         }));
 
+        let diagramImageUrl = "";
+        if (diagram) {
+            try {
+                const diagFormData = new FormData();
+                diagFormData.append("diagram", diagram, "diagram.png");
+
+                const res = await api.post(`/diagrams/upload`, diagFormData, {
+                    timeout: 10000,
+                });
+
+                if (res.data && res.data.url) {
+                    diagramImageUrl = res.data.url;
+                }
+            } catch (err) {
+                console.error("Failed to upload diagram", err);
+                toast.warning("Failed to upload whiteboard diagram. Submitting without it.");
+            }
+        }
+
         const formData = new FormData();
         formData.append("questionIndex", currentQuestionIndex.toString());
         if (code) formData.append("code", code);
         if (selectedLanguage) formData.append("language", selectedLanguage);
         if (audio) formData.append("audio", audio, 'audio.webm');
+        if (diagramImageUrl) formData.append("diagramImageUrl", diagramImageUrl);
 
         dispatch(submitAnswer({ sessionId, formData })).unwrap().catch(() => {
             setSubmittedLocal(prev => ({
@@ -178,6 +214,7 @@ export const useInterviewSession = (stopRecording: () => void, setRecordingTime:
         handleNavigation,
         updateDraftCode,
         updateDraftAudio,
+        updateDraftDiagram,
         deleteDraftAudio,
         handleSubmitAnswer,
         confirmFinishInterview

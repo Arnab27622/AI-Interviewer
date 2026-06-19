@@ -17,7 +17,7 @@ export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "
   let issuesText = "";
   let strengthsText = "";
   let parts: string[] = [];
-  
+
   if (streamingText || isStreaming) {
     parts = streamingText.split(/##?\s*(?:🌟\s*)?Strengths/i);
     issuesText = parts[0].replace(/##?\s*(?:🚨\s*)?Issues\s*(?:Found)?/iu, "").replace(/[🚨🌟💡]/gu, "").trim();
@@ -54,17 +54,18 @@ export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "
     >
       {streamingText || isStreaming ? (
         <div className="space-y-8">
-          <section className="bg-surface-800/40 border border-rose-500/10 rounded-2xl p-5 sm:p-8 shadow-xl">
-            <div className="flex items-center gap-3 mb-5 sm:mb-6">
-              <div className="shrink-0 w-8 h-8 rounded-full border border-rose-500/30 bg-rose-500/10 flex items-center justify-center">
-                <span className="text-rose-400 font-bold text-sm">!</span>
+          <section className="bg-surface-800/40 border border-rose-500/30 rounded-3xl p-6 sm:p-10 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden">
+            <div className="absolute inset-0 bg-linear-to-b from-rose-500/5 to-transparent pointer-events-none" />
+            <div className="flex items-center gap-4 mb-6 sm:mb-8 relative z-10">
+              <div className="shrink-0 w-10 h-10 rounded-2xl border border-rose-500/50 bg-rose-500/20 flex items-center justify-center shadow-inner shadow-black/20">
+                <span className="text-rose-400 font-black text-lg">!</span>
               </div>
-              <h3 className="text-xl font-black text-white flex items-center gap-2">
+              <h3 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
                 Issues Found
-                {isStreaming && !strengthsText && <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400 uppercase tracking-widest ml-2 animate-pulse">Live</span>}
+                {isStreaming && !strengthsText && <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-rose-500/20 text-rose-400 uppercase tracking-widest ml-2 animate-pulse border border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.2)]">Live</span>}
               </h3>
             </div>
-            <div className="max-w-none">
+            <div className="max-w-none relative z-10">
               <ReactMarkdown components={mdComponents}>{issuesText}</ReactMarkdown>
               {isStreaming && !strengthsText && (
                 <span className="inline-block w-2 h-4 bg-rose-400 ml-1 animate-pulse align-middle" />
@@ -73,17 +74,18 @@ export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "
           </section>
 
           {(strengthsText || (isStreaming && parts?.length > 1)) && (
-            <section className="bg-surface-800/40 border border-primary-500/10 rounded-2xl p-5 sm:p-8 shadow-xl">
-              <div className="flex items-center gap-3 mb-5 sm:mb-6">
-                <div className="shrink-0 w-8 h-8 rounded-full border border-primary-400/30 bg-primary-400/10 flex items-center justify-center">
-                  <span className="text-primary-400 font-bold text-xs">★</span>
+            <section className="bg-surface-800/40 border border-primary-500/30 rounded-3xl p-6 sm:p-10 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden">
+              <div className="absolute inset-0 bg-linear-to-b from-primary-500/5 to-transparent pointer-events-none" />
+              <div className="flex items-center gap-4 mb-6 sm:mb-8 relative z-10">
+                <div className="shrink-0 w-10 h-10 rounded-2xl border border-primary-500/50 bg-primary-500/20 flex items-center justify-center shadow-inner shadow-black/20">
+                  <span className="text-primary-400 font-black text-lg">★</span>
                 </div>
-                <h3 className="text-xl font-black text-white flex items-center gap-2">
+                <h3 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
                   Strengths
-                  {isStreaming && strengthsText && <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-primary-500/20 text-primary-400 uppercase tracking-widest ml-2 animate-pulse">Live</span>}
+                  {isStreaming && strengthsText && <span className="text-[10px] font-black px-2 py-1 rounded-lg bg-primary-500/20 text-primary-400 uppercase tracking-widest ml-2 animate-pulse border border-primary-500/30 shadow-[0_0_10px_rgba(45,212,191,0.2)]">Live</span>}
                 </h3>
               </div>
-              <div className="max-w-none">
+              <div className="max-w-none relative z-10">
                 <ReactMarkdown components={mdComponents}>{strengthsText}</ReactMarkdown>
                 {isStreaming && strengthsText && (
                   <span className="inline-block w-2 h-4 bg-primary-400 ml-1 animate-pulse align-middle" />
@@ -96,24 +98,25 @@ export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "
         <>
           {/* Issues Section */}
           {issues.length > 0 && (
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-1 h-6 bg-rose-500 rounded-full" />
-                <h3 className="text-lg font-bold text-white">Issues Found</h3>
-                <span className="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 text-xs font-bold border border-rose-500/10">
+            <section className="bg-surface-800/40 border border-rose-500/30 rounded-3xl p-6 sm:p-10 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden">
+              <div className="absolute inset-0 bg-linear-to-b from-rose-500/5 to-transparent pointer-events-none" />
+              <div className="flex items-center gap-4 mb-8 relative z-10">
+                <div className="w-1.5 h-8 bg-rose-500 rounded-full shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+                <h3 className="text-xl font-black text-white tracking-tight">Issues Found</h3>
+                <span className="px-3 py-1 rounded-lg bg-rose-500/20 text-rose-400 text-[10px] font-black border border-rose-500/30 uppercase tracking-widest shadow-sm shadow-rose-500/10">
                   {issues.length}
                 </span>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4 relative z-10">
                 {issues.map((issue: string, idx: number) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-4 bg-surface-800/40 border border-rose-500/10 rounded-xl p-4"
+                    className="flex items-start gap-5 bg-surface-900/60 border border-rose-500/20 rounded-2xl p-5 shadow-inner shadow-black/20"
                   >
-                    <div className="shrink-0 w-8 h-8 rounded-full border border-rose-500/30 bg-rose-500/10 flex items-center justify-center">
-                      <span className="text-rose-400 font-bold text-sm">!</span>
+                    <div className="shrink-0 w-10 h-10 rounded-xl border border-rose-500/40 bg-rose-500/10 flex items-center justify-center shadow-inner shadow-rose-500/5 mt-0.5">
+                      <span className="text-rose-400 font-black text-lg">!</span>
                     </div>
-                    <p className="text-sm text-surface-200 leading-relaxed">{issue}</p>
+                    <p className="text-[14.5px] text-surface-200 leading-relaxed font-medium">{issue}</p>
                   </div>
                 ))}
               </div>
@@ -122,24 +125,25 @@ export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "
 
           {/* Strengths Section */}
           {strengths.length > 0 && (
-            <section>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-1 h-6 bg-primary-400 rounded-full" />
-                <h3 className="text-lg font-bold text-white">Strengths</h3>
-                <span className="px-2.5 py-0.5 rounded-full bg-primary-400/20 text-primary-400 text-xs font-bold border border-primary-400/10">
+            <section className="bg-surface-800/40 border border-primary-500/30 rounded-3xl p-6 sm:p-10 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden mt-8">
+              <div className="absolute inset-0 bg-linear-to-b from-primary-500/5 to-transparent pointer-events-none" />
+              <div className="flex items-center gap-4 mb-8 relative z-10">
+                <div className="w-1.5 h-8 bg-primary-400 rounded-full shadow-[0_0_10px_rgba(45,212,191,0.5)]" />
+                <h3 className="text-xl font-black text-white tracking-tight">Strengths</h3>
+                <span className="px-3 py-1 rounded-lg bg-primary-400/20 text-primary-400 text-[10px] font-black border border-primary-400/30 uppercase tracking-widest shadow-sm shadow-primary-400/10">
                   {strengths.length}
                 </span>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                 {strengths.map((strength: string, idx: number) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-4 bg-surface-800/40 border border-primary-400/10 rounded-xl p-4"
+                    className="flex items-start gap-5 bg-surface-900/60 border border-primary-400/20 rounded-2xl p-5 shadow-inner shadow-black/20"
                   >
-                    <div className="shrink-0 w-8 h-8 rounded-full border border-primary-400/30 bg-primary-400/10 flex items-center justify-center">
-                      <span className="text-primary-400 font-bold text-xs">{idx + 1}</span>
+                    <div className="shrink-0 w-10 h-10 rounded-xl border border-primary-400/40 bg-primary-400/10 flex items-center justify-center shadow-inner shadow-primary-400/5 mt-0.5">
+                      <span className="text-primary-400 font-black text-sm">{idx + 1}</span>
                     </div>
-                    <p className="text-sm text-surface-200 leading-relaxed">{strength}</p>
+                    <p className="text-[14.5px] text-surface-200 leading-relaxed font-medium">{strength}</p>
                   </div>
                 ))}
               </div>

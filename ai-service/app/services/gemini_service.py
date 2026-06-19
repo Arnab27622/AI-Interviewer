@@ -1,6 +1,7 @@
 import requests
 import os
 import json
+import logging
 import time
 import threading
 from fastapi import HTTPException
@@ -28,32 +29,42 @@ def _wait_for_rate_limit() -> None:
         elapsed = now - _last_call_time
         if elapsed < MIN_CALL_INTERVAL:
             sleep_time = MIN_CALL_INTERVAL - elapsed
-            print(f"[RATE LIMITER] Throttling — waiting {sleep_time:.1f}s before next Gemini call")
+            print(
+                f"[RATE LIMITER] Throttling — waiting {sleep_time:.1f}s before next Gemini call"
+            )
             time.sleep(sleep_time)
         _last_call_time = time.time()
 
 
-def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, audio_base64: str = None, api_key: str = None) -> str:
+def call_gemini(
+    system_prompt: str,
+    user_prompt: str,
+    as_json: bool = False,
+    audio_base64: str = None,
+    api_key: str = None,
+) -> str:
     """Shared helper to call the Gemini API. Supports text or text+audio."""
     model_name = os.getenv("MODEL_NAME")
     # Use override key if provided, otherwise fallback to default env var
     actual_api_key = api_key or os.getenv("GEMINI_API_KEY")
-    
+
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
     headers = {
         "Content-Type": "application/json",
         "x-goog-api-key": actual_api_key,
     }
-    
+
     # Build parts list
     parts = [{"text": user_prompt}]
     if audio_base64:
-        parts.append({
-            "inline_data": {
-                "mime_type": "audio/webm", # Most browsers record in webm
-                "data": audio_base64
+        parts.append(
+            {
+                "inline_data": {
+                    "mime_type": "audio/webm",  # Most browsers record in webm
+                    "data": audio_base64,
+                }
             }
-        })
+        )
 
     body = {
         "system_instruction": {"parts": [{"text": system_prompt}]},
@@ -65,11 +76,11 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, aud
     }
 
     timeout = int(os.getenv("REQUEST_TIMEOUT", "60"))
-    
+
     # Retry logic for Rate Limiting (429) and Server Errors (500, 503, 504)
     max_retries = 5
     retry_delay = 10  # Start with a 10s delay for rate limits
-    
+
     resp = None  # ensure resp is defined for the post-loop code
 
     for attempt in range(max_retries + 1):
@@ -78,18 +89,26 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, aud
 
         try:
             resp = requests.post(url, json=body, headers=headers, timeout=timeout)
-            
+
             if resp.status_code == 429 and attempt < max_retries:
                 # Parse Retry-After header if available
                 retry_after = resp.headers.get("Retry-After")
-                wait_time = int(retry_after) if retry_after and retry_after.isdigit() else retry_delay
-                print(f"[RATE LIMIT] 429 received. Waiting {wait_time}s before retry... (Attempt {attempt+1}/{max_retries})")
+                wait_time = (
+                    int(retry_after)
+                    if retry_after and retry_after.isdigit()
+                    else retry_delay
+                )
+                print(
+                    f"[RATE LIMIT] 429 received. Waiting {wait_time}s before retry... (Attempt {attempt+1}/{max_retries})"
+                )
                 time.sleep(wait_time)
                 retry_delay = int(retry_delay * 1.5)  # Exponential backoff
                 continue
-                
+
             if resp.status_code in [500, 503, 504] and attempt < max_retries:
-                print(f"[UPSTREAM ERROR] {resp.status_code} received. Retrying in {retry_delay}s... (Attempt {attempt+1}/{max_retries})")
+                print(
+                    f"[UPSTREAM ERROR] {resp.status_code} received. Retrying in {retry_delay}s... (Attempt {attempt+1}/{max_retries})"
+                )
                 time.sleep(retry_delay)
                 retry_delay = int(retry_delay * 1.5)
                 continue
@@ -99,7 +118,7 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, aud
                 time.sleep(5)
                 continue
             raise HTTPException(status_code=504, detail=f"AI Service Timeout: {str(e)}")
-            
+
         if not resp.ok:
             try:
                 error_data = resp.json()
@@ -108,34 +127,39 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, aud
                     error_msg = f"{err_info.get('status', 'ERROR')}: {err_info.get('message', 'No message')}"
                 else:
                     error_msg = resp.text
-            except Exception:
+            except Exception as e:
+                logging.warning(f"Failed to parse error response JSON: {e}")
                 error_msg = resp.text
-                
+
             print(f"!!! [CRITICAL] Gemini API Failure {resp.status_code} !!!")
             print(f"!!! Error Message: {error_msg} !!!")
-            
+
             detail = "The AI Evaluation Service encountered an upstream error. Please try again later."
             if resp.status_code == 429:
                 detail = "AI Service rate limit exceeded. Please wait a moment and try again."
             elif resp.status_code == 503:
                 detail = "AI Service is currently overloaded or undergoing maintenance. Please try a smaller question count or wait a minute."
-                
+
             raise HTTPException(
                 status_code=resp.status_code if resp.status_code != 500 else 500,
-                detail=detail
+                detail=detail,
             )
         break
 
     if resp is None:
-        raise HTTPException(status_code=500, detail="No response received from AI service after retries")
+        raise HTTPException(
+            status_code=500, detail="No response received from AI service after retries"
+        )
 
     data = resp.json()
-    
+
     # Check for truncated responses
     candidate = data.get("candidates", [{}])[0]
     finish_reason = candidate.get("finishReason", "UNKNOWN")
     if finish_reason != "STOP" and finish_reason != "SUCCESS":
-        print(f"!!! [WARNING] Gemini finished with reason: {finish_reason}. Response may be truncated !!!")
+        print(
+            f"!!! [WARNING] Gemini finished with reason: {finish_reason}. Response may be truncated !!!"
+        )
 
     text_output = "".join(
         part.get("text", "")
@@ -145,32 +169,60 @@ def call_gemini(system_prompt: str, user_prompt: str, as_json: bool = False, aud
 
     return text_output
 
+
 def parse_response(text_output: str):
     """Clean and parse JSON response from the model."""
     try:
-        cleaned = (
-            text_output.strip()
-            .removeprefix("```json")
-            .removeprefix("```")
-            .removesuffix("```")
-            .strip()
+        # First, try to strip common markdown code block markers
+        cleaned = text_output.strip()
+        if cleaned.startswith("```json"):
+            cleaned = cleaned[7:]
+        elif cleaned.startswith("```"):
+            cleaned = cleaned[3:]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+
+        return json.loads(cleaned.strip())
+    except Exception as e:
+        logging.warning(
+            f"Initial JSON parsing attempt failed: {e}. Falling back to brace matching."
         )
-        return json.loads(cleaned)
+        pass
+
+    # Fallback: attempt to extract a valid JSON object by single-pass brace counting
+    try:
+        start = text_output.find("{")
+        if start != -1:
+            brace_count = 0
+            for i in range(start, len(text_output)):
+                if text_output[i] == "{":
+                    brace_count += 1
+                elif text_output[i] == "}":
+                    brace_count -= 1
+                    if brace_count == 0:
+                        try:
+                            return json.loads(text_output[start : i + 1])
+                        except ValueError:
+                            # if it fails, we keep looking for the next balanced block?
+                            # Usually the first balanced block is the JSON.
+                            pass
     except Exception as e:
         print(f"Failed to parse JSON: {str(e)}")
-        return {}
+
+    return {}
+
 
 def stream_gemini(system_prompt: str, user_prompt: str, api_key: str = None):
     """Shared helper to call the Gemini API with streaming."""
     model_name = os.getenv("MODEL_NAME")
     actual_api_key = api_key or os.getenv("GEMINI_API_KEY")
-    
+
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:streamGenerateContent?alt=sse"
     headers = {
         "Content-Type": "application/json",
         "x-goog-api-key": actual_api_key,
     }
-    
+
     body = {
         "system_instruction": {"parts": [{"text": system_prompt}]},
         "contents": [{"parts": [{"text": user_prompt}]}],
@@ -180,14 +232,14 @@ def stream_gemini(system_prompt: str, user_prompt: str, api_key: str = None):
     }
 
     _wait_for_rate_limit()
-    
+
     try:
         resp = requests.post(url, json=body, headers=headers, stream=True)
         resp.raise_for_status()
-        
+
         for line in resp.iter_lines():
             if line:
-                decoded_line = line.decode('utf-8')
+                decoded_line = line.decode("utf-8")
                 if decoded_line.startswith("data:"):
                     data_str = decoded_line[5:].strip()
                     if data_str == "[DONE]":
@@ -206,6 +258,7 @@ def stream_gemini(system_prompt: str, user_prompt: str, api_key: str = None):
     except Exception as e:
         print(f"!!! [CRITICAL] Gemini Streaming API Failure: {str(e)} !!!")
         yield f"Error generating stream: {str(e)}"
+
 
 def to_float(val, default: float = 0.0) -> float:
     """Safely coerce a value to float, handling formats like '8/10' or '8.5'."""

@@ -7,7 +7,7 @@ declare module "express-serve-static-core" {
   }
 }
 
-export const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) => {
+const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const incoming = (req.headers["x-request-id"] as string) || undefined;
   const requestId = getOrGenerateRequestId(incoming);
   req.requestId = requestId;

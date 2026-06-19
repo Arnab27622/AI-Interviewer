@@ -82,6 +82,7 @@ export interface JDMatchReport {
 export interface ResumeData {
   _id: string;
   originalFilename: string;
+  fileType?: string;
   status: string;
   jdText?: string;
   streamingFeedbackText?: string;

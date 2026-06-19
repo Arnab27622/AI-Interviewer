@@ -7,6 +7,7 @@
 import fetch from "node-fetch";
 import FormData from "form-data";
 import dotenv from "dotenv";
+import { SpeechAnalysisResult } from "../types/SpeechAnalysisResult.js";
 
 dotenv.config();
 
@@ -132,5 +133,33 @@ export const aiService = {
     }
 
     return (await response.json()) as EvaluateAnswerResponse;
+  },
+
+  /**
+   * Analyze speech audio for pace, pauses, and filler words.
+   * Transcribes if transcript is not provided.
+   */
+  analyzeSpeech: async (audioBuffer: Buffer, transcript?: string): Promise<SpeechAnalysisResult> => {
+    const formData = new FormData();
+    formData.append("audio", audioBuffer, {
+      filename: "audio.webm",
+      contentType: "audio/webm",
+    });
+    if (transcript) {
+      formData.append("transcript", transcript);
+    }
+
+    const response = await fetchWithRetry(`${API_SERVICE_URL}/speech/analyze`, {
+      method: "POST",
+      body: formData,
+      headers: formData.getHeaders(),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Speech analysis failed: ${error}`);
+    }
+
+    return (await response.json()) as SpeechAnalysisResult;
   },
 };

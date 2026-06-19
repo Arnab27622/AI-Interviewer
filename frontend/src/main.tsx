@@ -7,21 +7,11 @@ import axios from 'axios'
 import App from './App.tsx'
 import { store } from './app/store.ts'
 import './index.css'
+import { setupInterceptors } from './services/axiosSetup.ts'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem("user")
-      if (window.location.pathname !== "/login") {
-        window.location.href = "/login"
-      }
-    }
-    return Promise.reject(error)
-  }
-);
+setupInterceptors(axios);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <StrictMode>

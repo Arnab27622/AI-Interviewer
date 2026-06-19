@@ -1,6 +1,17 @@
+export interface SpeechMetrics {
+    fillerWordCount: number;
+    fillerWords: { word: string; count: number }[];
+    speakingPaceWpm: number;
+    paceRating: string;
+    totalPauseDurationMs: number;
+    pauseCount: number;
+    clarityScore: number;
+    confidenceScore: number;
+}
+
 export interface Question {
     questionText: string;
-    questionType: "coding" | "oral";
+    questionType: "coding" | "oral" | "system-design";
     isEvaluated: boolean;
     isSubmitted: boolean;
     userAnswerText?: string;
@@ -9,6 +20,7 @@ export interface Question {
     technicalScore?: number;
     confidenceScore?: number;
     aiFeedback?: string;
+    speechMetrics?: SpeechMetrics;
 }
 
 export interface Session {
@@ -17,6 +29,8 @@ export interface Session {
     role: string;
     level: string;
     interviewType: string;
+    company?: string;
+    companyTrack?: string;
     questions: Question[];
     status: "pending" | "in-progress" | "completed" | "failed" | "cancelled";
     startTime?: Date | string;
@@ -28,6 +42,7 @@ export interface Session {
     };
     createdAt?: string;
     updatedAt?: string;
+
 }
 
 export interface Pagination {
@@ -56,6 +71,16 @@ export interface SessionState {
     message: string;
     isLoading: boolean;
     pagination: Pagination | null;
+    recording?: {
+        isAvailable: boolean;
+        recordingUrl?: string;
+        totalDurationMs?: number;
+        questionTimestamps?: {
+            questionIndex: number;
+            startTime: string;
+            endTime?: string;
+        }[];
+    };
     stats: {
         totalSessions: number;
         completedSessions: number;

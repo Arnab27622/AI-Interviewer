@@ -25,7 +25,7 @@ export const getSession = createAsyncThunk<PaginatedSessionsResponse, { page?: n
         try {
             const page = args?.page || 1;
             const limit = args?.limit || 9;
-            const response = await api.get(`/?page=${page}&limit=${limit}`);
+            const response = await api.get(`sessions?page=${page}&limit=${limit}`);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(handleThunkError(error));
@@ -40,7 +40,7 @@ export const createSession = createAsyncThunk<Session, Record<string, unknown>, 
     "session/create",
     async (sessionData, thunkAPI) => {
         try {
-            const response = await api.post<Session>(`/`, sessionData);
+            const response = await api.post<Session>(`/sessions`, sessionData);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(handleThunkError(error));
@@ -55,7 +55,7 @@ export const getSessionById = createAsyncThunk<Session, string, { rejectValue: s
     "session/getOne",
     async (sessionId, thunkAPI) => {
         try {
-            const response = await api.get<Session>(`/${sessionId}`);
+            const response = await api.get<Session>(`/sessions/${sessionId}`);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(handleThunkError(error));
@@ -70,7 +70,7 @@ export const deleteSession = createAsyncThunk<Session, string, { rejectValue: st
     "session/delete",
     async (sessionId, thunkAPI) => {
         try {
-            const response = await api.delete<Session>(`/${sessionId}`);
+            const response = await api.delete<Session>(`/sessions/${sessionId}`);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(handleThunkError(error));
@@ -85,7 +85,7 @@ export const submitAnswer = createAsyncThunk<Session, { sessionId: string; formD
     "session/submitAnswer",
     async ({ sessionId, formData }, thunkAPI) => {
         try {
-            const response = await api.post<Session>(`/${sessionId}/submit-answer`, formData);
+            const response = await api.post<Session>(`/sessions/${sessionId}/submit-answer`, formData);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(handleThunkError(error));
@@ -100,7 +100,7 @@ export const endSession = createAsyncThunk<Session, string, { rejectValue: strin
     "session/endSession",
     async (sessionId, thunkAPI) => {
         try {
-            const response = await api.post<Session>(`/${sessionId}/end`);
+            const response = await api.post<Session>(`/sessions/${sessionId}/end`);
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue(handleThunkError(error));
@@ -203,7 +203,7 @@ export const sessionSlice = createSlice({
             })
 
             // Submit answer
-            .addCase(submitAnswer.pending, () => {})
+            .addCase(submitAnswer.pending, () => { })
             .addCase(submitAnswer.fulfilled, (state, action) => {
                 state.isLoading = false;
                 if (action.payload && Array.isArray(action.payload.questions)) {

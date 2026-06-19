@@ -1,6 +1,5 @@
-// Code execution service - proxied through our backend to JDoodle API
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api") + "/code/execute";
-
+import apiClient from "./apiClient";
+import type { ExecutionResult } from "../types/codeRunner";
 // Languages that cannot be executed (markup/config languages)
 const NON_EXECUTABLE = new Set([
     "sql", "html", "css", "yaml", "markdown", "plaintext", "solidity", "powershell", "objective-c"
@@ -14,7 +13,6 @@ const EXECUTABLE_LANGUAGES = new Set([
     "elixir", "haskell", "clojure", "fsharp"
 ]);
 
-import type { ExecutionResult } from "../types/codeRunner";
 
 export const isExecutable = (language: string): boolean => {
     return !NON_EXECUTABLE.has(language) && EXECUTABLE_LANGUAGES.has(language);
@@ -36,19 +34,8 @@ export const executeCode = async (
     }
 
     try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ language, code, stdin }),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `Server returned ${response.status}`);
-        }
-
-        const data = await response.json();
+        const response = await apiClient.post("/code/execute", { language, code, stdin });
+        const data = response.data;
         const run = data.run;
 
         return {

@@ -1,0 +1,78 @@
+import axios from "axios";
+import type { AxiosInstance } from "axios";
+
+interface FailedRequestQueue {
+    resolve: (value?: unknown) => void;
+    reject: (reason?: unknown) => void;
+}
+
+let isRefreshing = false;
+let failedQueue: FailedRequestQueue[] = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+    failedQueue.forEach((prom) => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
+export const setupInterceptors = (apiInstance: AxiosInstance) => {
+    apiInstance.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+            const originalRequest = error.config;
+
+            if (error.response?.status === 401 && !originalRequest._retry) {
+                if (isRefreshing) {
+                    return new Promise(function (resolve, reject) {
+                        failedQueue.push({ resolve, reject });
+                    })
+                        .then(() => {
+                            return apiInstance(originalRequest);
+                        })
+                        .catch((err) => {
+                            return Promise.reject(err);
+                        });
+                }
+
+                originalRequest._retry = true;
+                isRefreshing = true;
+
+                try {
+                    // Call the refresh endpoint. It will automatically use the refresh_jwt cookie
+                    // and set the new jwt cookie on success.
+                    await axios.post(
+                        `${import.meta.env.VITE_API_URL}/user/refresh`,
+                        {},
+                        { withCredentials: true }
+                    );
+
+                    isRefreshing = false;
+                    processQueue(null, "success");
+                    return apiInstance(originalRequest);
+                } catch (refreshError) {
+                    isRefreshing = false;
+                    processQueue(refreshError, null);
+
+                    // Refresh failed (token expired/invalid) -> Logout
+                    localStorage.removeItem("user");
+                    if (window.location.pathname !== "/login") {
+                        window.location.href = "/login";
+                    }
+                    return Promise.reject(refreshError);
+                }
+            }
+
+            const backendErrorMsg = error.response?.data?.error?.message;
+            if (backendErrorMsg) {
+                error.message = backendErrorMsg;
+            }
+
+            return Promise.reject(error);
+        }
+    );
+};

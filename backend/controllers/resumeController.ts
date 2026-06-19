@@ -9,7 +9,8 @@
  * - `rewriteBullet` & `generateCoverLetter`: Synchronously passes specific ML requests to the FastAPI Python service.
  */
 
-import { Request, Response, NextFunction } from "express";
+import { Response } from "express";
+import fs from "fs/promises";
 import asyncHandler from "express-async-handler";
 import { Resume } from "../models/Resume.js";
 import { addResumeJob, connection as redis } from "../services/queue/queueService.js";
@@ -91,8 +92,8 @@ export const uploadResume = asyncHandler(async (req: AuthenticatedRequest, res: 
 });
 
 /**
- * @desc    Get all user resumes
- * @route   GET /api/resume
+ * @desc    Get all user resumes (paginated)
+ * @route   GET /api/resume?page=1&limit=20
  * @access  Private
  */
 export const getUserResumes = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -100,10 +101,20 @@ export const getUserResumes = asyncHandler(async (req: AuthenticatedRequest, res
     throw new AppError("UNAUTHORIZED", "User not authenticated", {}, 401);
   }
 
-  const resumes = await Resume.find({ user: req.user._id }).sort({ createdAt: -1 });
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 20));
+  const skip = (page - 1) * limit;
+
+  const [resumes, total] = await Promise.all([
+    Resume.find({ user: req.user._id }).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Resume.countDocuments({ user: req.user._id }),
+  ]);
+
   res.json({
     success: true,
     data: resumes,
+    hasMore: skip + resumes.length < total,
+    total,
   });
 });
 
@@ -182,6 +193,54 @@ export const getResumeStatus = asyncHandler(async (req: AuthenticatedRequest, re
       error: resume.error,
       scores: resume.scores,
     },
+  });
+});
+
+/**
+ * @desc    Delete a resume
+ * @route   DELETE /api/resume/:id
+ * @access  Private
+ */
+export const deleteResume = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    throw new AppError("UNAUTHORIZED", "User not authenticated", {}, 401);
+  }
+
+  const resume = await Resume.findById(req.params.id);
+
+  if (!resume) {
+    throw new AppError("NOT_FOUND", "Resume not found", {}, 404);
+  }
+
+  if (resume.user.toString() !== req.user._id.toString()) {
+    throw new AppError("UNAUTHORIZED", "Not authorized to delete this resume", {}, 401);
+  }
+
+  // Delete file from disk
+  if (resume.filePath) {
+    try {
+      await fs.unlink(resume.filePath);
+    } catch (err) {
+      logger.warn("Failed to delete file from disk", { filePath: resume.filePath, error: err });
+    }
+  }
+
+  // Invalidate Redis cache
+  const cacheKey = `resume:${req.params.id}`;
+  try {
+    await redis.del(cacheKey);
+  } catch (err) {
+    logger.warn("Failed to invalidate Redis cache", { cacheKey, error: err });
+  }
+
+  // Delete from MongoDB
+  await Resume.findByIdAndDelete(req.params.id);
+
+  logger.info("Resume deleted", { resumeId: req.params.id, userId: req.user._id });
+
+  res.json({
+    success: true,
+    message: "Resume deleted successfully",
   });
 });
 

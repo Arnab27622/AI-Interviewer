@@ -10,6 +10,7 @@ interface InterviewHeaderProps {
     handleNavigation: (index: number) => void;
     handleFinishInterview: () => void;
     isLoading: boolean;
+    company?: string;
 }
 
 const InterviewHeader: React.FC<InterviewHeaderProps> = ({
@@ -20,7 +21,8 @@ const InterviewHeader: React.FC<InterviewHeaderProps> = ({
     submittedLocal,
     handleNavigation,
     handleFinishInterview,
-    isLoading
+    isLoading,
+    company
 }) => {
     const [elapsedTime, setElapsedTime] = useState("00:00");
 
@@ -33,7 +35,7 @@ const InterviewHeader: React.FC<InterviewHeaderProps> = ({
             const hours = Math.floor(diff / 3600000);
             const mins = Math.floor((diff % 3600000) / 60000);
             const secs = Math.floor((diff % 60000) / 1000);
-            
+
             const hoursStr = hours > 0 ? `${hours.toString().padStart(2, '0')}:` : '00:';
             setElapsedTime(`${hoursStr}${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
         };
@@ -46,8 +48,13 @@ const InterviewHeader: React.FC<InterviewHeaderProps> = ({
         <div className="flex justify-between items-center glass-card p-6 rounded-3xl mb-10 mt-6 border-white/5 relative z-40">
             <div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 mb-1">
-                    <h1 className="text-xl font-black text-white tracking-tight uppercase leading-none">
+                    <h1 className="text-xl font-black text-white tracking-tight uppercase leading-none flex items-center gap-3">
                         {role}
+                        {company && company !== 'general' && (
+                            <span aria-label="Company" className="text-[10px] bg-primary-500/20 text-primary-400 border border-primary-500/30 px-2 py-0.5 rounded-md tracking-widest">
+                                {company.toUpperCase()}
+                            </span>
+                        )}
                     </h1>
                     {startTime && (
                         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-900 border border-white/5 shadow-inner">
@@ -69,15 +76,15 @@ const InterviewHeader: React.FC<InterviewHeaderProps> = ({
                     ))}
                 </div>
             </div>
-            <button 
-                onClick={handleFinishInterview} 
-                disabled={isLoading} 
+            <button
+                onClick={handleFinishInterview}
+                disabled={isLoading}
                 className="btn-danger flex items-center gap-3 px-8! cursor-pointer"
             >
                 {isLoading ? (
                     <span className="w-5 h-5 border-2 border-white/20 border-t-white animate-spin rounded-full" />
                 ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                 )}
                 {isLoading ? "Finalizing..." : "Finish Session"}
             </button>

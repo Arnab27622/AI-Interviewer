@@ -20,10 +20,11 @@ export interface GenerateQuestionsResponse {
 
 export interface EvaluateAnswerParams {
   question: string;
-  question_type: "oral" | "coding";
+  question_type: "oral" | "coding" | "system-design";
   user_answer: string;
   user_code: string;
   selected_language: string;
+  diagram_payload?: string;
   role: string;
   level: string;
   interview_type: string;
@@ -35,3 +36,4 @@ export interface EvaluateAnswerResponse {
   confidence_score: number;
   ai_feedback: string;
 }
+

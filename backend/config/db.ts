@@ -5,7 +5,7 @@
 
 import mongoose from "mongoose";
 
-export const connectDB = async (): Promise<void> => {
+const connectDB = async (): Promise<void> => {
   try {
     const mongoUri = process.env.MONGO_URI;
     if (!mongoUri) {
