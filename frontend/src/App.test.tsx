@@ -3,7 +3,13 @@ import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './app/store';
 import App from './App';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// Mock Excalidraw since it requires a real canvas environment which JSDOM lacks
+vi.mock('@excalidraw/excalidraw', () => ({
+  Excalidraw: () => <div data-testid="excalidraw-mock">Excalidraw Mock</div>,
+  exportToBlob: vi.fn(),
+}));
 
 describe('App Component', () => {
   it('renders without crashing', () => {
