@@ -12,40 +12,60 @@ class SpeechAnalysisService:
     def analyze_audio(file_path: str, transcript: str):
         """
         Analyzes an audio file to extract speech metrics: pace, pauses, and filler words.
-        Uses fast ffprobe heuristics to prevent server timeouts on cloud deployments.
+        Uses fast ffmpeg heuristics to prevent server timeouts on cloud deployments.
         """
+        # Chrome WebM uploads often lack duration headers, making ffprobe return 'N/A'.
+        # Instead, we run ffmpeg frame decoding (which we need for silence anyway)
+        # and extract the exact final timestamp.
         try:
-            # Fast duration extraction using ffprobe
-            try:
-                cmd = [
-                    'ffprobe', '-v', 'error', '-show_entries', 'format=duration',
-                    '-of', 'default=noprint_wrappers=1:nokey=1', file_path
-                ]
-                duration_sec = float(subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode('utf-8').strip())
-            except Exception as e:
-                logger.warning(f"ffprobe failed ({e}), falling back to heuristic duration")
-                # Fallback duration if ffprobe is missing
-                words_temp = re.findall(r"\b\w+\b", transcript)
-                duration_sec = (len(words_temp) / 130.0) * 60.0
+            cmd_silence = [
+                'ffmpeg', '-i', file_path, '-af', 'silencedetect=noise=-30dB:d=0.8', '-f', 'null', '-'
+            ]
+            output = subprocess.check_output(cmd_silence, stderr=subprocess.STDOUT).decode('utf-8')
+            
+            pause_time_sec = 0.0
+            pause_count = 0
+            duration_sec = 0.0
+            
+            for line in output.split('\n'):
+                if 'silence_duration: ' in line:
+                    parts = line.split('silence_duration: ')
+                    if len(parts) > 1:
+                        try:
+                            val = float(parts[1].split()[0])
+                            pause_time_sec += val
+                            pause_count += 1
+                        except ValueError:
+                            pass
+                elif 'time=' in line:
+                    try:
+                        time_match = re.search(r'time=(\d+):(\d+):(\d+\.\d+)', line)
+                        if time_match:
+                            h, m, s = time_match.groups()
+                            duration_sec = float(h) * 3600 + float(m) * 60 + float(s)
+                    except Exception:
+                        pass
+                        
+            # Failsafe if duration wasn't parsed
+            if duration_sec <= 0:
+                raise ValueError("Failed to parse duration from ffmpeg output")
+                            
+            speaking_time_sec = max(0.0, duration_sec - pause_time_sec)
+            
+        except Exception as e:
+            logger.warning(f"ffmpeg failed ({e}), falling back to heuristic duration")
+            words_temp = re.findall(r"\b\w+\b", transcript)
+            duration_sec = (len(words_temp) / 130.0) * 60.0
+            estimated_speaking_time = duration_sec
+            speaking_time_sec = min(duration_sec, estimated_speaking_time)
+            pause_time_sec = max(0, duration_sec - speaking_time_sec)
+            pause_count = int(len(words_temp) / 15) if pause_time_sec > 2.0 else 0
 
-            duration_min = duration_sec / 60.0
-
-            # Calculate word count from transcript
+        try:
+            speaking_time_min = speaking_time_sec / 60.0 if speaking_time_sec > 0 else (duration_sec / 60.0)
             words = re.findall(r"\b\w+\b", transcript)
             word_count = len(words)
-
-            # Fast heuristic for speaking time (avoids heavy librosa.effects.split)
-            # Average speaking pace is ~130 WPM
-            estimated_speaking_time = (word_count / 130.0) * 60.0
-            speaking_time_sec = min(duration_sec, estimated_speaking_time)
-
-            pause_time_sec = max(0, duration_sec - speaking_time_sec)
-
-            # Estimate pause count: roughly 1 pause per 15 words if there is significant pause time
-            pause_count = int(word_count / 15) if pause_time_sec > 2.0 else 0
-
-            # Calculate pace (words per minute)
-            pace_wpm = word_count / duration_min if duration_min > 0 else 0
+            pace_wpm = word_count / speaking_time_min if speaking_time_min > 0 else 0
 
             # Count filler words
             filler_count = 0

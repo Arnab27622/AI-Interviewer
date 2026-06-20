@@ -31,7 +31,14 @@ class WhisperService:
             audio_base64 = base64.b64encode(audio_data).decode("utf-8")
 
             # We use a specialized prompt to ensure we only get the text back
-            system_prompt = "You are an expert transcription service. Transcribe the following audio exactly as spoken. Return ONLY the transcribed text."
+            system_prompt = (
+                "You are an expert transcription service. Transcribe the following audio exactly as spoken. "
+                "CRITICAL INSTRUCTION: If the audio is silent, contains only background noise, or has no discernible human speech, "
+                "you MUST return exactly the word '[SILENCE]' and nothing else. "
+                "DO NOT invent or hallucinate sentences. DO NOT include phrases like 'The quick brown fox', "
+                "'Thank you for watching', 'Subtitles by', or any apologies or personal statements. "
+                "Return ONLY the exact transcribed text."
+            )
             user_prompt = "Transcribe this audio:"
 
             # Use a separate API key for transcription to bypass rate limits if available
@@ -44,7 +51,21 @@ class WhisperService:
                 audio_base64=audio_base64,
                 api_key=transcription_api_key,
             )
-            return {"text": transcription.strip()}
+            
+            text = transcription.strip()
+            logger.info(f"Raw Gemini Transcription: '{text}'")
+            
+            # Filter out known hallucinations and silence tags
+            upper_text = text.upper()
+            if ("[SILENCE]" in upper_text or 
+                "QUICK BROWN FOX" in upper_text or 
+                "THANK YOU FOR WATCHING" in upper_text or 
+                "SUBTITLES BY" in upper_text or
+                "AMARA.ORG" in upper_text or
+                upper_text == "SILENCE"):
+                text = ""
+                
+            return {"text": text}
 
         except Exception as e:
             logger.error(f"[CRITICAL] Gemini Transcription error: {e}")
@@ -57,7 +78,14 @@ class WhisperService:
             with open(file_path, "rb") as f:
                 audio_data = f.read()
             audio_base64 = base64.b64encode(audio_data).decode("utf-8")
-            system_prompt = "You are an expert transcription service. Transcribe the following audio exactly as spoken. Return ONLY the transcribed text."
+            system_prompt = (
+                "You are an expert transcription service. Transcribe the following audio exactly as spoken. "
+                "CRITICAL INSTRUCTION: If the audio is silent, contains only background noise, or has no discernible human speech, "
+                "you MUST return exactly the word '[SILENCE]' and nothing else. "
+                "DO NOT invent or hallucinate sentences. DO NOT include phrases like 'The quick brown fox', "
+                "'Thank you for watching', 'Subtitles by', or any apologies or personal statements. "
+                "Return ONLY the exact transcribed text."
+            )
             user_prompt = "Transcribe this audio:"
             transcription_api_key = os.getenv("GEMINI_API_KEY_TRANSCRIPTION")
             transcription = call_gemini(
@@ -66,7 +94,20 @@ class WhisperService:
                 audio_base64=audio_base64,
                 api_key=transcription_api_key,
             )
-            return {"text": transcription.strip()}
+            
+            text = transcription.strip()
+            logger.info(f"Raw Gemini Transcription (Sync): '{text}'")
+            
+            upper_text = text.upper()
+            if ("[SILENCE]" in upper_text or 
+                "QUICK BROWN FOX" in upper_text or 
+                "THANK YOU FOR WATCHING" in upper_text or 
+                "SUBTITLES BY" in upper_text or
+                "AMARA.ORG" in upper_text or
+                upper_text == "SILENCE"):
+                text = ""
+                
+            return {"text": text}
         except Exception as e:
             logger.error(f"[CRITICAL] Gemini Transcription error from path: {e}")
             return {"text": ""}

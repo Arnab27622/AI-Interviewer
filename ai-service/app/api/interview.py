@@ -178,10 +178,13 @@ def evaluate_answer(req: EvaluationRequest):
         )
     else:
         if not req.user_answer or not req.user_answer.strip():
-            raise HTTPException(
-                status_code=422,
-                detail="user_answer is required for non-coding questions.",
+            return EvaluationResponse(
+                technical_score=0.0,
+                confidence_score=0.0,
+                ai_feedback="No response was detected. Please ensure your microphone is working and that you provide a clear answer.",
+                # ideal_answer="A complete and relevant answer to the question."
             )
+            
         system_prompt = EVALUATION_SYSTEM_PROMPT_CONCEPTUAL
         user_prompt = get_evaluation_user_prompt_conceptual(
             req.question, req.user_answer
