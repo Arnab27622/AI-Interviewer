@@ -1,15 +1,13 @@
-import base64
 import os
 import logging
+import requests
 from fastapi import UploadFile
-from app.services.gemini_service import call_gemini
 
 logger = logging.getLogger(__name__)
 
 # Service to handle audio transcription.
-# Migrated from local Whisper model to Gemini-powered transcription
-# to work within the tight 512MB RAM limits of free-tier cloud platforms.
-
+# Migrated to Groq Whisper API for blazing fast and perfectly accurate
+# verbatim transcription, replacing Gemini.
 
 class WhisperService:
     def __init__(self):
@@ -20,55 +18,48 @@ class WhisperService:
         """No-op kept for backward compatibility with existing startup logic."""
         pass
 
+    def _call_groq(self, audio_bytes: bytes, filename: str) -> str:
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            logger.error("GROQ_API_KEY is not set.")
+            return ""
+            
+        url = "https://api.groq.com/openai/v1/audio/transcriptions"
+        headers = {
+            "Authorization": f"Bearer {api_key}"
+        }
+        files = {
+            "file": (filename, audio_bytes)
+        }
+        data = {
+            "model": "whisper-large-v3-turbo",
+            "response_format": "json",
+            "prompt": "um, uh, ah, ahh, hmm, like, you know"
+        }
+        
+        try:
+            response = requests.post(url, headers=headers, files=files, data=data)
+            response.raise_for_status()
+            text = response.json().get("text", "")
+            logger.info(f"Groq Whisper Transcription: '{text}'")
+            return text
+        except Exception as e:
+            logger.error(f"[CRITICAL] Groq Transcription error: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                logger.error(f"Response data: {e.response.text}")
+            return ""
+
     def transcribe(self, file: UploadFile):
         """
-        Sends audio data to Gemini API for transcription.
-        Encoded as Base64 to avoid temporary file storage issues on cloud platforms.
+        Sends audio data to Groq Whisper API for transcription.
         """
         try:
-            # Read and encode bio data
             audio_data = file.file.read()
-            audio_base64 = base64.b64encode(audio_data).decode("utf-8")
-
-            # We use a specialized prompt to ensure we only get the text back
-            system_prompt = (
-                "You are an expert transcription service. Transcribe the following audio exactly as spoken. "
-                "CRITICAL INSTRUCTION: If the audio is silent, contains only background noise, or has no discernible human speech, "
-                "you MUST return exactly the word '[SILENCE]' and nothing else. "
-                "DO NOT invent or hallucinate sentences. DO NOT include phrases like 'The quick brown fox', "
-                "'Thank you for watching', 'Subtitles by', or any apologies or personal statements. "
-                "Return ONLY the exact transcribed text."
-            )
-            user_prompt = "Transcribe this audio:"
-
-            # Use a separate API key for transcription to bypass rate limits if available
-            transcription_api_key = os.getenv("GEMINI_API_KEY_TRANSCRIPTION")
-
-            # Offload the heavy lifting to Google's infrastructure
-            transcription = call_gemini(
-                system_prompt,
-                user_prompt,
-                audio_base64=audio_base64,
-                api_key=transcription_api_key,
-            )
-            
-            text = transcription.strip()
-            logger.info(f"Raw Gemini Transcription: '{text}'")
-            
-            # Filter out known hallucinations and silence tags
-            upper_text = text.upper()
-            if ("[SILENCE]" in upper_text or 
-                "QUICK BROWN FOX" in upper_text or 
-                "THANK YOU FOR WATCHING" in upper_text or 
-                "SUBTITLES BY" in upper_text or
-                "AMARA.ORG" in upper_text or
-                upper_text == "SILENCE"):
-                text = ""
-                
-            return {"text": text}
-
+            filename = file.filename if file.filename else "audio.webm"
+            text = self._call_groq(audio_data, filename)
+            return {"text": text.strip()}
         except Exception as e:
-            logger.error(f"[CRITICAL] Gemini Transcription error: {e}")
+            logger.error(f"[CRITICAL] Transcription error: {e}")
             return {"text": ""}
 
     @classmethod
@@ -77,40 +68,13 @@ class WhisperService:
         try:
             with open(file_path, "rb") as f:
                 audio_data = f.read()
-            audio_base64 = base64.b64encode(audio_data).decode("utf-8")
-            system_prompt = (
-                "You are an expert transcription service. Transcribe the following audio exactly as spoken. "
-                "CRITICAL INSTRUCTION: If the audio is silent, contains only background noise, or has no discernible human speech, "
-                "you MUST return exactly the word '[SILENCE]' and nothing else. "
-                "DO NOT invent or hallucinate sentences. DO NOT include phrases like 'The quick brown fox', "
-                "'Thank you for watching', 'Subtitles by', or any apologies or personal statements. "
-                "Return ONLY the exact transcribed text."
-            )
-            user_prompt = "Transcribe this audio:"
-            transcription_api_key = os.getenv("GEMINI_API_KEY_TRANSCRIPTION")
-            transcription = call_gemini(
-                system_prompt,
-                user_prompt,
-                audio_base64=audio_base64,
-                api_key=transcription_api_key,
-            )
+            filename = os.path.basename(file_path)
             
-            text = transcription.strip()
-            logger.info(f"Raw Gemini Transcription (Sync): '{text}'")
-            
-            upper_text = text.upper()
-            if ("[SILENCE]" in upper_text or 
-                "QUICK BROWN FOX" in upper_text or 
-                "THANK YOU FOR WATCHING" in upper_text or 
-                "SUBTITLES BY" in upper_text or
-                "AMARA.ORG" in upper_text or
-                upper_text == "SILENCE"):
-                text = ""
-                
-            return {"text": text}
+            # Use the global instance to make the call
+            text = whisper_service._call_groq(audio_data, filename)
+            return {"text": text.strip()}
         except Exception as e:
-            logger.error(f"[CRITICAL] Gemini Transcription error from path: {e}")
+            logger.error(f"[CRITICAL] Transcription error from path: {e}")
             return {"text": ""}
-
 
 whisper_service = WhisperService()

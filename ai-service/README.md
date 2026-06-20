@@ -5,7 +5,7 @@ The AI microservice backend for Prepify. This service specialized in handling he
 ## 🚀 Capabilities
 
 - **🧠 Generative Intelligence**: Uses advanced system prompting to generate role-specific interview questions with strict JSON schema guarantees. Now integrates user resume text to create real-world, project-specific scenario questions.
-- **🎙️ Cloud-Native Transcription**: Offloads verbal audio analysis to Gemini Cloud, staying within strict RAM limits (under 512MB) of free-tier hosting.
+- **🎙️ Cloud-Native Transcription**: Offloads verbal audio analysis to the blazing-fast Groq Whisper API, staying within strict RAM limits (under 512MB) of free-tier hosting.
 - **🛡️ Security Guardrails**: Implements input sanitization and prompt-injection hardening to prevent malicious behavior through user-provided roles, resumes, or answers.
 - **⚡ Async Execution**: Built with FastAPI for non-blocking processing of multiple parallel evaluation requests.
 - **📄 Advanced Resume Parsing**: Integrates PyMuPDF for lightning-fast, highly accurate document extraction, powering the ATS scoring and cover letter generation tools.
@@ -13,7 +13,7 @@ The AI microservice backend for Prepify. This service specialized in handling he
 ## 🏗️ Tech Stack
 
 - **FastAPI**: Asynchronous, high-performance Python framework.
-- **HTTPX / Requests**: Direct REST API interactions for optimized communication with Gemini models.
+- **HTTPX / Requests**: Direct REST API interactions for optimized communication with Gemini and Groq models.
 - **PyMuPDF & pdf2image**: High-speed, robust PDF processing and image conversion.
 - **PyTesseract**: Optical Character Recognition (OCR) for scanned documents.
 - **python-docx**: Parsing and extraction of Microsoft Word documents.
@@ -51,7 +51,7 @@ Create a `.env` file in this directory based on `.env.example`:
 PORT=8000
 MODEL_NAME=gemini-3.1-flash-lite
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_API_KEY_TRANSCRIPTION=your_gemini_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
 ALLOWED_ORIGINS=http://localhost:5000,http://localhost:5173
 REQUEST_TIMEOUT=60
 ```
@@ -74,7 +74,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 - `POST /api/v2/resume/generate-cover-letter`: Generates a professional cover letter dynamically mapped to a job description.
 - `POST /generate-questions`: Batch generation of technical/conceptual questions.
 - `POST /evaluate`: Detailed scoring and feedback for a specific answer/code snippet.
-- `POST /transcribe`: High-speed audio-to-text conversion via Gemini base64 encoding.
+- `POST /transcribe`: High-speed audio-to-text conversion via Groq Whisper API.
 
 ---
 

@@ -17,11 +17,12 @@ graph TD
     Redis -- Background Workers --> Backend
     Backend <--> AIService[AI Service - FastAPI]
     AIService <--> Gemini[[Google Gemini Cloud API]]
+    AIService <--> Groq[[Groq Whisper API]]
 ```
 
 - **Frontend**: A "Neo-Dark" React/Vite application utilizing **WebSockets** for real-time progress syncing, and a rich dynamic UI for ATS Resume Analysis and PDF extraction.
 - **Backend**: A hardened Express.js server managing authentication (HttpOnly JWT), session orchestration, and **BullMQ Background Workers** via Redis to offload heavy file processing and ML orchestration.
-- **AI Service**: A high-efficiency Python microservice that offloads heavy transcription, resume parsing (PyMuPDF), and NLP evaluation tasks to the Google Gemini Cloud API without blocking the Node event loop.
+- **AI Service**: A high-efficiency Python microservice that offloads heavy transcription to the **Groq Whisper API**, resume parsing (PyMuPDF), and NLP evaluation tasks to the Google Gemini Cloud API without blocking the Node event loop.
 
 ---
 
@@ -45,7 +46,7 @@ graph TD
 | :--- | :--- |
 | **Frontend** | React 19, Vite, TypeScript, Tailwind CSS v4, Redux Toolkit, React Router DOM v7, Framer Motion, Monaco Editor, Excalidraw, Socket.io-client, React-PDF |
 | **Backend** | Node.js, Express 5.x, MongoDB, Redis, BullMQ, Socket.io, JWT, Cloudinary, Mammoth, Jest |
-| **AI Service** | Python, FastAPI, PyMuPDF, Pytesseract, python-docx, HTTPX (Gemini API), Pydantic, Pytest, Ruff |
+| **AI Service** | Python, FastAPI, PyMuPDF, Pytesseract, python-docx, HTTPX (Gemini & Groq APIs), Pydantic, Pytest, Ruff |
 | **Deployment / CI** | Render (Services), Vercel (Frontend), MongoDB Atlas, Upstash Redis, GitHub Actions |
 
 ---
@@ -56,7 +57,7 @@ graph TD
 - **Node.js 18+**
 - **Python 3.10+**
 - **MongoDB** (Local or Atlas)
-- **Google Gemini API Key**
+- **Google Gemini API Key** & **Groq API Key**
 
 ### 2. Setup All Components
 For detailed setup instructions for each service, please refer to their respective READMEs:

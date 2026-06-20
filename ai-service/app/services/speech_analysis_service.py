@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class SpeechAnalysisService:
-    FILLER_WORDS = [r"\buh\b", r"\bum\b", r"\bhmm\b", r"\buhh\b", r"\bumm\b"]
+    FILLER_WORDS = [r"\buh\b", r"\bum\b", r"\bhmm\b", r"\buhh\b", r"\bumm\b", r"\bah\b", r"\bahh\b"]
 
     @staticmethod
     def analyze_audio(file_path: str, transcript: str):

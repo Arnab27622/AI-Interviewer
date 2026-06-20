@@ -9,8 +9,9 @@ This guide explains how to set up the AI Interviewer locally and how to deploy i
 4. An **[Atlas MongoDB](https://www.mongodb.com/)** account (Free tier).
 5. An **[Upstash Redis](https://upstash.com/)** account (Free tier, required for background queues).
 6. A **[Google AI Studio](https://aistudio.google.com/)** account (for Gemini API Key).
-7. A **[Google Cloud Console](https://console.cloud.google.com/)** project (for Google Login/OAuth).
-8. A **[JDoodle](https://www.jdoodle.com/)** account (for Live Code Execution API).
+7. A **[Groq Console](https://console.groq.com/)** account (for Groq API Key for transcription).
+8. A **[Google Cloud Console](https://console.cloud.google.com/)** project (for Google Login/OAuth).
+9. A **[JDoodle](https://www.jdoodle.com/)** account (for Live Code Execution API).
 
 ---
 
@@ -42,7 +43,7 @@ This guide explains how to set up the AI Interviewer locally and how to deploy i
    PORT=8000
    MODEL_NAME=gemini-3.1-flash-lite
    GEMINI_API_KEY=your_gemini_api_key_here
-   GEMINI_API_KEY_TRANSCRIPTION=your_gemini_api_key_here
+   GROQ_API_KEY=your_groq_api_key_here
    ALLOWED_ORIGINS=http://localhost:5000,http://localhost:5173
    REQUEST_TIMEOUT=60
    ```
@@ -66,7 +67,7 @@ We have provided a `render.yaml` Blueprint which automatically configures Docker
 1. Go to your Render Dashboard and click **New** -> **Blueprint**.
 2. Connect your GitHub repository.
 3. Render will detect the `render.yaml` file.
-4. Fill in the required environment variables in the Render UI (e.g., `MONGO_URI`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `FRONTEND_URL`, `GEMINI_API_KEY`, `REDIS_URL`).
+4. Fill in the required environment variables in the Render UI (e.g., `MONGO_URI`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `FRONTEND_URL`, `GEMINI_API_KEY`, `GROQ_API_KEY`, `REDIS_URL`).
 5. Click **Apply**. Render will build and deploy both the `ai-interviewer-backend` and `ai-interviewer-ai-service` automatically using the provided Dockerfiles.
 
 *Note: You can find the AI Service URL in your Render dashboard after deployment. Update your Backend's `AI_SERVICE_URL` environment variable to point to it, and the Backend URL will go in your Frontend's `VITE_API_URL`.*
@@ -90,4 +91,4 @@ To make Google Login work in production:
 ## 💡 Troubleshooting
 - **502 Bad Gateway**: Usually a "Cold Start" on Render. Wait 30 seconds and refresh.
 - **Cookie/Login Issues**: Ensure `NODE_ENV=production` is set in your Render Backend environment variables.
-- **Memory Limits**: This app is optimized to run on 512MB RAM using Gemini's native audio support. Do not use local Whisper/Torch models on Render Free Tier.
+- **Memory Limits**: This app is optimized to run on 512MB RAM using Groq's blazing fast Whisper API for audio. Do not use local Whisper/Torch models on Render Free Tier.
