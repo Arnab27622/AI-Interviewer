@@ -54,9 +54,26 @@ export const updateSessionFromSocket = (
 
         const index = state.sessions.findIndex((s) => s._id === sessionId);
         if (index !== -1) {
+            const oldSession = state.sessions[index];
             state.sessions[index] = session;
+            
+            if (state.stats && oldSession.status !== session.status) {
+                if ((oldSession.status === 'in-progress') && session.status === 'completed') {
+                    state.stats.activeSessions = Math.max(0, state.stats.activeSessions - 1);
+                    state.stats.completedSessions = (state.stats.completedSessions || 0) + 1;
+                }
+            }
         } else if (upperStatus.includes("READY") || upperStatus.includes("COMPLETED")) {
             state.sessions.unshift(session);
+            
+            if (state.stats) {
+                state.stats.totalSessions = (state.stats.totalSessions || 0) + 1;
+                if (session.status === 'completed') {
+                    state.stats.completedSessions = (state.stats.completedSessions || 0) + 1;
+                } else if (session.status === 'in-progress') {
+                    state.stats.activeSessions = (state.stats.activeSessions || 0) + 1;
+                }
+            }
         }
     }
 };

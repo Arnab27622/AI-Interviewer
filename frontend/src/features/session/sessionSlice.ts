@@ -158,7 +158,13 @@ export const sessionSlice = createSlice({
                 const payload = action.payload as unknown;
                 // Prepend new session to lists
                 if (payload && typeof payload === 'object' && ('_id' in payload || 'role' in payload)) {
-                    state.sessions.unshift(payload as Session);
+                    const newSession = payload as Session;
+                    state.sessions.unshift(newSession);
+                    
+                    if (state.stats) {
+                        state.stats.totalSessions = (state.stats.totalSessions || 0) + 1;
+                        state.stats.activeSessions = (state.stats.activeSessions || 0) + 1;
+                    }
                 }
             })
             .addCase(createSession.rejected, (state, action) => {
@@ -194,6 +200,17 @@ export const sessionSlice = createSlice({
                 state.isLoading = false;
                 const sessionsList = Array.isArray(state.sessions) ? state.sessions : [];
                 const payloadId = (action.payload as { id?: string; _id?: string }).id || (action.payload as { id?: string; _id?: string })._id;
+                
+                const sessionToDelete = sessionsList.find(s => s._id === payloadId);
+                if (sessionToDelete && state.stats) {
+                    state.stats.totalSessions = Math.max(0, state.stats.totalSessions - 1);
+                    if (sessionToDelete.status === 'completed') {
+                        state.stats.completedSessions = Math.max(0, state.stats.completedSessions - 1);
+                    } else if (sessionToDelete.status === 'in-progress') {
+                        state.stats.activeSessions = Math.max(0, state.stats.activeSessions - 1);
+                    }
+                }
+
                 state.sessions = sessionsList.filter((s) => s._id !== payloadId);
             })
             .addCase(deleteSession.rejected, (state, action) => {
