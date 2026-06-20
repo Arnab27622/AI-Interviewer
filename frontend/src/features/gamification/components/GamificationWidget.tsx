@@ -138,13 +138,13 @@ export const GamificationWidget = () => {
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-white font-bold text-lg whitespace-nowrap">Global Rank</h3>
-            <p className="text-surface-400 text-xs truncate">Your Rank: {profile?.leaderboardOptIn ? leaderboard?.find(l => l.name === user?.name)?.rank || '-' : 'Opted Out'}</p>
+            <p className="text-surface-400 text-xs truncate">Your Rank: {profile?.leaderboardOptIn ? leaderboard?.find(l => l.userId ? (l.userId === user?._id || l.userId === user?.id) : (l.name === user?.name))?.rank || '-' : 'Opted Out'}</p>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col gap-2">
           {leaderboard?.slice(0, 3).map((entry, idx) => {
-            const isCurrentUser = entry.name === user?.name;
+            const isCurrentUser = entry.userId ? (entry.userId === user?._id || entry.userId === user?.id) : (entry.name === user?.name);
             return (
               <div key={idx} className={`p-2 flex items-center gap-3 rounded-xl ${isCurrentUser ? 'bg-[#2ECA8B]/10 border border-[#2ECA8B]/20' : ''}`}>
                 <span className={`${isCurrentUser ? 'text-[#2ECA8B]' : 'text-surface-500'} font-bold text-xs w-4 text-center shrink-0`}>{idx + 1}.</span>

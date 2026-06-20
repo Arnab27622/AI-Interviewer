@@ -14,8 +14,8 @@ class SpeechAnalysisService:
         Analyzes an audio file to extract speech metrics: pace, pauses, and filler words.
         """
         try:
-            # Load audio using librosa
-            y, sr = librosa.load(file_path, sr=16000)
+            # Load audio using librosa without resampling for much faster load times
+            y, sr = librosa.load(file_path, sr=None)
 
             # Calculate duration in minutes
             duration_sec = librosa.get_duration(y=y, sr=sr)

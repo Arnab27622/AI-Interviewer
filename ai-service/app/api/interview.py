@@ -63,7 +63,7 @@ class EvaluationResponse(BaseModel):
 
 
 @router.post("/generate-questions", response_model=QuestionResponse)
-async def generate_questions(req: QuestionRequest):
+def generate_questions(req: QuestionRequest):
     """
     Generate multiple unique interview questions using Gemini AI.
     Handles partitioning between coding and conceptual questions based on interview_type.
@@ -136,14 +136,14 @@ async def generate_questions(req: QuestionRequest):
 
 
 @router.post("/transcribe")
-async def transcribe_audio(file: UploadFile = File(...)):
+def transcribe_audio(file: UploadFile = File(...)):
     """Convert an uploaded audio (webm) file to text transcription using Gemini."""
-    text = await whisper_service.transcribe(file)
+    text = whisper_service.transcribe(file)
     return {"transcription": text}
 
 
 @router.post("/evaluate", response_model=EvaluationResponse)
-async def evaluate_answer(req: EvaluationRequest):
+def evaluate_answer(req: EvaluationRequest):
     """
     Evaluate a user's answer (text or code) for technical accuracy and confidence.
     Uses separate system prompts for coding and conceptual evaluation.

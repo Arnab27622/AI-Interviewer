@@ -20,14 +20,14 @@ class WhisperService:
         """No-op kept for backward compatibility with existing startup logic."""
         pass
 
-    async def transcribe(self, file: UploadFile):
+    def transcribe(self, file: UploadFile):
         """
         Sends audio data to Gemini API for transcription.
         Encoded as Base64 to avoid temporary file storage issues on cloud platforms.
         """
         try:
             # Read and encode bio data
-            audio_data = await file.read()
+            audio_data = file.file.read()
             audio_base64 = base64.b64encode(audio_data).decode("utf-8")
 
             # We use a specialized prompt to ensure we only get the text back

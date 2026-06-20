@@ -7,7 +7,7 @@ from app.services.whisper_service import WhisperService
 router = APIRouter()
 
 @router.post("/analyze")
-async def analyze_speech(
+def analyze_speech(
     audio: UploadFile = File(...),
     transcript: str = Form(None)
 ):
@@ -20,7 +20,7 @@ async def analyze_speech(
         # Save uploaded file temporarily
         suffix = os.path.splitext(audio.filename)[1] if audio.filename else ".webm"
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-            content = await audio.read()
+            content = audio.file.read()
             temp_file.write(content)
             temp_file_path = temp_file.name
 
