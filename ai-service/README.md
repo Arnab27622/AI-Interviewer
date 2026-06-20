@@ -13,8 +13,10 @@ The AI microservice backend for Prepify. This service specialized in handling he
 ## 🏗️ Tech Stack
 
 - **FastAPI**: Asynchronous, high-performance Python framework.
-- **Google Generative AI**: Native SDK for optimized interaction with Gemini models.
-- **PyMuPDF / Tesseract**: High-speed, robust PDF and DOCX file processing.
+- **HTTPX / Requests**: Direct REST API interactions for optimized communication with Gemini models.
+- **PyMuPDF & pdf2image**: High-speed, robust PDF processing and image conversion.
+- **PyTesseract**: Optical Character Recognition (OCR) for scanned documents.
+- **python-docx**: Parsing and extraction of Microsoft Word documents.
 - **Uvicorn**: Production-grade ASGI server with worker-based scaling.
 - **Pydantic**: Type-strict data validation for all API requests and responses.
 - **Pytest & Ruff**: Integrated testing suite and high-speed rust-based code linting.

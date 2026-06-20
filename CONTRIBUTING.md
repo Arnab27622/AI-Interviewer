@@ -26,9 +26,9 @@ We love hearing new ideas! When suggesting a feature:
 
 ### 1. Project Setup
 Prepify is a 3-tier application. You will need to set up all three parts to test your changes:
-- `frontend/`: React + Vite + TypeScript
-- `backend/`: Node.js + Express + Socket.io
-- `ai-service/`: FastAPI + Python + Gemini AI
+- `frontend/`: React 19 + Vite + TypeScript + Redux Toolkit
+- `backend/`: Node.js + Express 5.x + Socket.io + BullMQ
+- `ai-service/`: FastAPI + Python + HTTPX (Gemini API)
 
 Follow the setup instructions in the [Root README](./README.md).
 
@@ -38,7 +38,7 @@ Follow the setup instructions in the [Root README](./README.md).
 
 ### 3. Standards
 - **TypeScript**: Ensure all new code is properly typed. Avoid using `any`.
-- **Styling**: We use Tailwind CSS following our "Neo-Dark" design system.
+- **Styling**: We use Tailwind CSS v4 following our "Neo-Dark" design system.
 - **Python**: Use PEP 8 standards and provide Type Hints for new functions.
 - **Documentation**: If you add a new feature or utility, please add JSDoc or Python Docstrings as shown in the existing files.
 

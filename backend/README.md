@@ -6,15 +6,20 @@ The core orchestrator for Prepify. This Node.js service manages the API, user au
 
 - **🔐 User Management**: Handles Google OAuth 2.0 and JWT-based session management using HttpOnly cookies.
 - **🔄 Session Orchestration**: Manages the lifecycle of an interview session, from question generation to final evaluation. Forwards structured user resume context to the AI service.
+- **💻 Remote Code Execution**: Bridges the frontend Monaco editor with the external JDoodle API to compile and execute 20+ programming languages securely.
+- **🎮 Gamification & Analytics Engine**: Aggregates user performance metrics across sessions to calculate XP, streaks, achievements, and speech behavioral stats.
 - **📡 Real-time Updates**: Uses Socket.io to provide live progress feedback during heavy AI processing tasks.
 - **🛡️ Request Throttling**: Implements API rate limiting to prevent resource exhaustion and abuse.
-- **💾 Data Persistence**: Manages user profiles, interview history, and evaluation results using MongoDB.
+- **💾 Data Persistence**: Manages user profiles, interview history, gamification states, and evaluation results using MongoDB.
 
 ## 🏗️ Tech Stack
 
-- **Node.js & Express**: Fast and scalable web framework.
+- **Node.js & Express 5.x**: Fast and scalable web framework with modern async support.
 - **MongoDB & Mongoose**: NoSQL database for flexible data modeling.
+- **BullMQ & Redis**: High-performance background job queue.
 - **Socket.io**: Real-time, bidirectional communication engine.
+- **Cloudinary**: Media and file storage integration.
+- **Mammoth**: DOCX extraction and parsing.
 - **Passport.js**: Authentication middleware for Google OAuth.
 - **JWT**: Secure token-based authorization.
 - **Express-rate-limit**: Protective middleware against brute-force and DoS.

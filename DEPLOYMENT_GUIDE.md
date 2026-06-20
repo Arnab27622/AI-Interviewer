@@ -30,6 +30,9 @@ This guide explains how to set up the AI Interviewer locally and how to deploy i
    JDOODLE_CLIENT_ID=your_jdoodle_client_id_here
    JDOODLE_CLIENT_SECRET=your_jdoodle_client_secret_here
    REDIS_URL=rediss://default:your_upstash_redis_password@your-upstash-endpoint.upstash.io:6379
+   CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name_here
+   CLOUDINARY_API_KEY=your_cloudinary_api_key_here
+   CLOUDINARY_API_SECRET=your_cloudinary_api_secret_here
    ```
 2. Run: `npm install && npm run dev`
 
@@ -37,7 +40,7 @@ This guide explains how to set up the AI Interviewer locally and how to deploy i
 1. Create a `.env` file:
    ```env
    PORT=8000
-   MODEL_NAME=gemini-2.5-flash
+   MODEL_NAME=gemini-3.1-flash-lite
    GEMINI_API_KEY=your_gemini_api_key_here
    GEMINI_API_KEY_TRANSCRIPTION=your_gemini_api_key_here
    ALLOWED_ORIGINS=http://localhost:5000,http://localhost:5173
