@@ -1,4 +1,4 @@
-import librosa
+import subprocess
 import re
 import logging
 
@@ -12,34 +12,37 @@ class SpeechAnalysisService:
     def analyze_audio(file_path: str, transcript: str):
         """
         Analyzes an audio file to extract speech metrics: pace, pauses, and filler words.
+        Uses fast ffprobe heuristics to prevent server timeouts on cloud deployments.
         """
         try:
-            # Load audio using librosa without resampling for much faster load times
-            y, sr = librosa.load(file_path, sr=None)
+            # Fast duration extraction using ffprobe
+            try:
+                cmd = [
+                    'ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+                    '-of', 'default=noprint_wrappers=1:nokey=1', file_path
+                ]
+                duration_sec = float(subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode('utf-8').strip())
+            except Exception as e:
+                logger.warning(f"ffprobe failed ({e}), falling back to heuristic duration")
+                # Fallback duration if ffprobe is missing
+                words_temp = re.findall(r"\b\w+\b", transcript)
+                duration_sec = (len(words_temp) / 130.0) * 60.0
 
-            # Calculate duration in minutes
-            duration_sec = librosa.get_duration(y=y, sr=sr)
             duration_min = duration_sec / 60.0
-
-            # Find non-silent intervals to calculate pauses
-            # top_db is the threshold (in decibels) below reference to consider as silence
-            non_silent_intervals = librosa.effects.split(y, top_db=30)
-
-            # Calculate total speaking time and total pause time
-            speaking_time_sec = 0
-            for interval in non_silent_intervals:
-                speaking_time_sec += (interval[1] - interval[0]) / sr
-
-            pause_time_sec = duration_sec - speaking_time_sec
-
-            # Count pauses (number of gaps between non-silent intervals)
-            pause_count = (
-                len(non_silent_intervals) - 1 if len(non_silent_intervals) > 1 else 0
-            )
 
             # Calculate word count from transcript
             words = re.findall(r"\b\w+\b", transcript)
             word_count = len(words)
+
+            # Fast heuristic for speaking time (avoids heavy librosa.effects.split)
+            # Average speaking pace is ~130 WPM
+            estimated_speaking_time = (word_count / 130.0) * 60.0
+            speaking_time_sec = min(duration_sec, estimated_speaking_time)
+
+            pause_time_sec = max(0, duration_sec - speaking_time_sec)
+
+            # Estimate pause count: roughly 1 pause per 15 words if there is significant pause time
+            pause_count = int(word_count / 15) if pause_time_sec > 2.0 else 0
 
             # Calculate pace (words per minute)
             pace_wpm = word_count / duration_min if duration_min > 0 else 0
