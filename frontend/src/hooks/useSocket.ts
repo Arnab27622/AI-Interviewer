@@ -57,7 +57,7 @@ const useSocket = () => {
             dispatchRef.current(socketUpdateSession(data));
 
             const status = (data.status || "").toUpperCase();
-            if (status.includes("COMPLETED")) {
+            if (status === "SESSION COMPLETED") {
                 navigateRef.current(`/review/${data.sessionId}`);
             } else if (status === "QUESTIONS_READY") {
                 navigateRef.current(`/interview/${data.sessionId}`);
