@@ -1,6 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../../services/apiClient";
 
+export interface BadgeRecord {
+    badgeId: string;
+    earnedAt: string;
+}
+
 export interface AnalyticsData {
     stats: {
         totalSessions: number;
@@ -22,6 +27,8 @@ export interface AnalyticsData {
         streakDays: number;
         currentLevelXp: number;
         nextLevelXp: number | null;
+        badges?: BadgeRecord[];
+        achievements?: string[];
     };
 }
 

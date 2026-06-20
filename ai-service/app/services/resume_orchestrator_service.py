@@ -32,9 +32,25 @@ class ResumeOrchestratorService:
         t_parse = time.time()
         parsed_profile = ResumeParsingService.parse(raw_text)
         parsing_ms = int((time.time() - t_parse) * 1000)
+        
+        # Check if valid resume
+        is_resume = parsed_profile.get("is_resume", True)
+        if not is_resume:
+            return {
+                "success": False,
+                "is_resume": False,
+                "message": "The uploaded document does not appear to be a valid resume or CV.",
+                "method_used": method_used,
+                "raw_text": raw_text,
+                "metrics": {
+                    "file_processing_ms": file_processing_ms,
+                    "parsing_ms": parsing_ms
+                }
+            }
 
         return {
             "success": True,
+            "is_resume": True,
             "method_used": method_used,
             "raw_text": raw_text,
             "parsed_profile": parsed_profile,

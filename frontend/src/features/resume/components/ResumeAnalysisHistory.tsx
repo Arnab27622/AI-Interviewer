@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -224,8 +225,9 @@ const ResumeCard = ({ resume, index, onDelete, isDeleting }: ResumeCardProps) =>
 
       {/* Strength */}
       {isCompleted && strength && (
-        <p className="text-[11px] text-surface-400 font-medium line-clamp-2 relative z-10 leading-relaxed">
-          <span className="text-emerald-400 font-bold">✦</span> {strength}
+        <p className="text-[11px] text-surface-400 font-medium line-clamp-2 relative z-10 leading-relaxed flex items-start gap-1">
+          <Sparkles className="w-3 h-3 text-emerald-400 shrink-0 mt-0.5" /> 
+          <span>{strength}</span>
         </p>
       )}
 

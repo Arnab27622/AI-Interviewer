@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Sparkles, FileText, Zap, Hourglass } from "lucide-react";
 import { motion } from "framer-motion";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -200,9 +201,9 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
                         onClick={() => handlePractice(kw)}
                         disabled={loadingKeyword === kw}
                         title={`Start an AI Mock Interview focusing on ${kw}`}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 bg-rose-400/20 hover:bg-rose-400/40 text-rose-400 rounded px-2 py-0.5 text-[10px] font-black uppercase tracking-widest cursor-pointer disabled:opacity-50"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 bg-rose-400/20 hover:bg-rose-400/40 text-rose-400 rounded px-2 py-0.5 text-[10px] font-black uppercase tracking-widest cursor-pointer disabled:opacity-50 flex items-center gap-1"
                       >
-                        {loadingKeyword === kw ? '⏳' : 'Practice ⚡'}
+                        {loadingKeyword === kw ? <Hourglass className="w-3 h-3" /> : <>Practice <Zap className="w-3 h-3 fill-current" /></>}
                       </button>
                     </span>
                   ))}
@@ -258,12 +259,12 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
               >
                 {isGeneratingCL ? (
                   <>
-                    <span className="animate-spin text-lg sm:text-xl">✨</span>
+                    <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
                     <span className="whitespace-nowrap">Generating Tailored Cover Letter...</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-lg sm:text-xl">📝</span>
+                    <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
                     <span className="whitespace-nowrap">Generate Tailored Cover Letter</span>
                   </>
                 )}
@@ -276,7 +277,7 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
               >
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
                   <h3 className="text-lg font-bold text-primary-400 flex items-center gap-2 whitespace-nowrap">
-                    <span>✨</span> Tailored Cover Letter
+                    <Sparkles className="w-5 h-5" /> Tailored Cover Letter
                   </h3>
                   <div className="flex gap-2 w-full sm:w-auto">
                     <button

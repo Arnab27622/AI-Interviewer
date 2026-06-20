@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { motion } from "framer-motion";
+import { AlertCircle, Star } from "lucide-react";
 import type { ResumeData } from "../types";
 import ReactMarkdown, { type Components } from "react-markdown";
 
@@ -58,7 +59,7 @@ export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "
             <div className="absolute inset-0 bg-linear-to-b from-rose-500/5 to-transparent pointer-events-none" />
             <div className="flex items-center gap-4 mb-6 sm:mb-8 relative z-10">
               <div className="shrink-0 w-10 h-10 rounded-2xl border border-rose-500/50 bg-rose-500/20 flex items-center justify-center shadow-inner shadow-black/20">
-                <span className="text-rose-400 font-black text-lg">!</span>
+                <AlertCircle className="w-5 h-5 text-rose-400" />
               </div>
               <h3 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
                 Issues Found
@@ -78,7 +79,7 @@ export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "
               <div className="absolute inset-0 bg-linear-to-b from-primary-500/5 to-transparent pointer-events-none" />
               <div className="flex items-center gap-4 mb-6 sm:mb-8 relative z-10">
                 <div className="shrink-0 w-10 h-10 rounded-2xl border border-primary-500/50 bg-primary-500/20 flex items-center justify-center shadow-inner shadow-black/20">
-                  <span className="text-primary-400 font-black text-lg">★</span>
+                  <Star className="w-5 h-5 text-primary-400" />
                 </div>
                 <h3 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
                   Strengths
@@ -114,7 +115,7 @@ export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "
                     className="flex items-start gap-5 bg-surface-900/60 border border-rose-500/20 rounded-2xl p-5 shadow-inner shadow-black/20"
                   >
                     <div className="shrink-0 w-10 h-10 rounded-xl border border-rose-500/40 bg-rose-500/10 flex items-center justify-center shadow-inner shadow-rose-500/5 mt-0.5">
-                      <span className="text-rose-400 font-black text-lg">!</span>
+                      <AlertCircle className="w-5 h-5 text-rose-400" />
                     </div>
                     <p className="text-[14.5px] text-surface-200 leading-relaxed font-medium">{issue}</p>
                   </div>

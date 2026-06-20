@@ -8,6 +8,7 @@
  * It also handles the "AI Bullet Rewrite" feature by bridging user input to the backend LLM service.
  */
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import { PDFDownloadLink } from "@react-pdf/renderer";
@@ -135,7 +136,7 @@ export const EntityExtractionTab = ({
           fileName="Optimized_Resume.pdf"
           className="w-full sm:w-auto px-6 py-3 sm:py-2 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/50 text-indigo-300 rounded-xl text-[11px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/10"
         >
-          {({ loading }) => (loading ? "Preparing PDF..." : "📄 Download ATS PDF")}
+          {({ loading }) => (loading ? "Preparing PDF..." : "Download ATS PDF")}
         </PDFDownloadLink>
       </div>
 
@@ -454,7 +455,7 @@ export const EntityExtractionTab = ({
                             {exp.description.split(/(?:\n|•)/).filter(b => b.trim().length > 3).map((bullet, idx) => (
                               <li key={idx} className="group flex flex-col sm:flex-row items-start gap-3 text-[14.5px] text-surface-300 font-medium leading-relaxed hover:text-surface-100 transition-colors">
                                 <div className="flex items-start gap-3 w-full">
-                                  <span className="text-primary-500 mt-1">✨</span>
+                                  <Sparkles className="w-4 h-4 text-primary-500 mt-1 shrink-0" />
                                   <span className="flex-1">{bullet.trim()}</span>
                                 </div>
                                 <button
@@ -581,7 +582,7 @@ export const EntityExtractionTab = ({
               </button>
 
               <h3 className="text-lg font-black text-white flex items-center gap-2 mb-2">
-                <span className="text-primary-400">✨</span> AI STAR Rewriter
+                <Sparkles className="w-5 h-5 text-primary-400" /> AI STAR Rewriter
               </h3>
               <p className="text-xs text-surface-400 mb-6 font-medium uppercase tracking-widest">
                 Situation • Task • Action • Result
@@ -594,7 +595,7 @@ export const EntityExtractionTab = ({
 
               {!variations ? (
                 <div className="flex flex-col items-center justify-center py-12 text-primary-400">
-                  <span className="animate-spin text-3xl mb-4">✨</span>
+                  <Sparkles className="w-8 h-8 mb-4 animate-pulse" />
                   <p className="text-sm font-bold animate-pulse">Generating high-impact variations...</p>
                 </div>
               ) : (

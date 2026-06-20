@@ -4,7 +4,8 @@ import Session from "../models/Session.js";
 import { AuthenticatedRequest } from "../types/express.js";
 import { User } from "../models/User.js";
 import mongoose from "mongoose";
-import { LEVEL_THRESHOLDS } from "../config/achievements.js";
+import { getTitleForLevel, getXPForLevel } from "../config/achievements.js";
+import { gamificationService } from "../services/gamificationService.js";
 
 /**
  * @desc Get overall progress metrics (total interviews, avg score, recent trend)
@@ -76,22 +77,22 @@ export const getOverallProgress = asyncHandler(async (req: AuthenticatedRequest,
 
   let gamificationData = null;
   if (user) {
-    const currentThreshold = LEVEL_THRESHOLDS.find(t => t.level === user.currentLevel);
-    const nextThreshold = LEVEL_THRESHOLDS.find(t => t.level === user.currentLevel + 1);
-
-    if (!currentThreshold) {
-      res.status(400);
-      throw new Error("Invalid gamification state: Current level threshold not found");
-    }
+    const currentLevelXp = getXPForLevel(user.currentLevel);
+    const nextLevelXp = getXPForLevel(user.currentLevel + 1);
+    
+    // Fetch detailed gamification record for achievements
+    const gamificationRecord = await gamificationService.getProfile(user._id.toString());
 
     gamificationData = {
       xp: user.xp,
       currentLevel: user.currentLevel,
-      currentTitle: currentThreshold.title,
+      currentTitle: getTitleForLevel(user.currentLevel),
       streakDays: user.streakDays,
       lastActiveDate: user.lastActiveDate,
-      currentLevelXp: currentThreshold.xpRequired,
-      nextLevelXp: nextThreshold ? nextThreshold.xpRequired : null,
+      currentLevelXp: currentLevelXp,
+      nextLevelXp: nextLevelXp,
+      achievements: gamificationRecord?.achievements || [],
+      badges: gamificationRecord?.badges || []
     };
   }
 

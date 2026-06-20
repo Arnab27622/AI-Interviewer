@@ -3,7 +3,7 @@ import { User } from "../models/User.js";
 import Session from "../models/Session.js";
 import { Gamification, IGamification } from "../models/Gamification.js";
 import redisClient from "../config/redisConfig.js";
-import { ACHIEVEMENTS, XP_REWARDS, LEVEL_THRESHOLDS } from "../config/achievements.js";
+import { ACHIEVEMENTS, XP_REWARDS, getLevelForXP } from "../config/achievements.js";
 
 export const gamificationService = {
   async ensureGamificationRecord(userId: string): Promise<IGamification> {
@@ -68,13 +68,7 @@ export const gamificationService = {
     }
 
     // Calculate level
-    let newLevel = 1;
-    for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
-      if (record.xp >= LEVEL_THRESHOLDS[i].xpRequired) {
-        newLevel = LEVEL_THRESHOLDS[i].level;
-        break;
-      }
-    }
+    const newLevel = getLevelForXP(record.xp);
 
     let leveledUp = false;
     if (newLevel > record.level) {
@@ -139,7 +133,47 @@ export const gamificationService = {
           _id: null,
           count: { $sum: 1 },
           anyPerfectScore: { $max: "$hasPerfectScore" },
-          anySystemDesign: { $max: "$hasSystemDesign" }
+          anySystemDesign: { $max: "$hasSystemDesign" },
+          weekendCount: {
+            $sum: {
+              $cond: [
+                {
+                  $in: [{ $dayOfWeek: "$createdAt" }, [1, 7]] // 1 = Sunday, 7 = Saturday
+                },
+                1,
+                0
+              ]
+            }
+          },
+          nightCount: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $gte: [{ $hour: "$createdAt" }, 0] },
+                    { $lt: [{ $hour: "$createdAt" }, 4] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      }
+    ]);
+
+    // Check languages and types across sessions
+    const languagesAndTypes = await Session.aggregate([
+      { $match: { user: new mongoose.Types.ObjectId(userId), status: 'completed' } },
+      { $unwind: "$questions" },
+      {
+        $group: {
+          _id: null,
+          languages: { $addToSet: "$questions.language" },
+          types: { $addToSet: "$questions.questionType" },
+          fillerWordsArray: { $push: { $ifNull: ["$questions.speechMetrics.fillerWordCount", -1] } },
+          paceArray: { $push: { $ifNull: ["$questions.speechMetrics.speakingPaceWpm", -1] } }
         }
       }
     ]);
@@ -147,6 +181,13 @@ export const gamificationService = {
     const count = aggResult.length > 0 ? aggResult[0].count : 0;
     const hasPerfectScore = aggResult.length > 0 ? aggResult[0].anyPerfectScore : false;
     const hasSystemDesign = aggResult.length > 0 ? aggResult[0].anySystemDesign : false;
+    const weekendCount = aggResult.length > 0 ? aggResult[0].weekendCount : 0;
+    const nightCount = aggResult.length > 0 ? aggResult[0].nightCount : 0;
+
+    const languages = languagesAndTypes.length > 0 ? languagesAndTypes[0].languages.filter((l: string) => l) : [];
+    const types = languagesAndTypes.length > 0 ? languagesAndTypes[0].types.filter((t: string) => t) : [];
+    const paceArray = languagesAndTypes.length > 0 ? languagesAndTypes[0].paceArray : [];
+    const fillerWordsArray = languagesAndTypes.length > 0 ? languagesAndTypes[0].fillerWordsArray : [];
 
     const checkBadge = (achievementDef: any, condition: boolean) => {
       const existing = record.achievements.find(a => a.achievementId === achievementDef.id);
@@ -170,10 +211,27 @@ export const gamificationService = {
     checkBadge(ACHIEVEMENTS.PERFECT_SCORE, hasPerfectScore);
     checkBadge(ACHIEVEMENTS.SYSTEM_DESIGNER, hasSystemDesign);
 
+    // Engagement / Grind Badges
+    checkBadge(ACHIEVEMENTS.NIGHT_OWL, nightCount >= 1);
+    checkBadge(ACHIEVEMENTS.WEEKEND_WARRIOR, weekendCount >= 3);
+
+    // Skill Badges
+    checkBadge(ACHIEVEMENTS.POLYGLOT, languages.length >= 3);
+    const hasAllTypes = types.includes('frontend') && types.includes('backend') && types.includes('system-design');
+    checkBadge(ACHIEVEMENTS.FULL_STACK_VISIONARY, hasAllTypes);
+
+    // Speech Badges
+    const hasZeroFillers = fillerWordsArray.some((fw: number) => fw === 0);
+    checkBadge(ACHIEVEMENTS.SILVER_TONGUE, hasZeroFillers);
+    
+    const hasPerfectCadence = paceArray.some((pace: number) => pace >= 130 && pace <= 150);
+    checkBadge(ACHIEVEMENTS.PERFECT_CADENCE, hasPerfectCadence);
+
     // Streak Badges
     checkBadge(ACHIEVEMENTS.STREAK_3, record.longestStreak >= 3);
     checkBadge(ACHIEVEMENTS.STREAK_7, record.longestStreak >= 7);
     checkBadge(ACHIEVEMENTS.STREAK_30, record.longestStreak >= 30);
+    checkBadge(ACHIEVEMENTS.STREAK_100, record.longestStreak >= 100);
 
     return newlyEarned;
   },

@@ -111,11 +111,14 @@ export const GamificationWidget = () => {
           <h3 className="text-white font-bold text-lg">Skills Verified</h3>
           <span className="text-[#2ECA8B] text-xs font-bold">{profile?.badges?.length || 0} Verified</span>
         </div>
-        <div className="flex justify-around items-center px-1">
-          {profile?.badges && profile.badges.length > 0 ? profile.badges.slice(0, 3).map((badge, idx) => (
-            <div key={idx} className="flex flex-col items-center">
-              <BadgeIcon badgeId={badge.badgeId} className="w-14 h-14 mb-2" />
-              <span className="text-[9px] text-surface-400 whitespace-nowrap overflow-hidden text-ellipsis max-w-[50px] text-center">
+        <div className="flex flex-wrap gap-x-3 gap-y-4 justify-center items-start px-1 pb-2">
+          {profile?.badges && profile.badges.length > 0 ? profile.badges.slice(0, 8).map((badge, idx) => (
+            <div key={idx} className="flex flex-col items-center min-w-[55px] max-w-[65px]">
+              <BadgeIcon badgeId={badge.badgeId} className="w-12 h-12 mb-2 shrink-0" />
+              <span 
+                className="text-[9px] text-surface-400 whitespace-nowrap overflow-hidden text-ellipsis w-full text-center"
+                title={badge.badgeId.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+              >
                 {badge.badgeId.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
               </span>
             </div>

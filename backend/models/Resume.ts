@@ -12,7 +12,7 @@ export interface IResume extends Document {
   fileType: "pdf" | "docx" | "txt";
   fileSize: number;
   filePath: string;
-  status: "pending" | "processing" | "parsed" | "analyzing" | "matching" | "completed" | "failed";
+  status: "pending" | "processing" | "parsed" | "analyzing" | "matching" | "completed" | "failed" | "invalid_document";
   jobId?: string;
   parsedData?: Record<string, any>;
   analysisReport?: Record<string, any>;
@@ -61,7 +61,7 @@ const resumeSchema = new Schema<IResume>(
     },
     status: {
       type: String,
-      enum: ["pending", "processing", "parsed", "analyzing", "matching", "completed", "failed"],
+      enum: ["pending", "processing", "parsed", "analyzing", "matching", "completed", "failed", "invalid_document"],
       default: "pending",
       index: true,
     },

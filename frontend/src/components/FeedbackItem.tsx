@@ -1,7 +1,9 @@
 import React from "react";
+import { Ghost } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { FeedbackItemProps } from "../types/components";
 import { sanitizeQuestionText, formatIdealAnswer } from "../utils/formatters";
+import SpeechAnalyticsPanel from "./SpeechAnalyticsPanel";
 
 const FeedbackItem: React.FC<FeedbackItemProps> = ({ question, index }) => {
     return (
@@ -60,7 +62,7 @@ const FeedbackItem: React.FC<FeedbackItemProps> = ({ question, index }) => {
 
                         {!question.userAnswerText && (!question.userSubmittedCode || question.userSubmittedCode === 'undefined') && (
                             <div className="p-10 text-center text-surface-600 text-xs font-bold uppercase tracking-widest italic opacity-50">
-                                <span className="block text-4xl mb-4 grayscale opacity-30">🕳️</span>
+                                <Ghost className="w-10 h-10 mb-4 mx-auto opacity-30" />
                                 Null data pointer / No record
                             </div>
                         )}
@@ -97,6 +99,17 @@ const FeedbackItem: React.FC<FeedbackItemProps> = ({ question, index }) => {
                         </div>
                     </div>
                 </div>
+
+                {/* Speech Analytics */}
+                {question.speechMetrics && (
+                    <div className="pt-10 border-t border-white/5 mt-10">
+                        <div className="flex items-center gap-3 ml-1 mb-6">
+                            <span className="text-[10px] font-black text-surface-500 uppercase tracking-[0.3em]">Speech Diagnostics</span>
+                            <div className="h-px grow bg-white/5"></div>
+                        </div>
+                        <SpeechAnalyticsPanel metrics={question.speechMetrics} />
+                    </div>
+                )}
             </div>
         </div>
     );

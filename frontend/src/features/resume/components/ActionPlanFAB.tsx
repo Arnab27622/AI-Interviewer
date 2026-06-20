@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ActionPlanFABProps {
@@ -37,7 +38,7 @@ export const ActionPlanFAB = ({ issues }: ActionPlanFABProps) => {
           >
             <div className="bg-primary-500/10 px-4 py-3 border-b border-primary-500/20">
               <h4 className="text-sm font-black text-white flex items-center gap-2">
-                <span className="text-primary-400">✨</span> Top Priority Fixes
+                <Sparkles className="w-4 h-4 text-primary-400" /> Top Priority Fixes
               </h4>
             </div>
             <div className="p-4 space-y-3">

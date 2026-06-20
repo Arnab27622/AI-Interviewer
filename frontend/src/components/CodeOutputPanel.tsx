@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Play, Square, Terminal, ChevronUp, ChevronDown, Trash2, Clock, AlertTriangle } from "lucide-react";
+import { Play, Square, Terminal, ChevronUp, ChevronDown, Trash2, Clock, AlertTriangle, Check } from "lucide-react";
 import { executeCode, isExecutable } from "../services/codeRunnerService";
 import type { ExecutionResult } from "../types/codeRunner";
 
@@ -154,7 +154,7 @@ const CodeOutputPanel: React.FC<CodeOutputPanelProps> = ({ language, code }) => 
                             {result.timedOut ? (
                                 <><AlertTriangle size={12} /> Timed Out</>
                             ) : isSuccess ? (
-                                <>✓ Exit Code: 0</>
+                                <><Check size={12} className="inline mr-1" /> Exit Code: 0</>
                             ) : (
                                 <><AlertTriangle size={12} /> Exit Code: {result.exitCode}</>
                             )}

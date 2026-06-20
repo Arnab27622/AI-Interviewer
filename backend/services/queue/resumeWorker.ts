@@ -73,6 +73,12 @@ const processJob = async (job: Job<ResumeJobData>): Promise<any> => {
     // ── STEP 1: File Processing + Parsing ──
     const processResult = await stepProcess(resume);
 
+    if (processResult.success === false && processResult.is_resume === false) {
+      await transitionState(resume, userId, "invalid_document", { error: processResult.message || "Invalid document format" });
+      console.log(`[Worker] Pipeline aborted: Document is not a valid resume (${resumeId})`);
+      return { success: false, status: "invalid_document" };
+    }
+
     resume.parsedData = {
       rawText: processResult.raw_text,
       method: processResult.method_used,

@@ -26,6 +26,9 @@ async def process_resume_v2(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         return ResumeOrchestratorService.process_resume(contents, file.filename)
+    except ValueError as ve:
+        logger.warning(f"[v2/process] Validation Error: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         logger.error(f"[v2/process] Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing resume: {str(e)}")

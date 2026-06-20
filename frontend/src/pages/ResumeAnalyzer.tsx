@@ -103,6 +103,7 @@ const ResumeAnalyzer = () => {
   const {
     isUploading,
     setIsUploading,
+    status,
     setStatus,
     resumeData,
     setResumeData,
@@ -391,75 +392,100 @@ const ResumeAnalyzer = () => {
           {/* Divider */}
           <div className="border-t border-surface-700" />
 
-          {/* Tab Bar */}
-          <div className="flex items-center gap-6 border-b border-surface-700 mt-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {TABS.map((tab) => {
-              // During upload, if we have streaming text, force 'feedback' tab, otherwise 'ats'
-              const isTabActive = isUploading ? (streamingFeedbackText ? tab.key === "feedback" : tab.key === "ats") : activeTab === tab.key;
-              const handleClick = () => {
-                if (!isUploading) setActiveTab(tab.key);
-              };
+          {status === "invalid_document" ? (
+            <div className="py-16 text-center space-y-6">
+              <div className="w-24 h-24 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+                <svg className="w-12 h-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-3xl font-black text-white">This doesn't look like a resume</h3>
+              <p className="text-surface-400 max-w-lg mx-auto text-sm leading-relaxed">
+                We couldn't detect any professional experience, education, or typical resume sections in this document. Please upload a valid Resume or CV to get your analysis.
+              </p>
+              <button
+                onClick={handleResetAll}
+                className="mt-8 px-8 py-4 bg-primary-600 hover:bg-primary-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-primary-900/40 active:scale-95 cursor-pointer inline-flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Upload Another Document
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Tab Bar */}
+              <div className="flex items-center gap-6 border-b border-surface-700 mt-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {TABS.map((tab) => {
+                  // During upload, if we have streaming text, force 'feedback' tab, otherwise 'ats'
+                  const isTabActive = isUploading ? (streamingFeedbackText ? tab.key === "feedback" : tab.key === "ats") : activeTab === tab.key;
+                  const handleClick = () => {
+                    if (!isUploading) setActiveTab(tab.key);
+                  };
 
-              return (
-                <button
-                  key={tab.key}
-                  onClick={handleClick}
-                  className={`relative pb-3 pt-4 text-sm font-semibold whitespace-nowrap transition-colors ${isUploading && !streamingFeedbackText ? "cursor-not-allowed opacity-50" : "cursor-pointer"
-                    } ${isTabActive ? "text-primary-400 opacity-100!" : "text-surface-400 hover:text-surface-200"}`}
-                >
-                  {tab.label}
-                  {isTabActive && (
-                    <motion.div
-                      layoutId="tab-indicator"
-                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary-400 rounded-full"
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={handleClick}
+                      className={`relative pb-3 pt-4 text-sm font-semibold whitespace-nowrap transition-colors ${isUploading && !streamingFeedbackText ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                        } ${isTabActive ? "text-primary-400 opacity-100!" : "text-surface-400 hover:text-surface-200"}`}
+                    >
+                      {tab.label}
+                      {isTabActive && (
+                        <motion.div
+                          layoutId="tab-indicator"
+                          className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary-400 rounded-full"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
 
-          {/* ──────── Tab Content ──────── */}
-          <div className="pt-6">
-            <AnimatePresence mode="wait">
-              {isUploading && !streamingFeedbackText ? (
-                <AtsScoreTab isLoading={true} />
-              ) : isUploading && streamingFeedbackText ? (
-                <FeedbackTipsTab
-                  isStreaming={true}
-                  streamingText={streamingFeedbackText}
-                />
-              ) : (
-                <>
-                  {activeTab === "extraction" && (
-                    <EntityExtractionTab
-                      resumeData={resumeData!}
-                      profile={profile}
-                      summary={summary}
-                      skills={skills}
-                      personalInfo={personalInfo}
-                      experience={experience}
-                      education={education}
-                    />
-                  )}
-                  {activeTab === "ats" && <AtsScoreTab resumeData={resumeData!} />}
-                  {activeTab === "jobmatch" && <JobMatchTab resumeData={resumeData!} />}
-                  {activeTab === "feedback" && (
+              {/* ──────── Tab Content ──────── */}
+              <div className="pt-6">
+                <AnimatePresence mode="wait">
+                  {isUploading && !streamingFeedbackText ? (
+                    <AtsScoreTab isLoading={true} />
+                  ) : isUploading && streamingFeedbackText ? (
                     <FeedbackTipsTab
-                      resumeData={resumeData!}
-                      issues={issues}
-                      strengths={strengths}
-                      streamingText={resumeData?.streamingFeedbackText || streamingFeedbackText}
-                      isStreaming={status === "analyzing" || status === "processing" || status === "parsed" || status === "pending"}
+                      isStreaming={true}
+                      streamingText={streamingFeedbackText}
                     />
+                  ) : (
+                    <>
+                      {activeTab === "extraction" && (
+                        <EntityExtractionTab
+                          resumeData={resumeData!}
+                          profile={profile}
+                          summary={summary}
+                          skills={skills}
+                          personalInfo={personalInfo}
+                          experience={experience}
+                          education={education}
+                        />
+                      )}
+                      {activeTab === "ats" && <AtsScoreTab resumeData={resumeData!} />}
+                      {activeTab === "jobmatch" && <JobMatchTab resumeData={resumeData!} />}
+                      {activeTab === "feedback" && (
+                        <FeedbackTipsTab
+                          resumeData={resumeData!}
+                          issues={issues}
+                          strengths={strengths}
+                          streamingText={resumeData?.streamingFeedbackText || streamingFeedbackText}
+                          isStreaming={status === "analyzing" || status === "processing" || status === "parsed" || status === "pending"}
+                        />
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </AnimatePresence>
-          </div>
+                </AnimatePresence>
+              </div>
 
-          {/* Action Plan FAB */}
-          {!isUploading && resumeData && <ActionPlanFAB issues={issues} />}
+              {/* Action Plan FAB */}
+              {!isUploading && resumeData && <ActionPlanFAB issues={issues} />}
+            </>
+          )}
         </motion.div>
       )}
     </div>

@@ -1,15 +1,15 @@
 import { Request, Response } from "express";
 import { gamificationService } from "../services/gamificationService.js";
 import { AuthenticatedRequest } from "../types/express.js";
-import { LEVEL_THRESHOLDS } from "../config/achievements.js";
+import { getTitleForLevel } from "../config/achievements.js";
 
 export const getProfile = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!._id;
     const profile = await gamificationService.getProfile(userId);
     const profileObj = profile.toObject ? profile.toObject() : profile;
-    const threshold = LEVEL_THRESHOLDS.find(t => t.level === profileObj.level);
-    res.json({ ...profileObj, title: threshold?.title || "Novice" });
+    const title = getTitleForLevel(profileObj.level);
+    res.json({ ...profileObj, title });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

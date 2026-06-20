@@ -63,6 +63,9 @@ export const useResumeAnalysis = ({ userId }: UseResumeAnalysisProps) => {
           toast.error(`Analysis failed: ${data.error || "Unknown error"}`);
           setIsUploading(false);
           setStatus(null);
+        } else if (data.status === "invalid_document") {
+          // Keep isUploading true to stay in the result view area where we will show the error UI
+          setStatus("invalid_document");
         }
       }
     });
@@ -73,7 +76,7 @@ export const useResumeAnalysis = ({ userId }: UseResumeAnalysisProps) => {
     };
   }, [userId, fetchResumeDetails]);
 
-  const getStatusMessage = () => {
+    const getStatusMessage = () => {
     switch (status) {
       case "pending":
         return "Job enqueued…";
@@ -85,6 +88,8 @@ export const useResumeAnalysis = ({ userId }: UseResumeAnalysisProps) => {
         return "AI is evaluating your profile…";
       case "matching":
         return "Matching against job description…";
+      case "invalid_document":
+        return "Invalid Document Detected";
       default:
         return "Processing…";
     }

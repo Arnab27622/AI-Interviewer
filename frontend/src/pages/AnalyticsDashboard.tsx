@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../app/store";
 import { getAnalytics } from "../features/analytics/analyticsSlice";
 import { ResumeAnalysisHistory } from "../features/resume/components/ResumeAnalysisHistory";
+import { ACHIEVEMENTS } from "../config/achievements";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -188,7 +189,7 @@ const AnalyticsDashboard: React.FC = () => {
           </div>
           <div className="mb-10 relative z-10">
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black text-white font-display">Lvl {gamification?.currentLevel || 0}</span>
+              <span className="text-5xl font-black text-white font-display">Lvl. {gamification?.currentLevel || 0}</span>
               <span className="text-surface-400 font-bold text-sm">{gamification?.currentTitle || 'Beginner'}</span>
             </div>
           </div>
@@ -420,6 +421,61 @@ const AnalyticsDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Achievements & Badges Gallery */}
+      <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden mt-6">
+        <div className="flex items-center gap-5 mb-10 relative z-10">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-400 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-white font-black text-xl font-display tracking-tight">Achievements & Badges</h3>
+            <p className="text-[13px] text-surface-400 font-medium mt-1">Unlock badges by pushing your limits and practicing consistently</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 relative z-10">
+          {ACHIEVEMENTS.map((badge) => {
+            const isUnlocked = gamification?.badges?.some((b) => b.badgeId === badge.id);
+            const badgeRecord = gamification?.badges?.find((b) => b.badgeId === badge.id);
+            
+            return (
+              <div 
+                key={badge.id} 
+                className={`p-5 rounded-2xl border transition-all duration-500 flex flex-col items-center text-center gap-3 relative overflow-hidden group
+                  ${isUnlocked 
+                    ? 'bg-surface-900/40 border-amber-500/30 shadow-[inset_0_0_20px_rgba(245,158,11,0.05)] hover:border-amber-500/50 hover:shadow-[0_0_15px_rgba(245,158,11,0.15)]' 
+                    : 'bg-surface-900/20 border-white/5 opacity-60 grayscale hover:grayscale-0 hover:opacity-100'}`}
+              >
+                {isUnlocked && (
+                  <div className="absolute -top-10 -right-10 w-20 h-20 bg-amber-500/20 blur-2xl rounded-full"></div>
+                )}
+                
+                <div className={`text-4xl ${!isUnlocked && 'opacity-50'}`}>
+                  {badge.icon}
+                </div>
+                
+                <div className="space-y-1">
+                  <h4 className={`text-sm font-black ${isUnlocked ? 'text-amber-400' : 'text-surface-400'}`}>
+                    {badge.name}
+                  </h4>
+                  <p className="text-[10px] text-surface-500 font-medium leading-snug">
+                    {badge.desc}
+                  </p>
+                </div>
+
+                {isUnlocked && badgeRecord?.earnedAt && (
+                  <div className="text-[9px] font-bold text-amber-500/60 uppercase tracking-widest mt-auto pt-2 border-t border-amber-500/10 w-full">
+                    {new Date(badgeRecord.earnedAt).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Resume Analysis History */}
       <ResumeAnalysisHistory />

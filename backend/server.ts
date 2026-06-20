@@ -79,14 +79,6 @@ const io = new SocketIOServer(server, {
 // --- Middlewares & Configuration ---
 app.use(helmet());
 
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per window
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
-});
-app.use("/api", globalLimiter);
-
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -116,6 +108,15 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   })
 );
+
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: process.env.NODE_ENV === "production" ? 100 : 500, // Limit each IP to 100 requests per window in prod, 500 in dev
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+});
+app.use("/api", globalLimiter);
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
