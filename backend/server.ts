@@ -159,7 +159,7 @@ app.use(errorHandler);
  * Supports both Auth Headers (Mobile/Postman) and HttpOnly Cookies (Web)
  */
 io.use((socket, next) => {
-  let token = socket.handshake.auth.token || socket.handshake.query.token;
+  let token = socket.handshake.auth.token;
 
   // Extract token from cookies if not found in handshake (essential for cross-site browser sessions)
   if (socket.handshake.headers.cookie) {

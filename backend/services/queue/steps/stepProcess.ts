@@ -62,6 +62,7 @@ export const stepProcess = async (resume: any): Promise<any> => {
   if (typeof formData.getLengthSync === "function") {
     headers["Content-Length"] = formData.getLengthSync().toString();
   }
+  headers["X-API-Key"] = process.env.INTERNAL_API_KEY || "";
 
   console.log(`[Worker] STEP 1/4: Sending resume ${resume._id} for async processing + parsing... Webhook: ${webhookUrl}`);
   const response = await fetch(`${AI_SERVICE_URL}/resume/v2/process-async`, {

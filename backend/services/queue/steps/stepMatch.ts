@@ -17,7 +17,10 @@ export const stepMatch = async (resume: any, resumeSkills: string[]): Promise<an
   console.log(`[Worker] STEP 3/4: Sending resume ${resume._id} for Gemini-based semantic JD matching...`);
   const response = await fetch(`${AI_SERVICE_URL}/resume/v2/match`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "X-API-Key": process.env.INTERNAL_API_KEY || ""
+    },
     body: JSON.stringify({
       resume_text: resume.parsedData.rawText,
       resume_skills: resumeSkills,

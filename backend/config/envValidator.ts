@@ -12,6 +12,7 @@ const requiredEnvVars = [
   'CLOUDINARY_CLOUD_NAME',
   'CLOUDINARY_API_KEY',
   'CLOUDINARY_API_SECRET',
+  'INTERNAL_API_KEY',
 ];
 
 export const validateEnv = (): void => {

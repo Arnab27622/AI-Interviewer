@@ -68,7 +68,10 @@ export const aiService = {
 
     const response = await fetchWithRetry(`${API_SERVICE_URL}/generate-questions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "X-API-Key": process.env.INTERNAL_API_KEY || ""
+      },
       body: JSON.stringify({
         role,
         level,
@@ -99,7 +102,10 @@ export const aiService = {
     const response = await fetchWithRetry(`${API_SERVICE_URL}/transcribe`, {
       method: "POST",
       body: formData,
-      headers: formData.getHeaders(),
+      headers: {
+        ...formData.getHeaders(),
+        "X-API-Key": process.env.INTERNAL_API_KEY || ""
+      },
     });
 
     if (!response.ok) {
@@ -117,7 +123,10 @@ export const aiService = {
   evaluateAnswer: async (params: EvaluateAnswerParams): Promise<EvaluateAnswerResponse> => {
     const response = await fetchWithRetry(`${API_SERVICE_URL}/evaluate`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "X-API-Key": process.env.INTERNAL_API_KEY || ""
+      },
       body: JSON.stringify(params),
     });
 
@@ -152,7 +161,10 @@ export const aiService = {
     const response = await fetchWithRetry(`${API_SERVICE_URL}/speech/analyze`, {
       method: "POST",
       body: formData,
-      headers: formData.getHeaders(),
+      headers: {
+        ...formData.getHeaders(),
+        "X-API-Key": process.env.INTERNAL_API_KEY || ""
+      },
     });
 
     if (!response.ok) {

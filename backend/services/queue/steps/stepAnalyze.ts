@@ -17,7 +17,10 @@ export const stepAnalyze = async (resume: any): Promise<any> => {
   console.log(`[Worker] STEP 2/4: Sending resume ${resume._id} for modular analysis...`);
   const response = await fetch(`${AI_SERVICE_URL}/resume/v2/analyze`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "X-API-Key": process.env.INTERNAL_API_KEY || ""
+    },
     body: JSON.stringify({
       raw_text: resume.parsedData.rawText,
       parsed_profile: resume.parsedData.parsedProfile || {},

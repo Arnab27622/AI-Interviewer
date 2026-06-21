@@ -267,7 +267,10 @@ export const rewriteBullet = asyncHandler(async (req: AuthenticatedRequest, res:
   const pythonServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
   const response = await fetch(`${pythonServiceUrl}/resume/v2/stream-bullet-rewrite`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "X-API-Key": process.env.INTERNAL_API_KEY || ""
+    },
     body: JSON.stringify({ bullet, resume_context: context }),
   });
 
@@ -309,7 +312,10 @@ export const generateCoverLetter = asyncHandler(async (req: AuthenticatedRequest
   const pythonServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
   const response = await fetch(`${pythonServiceUrl}/resume/v2/stream-cover-letter`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "X-API-Key": process.env.INTERNAL_API_KEY || ""
+    },
     body: JSON.stringify({ resume_text: resumeText, jd_text: jdText }),
   });
 

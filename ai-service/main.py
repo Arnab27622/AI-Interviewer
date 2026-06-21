@@ -11,8 +11,10 @@ This is the isolated Python Microservice dedicated exclusively to running heavy 
 """
 
 import os
+import sys
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, Security
+from fastapi.security.api_key import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
@@ -20,6 +22,22 @@ from app.api.interview import router as interview_router
 from app.api.v2.resume import router as v2_resume_router
 
 load_dotenv()
+
+# Startup validation for critical environment variables
+if not os.getenv("GEMINI_API_KEY"):
+    print("WARNING: GEMINI_API_KEY is not set. ML endpoints may fail.", file=sys.stderr)
+
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+async def verify_api_key(api_key: str = Security(api_key_header)):
+    expected_api_key = os.getenv("INTERNAL_API_KEY")
+    if not expected_api_key:
+        # In development, you might want to bypass this, but for security we enforce it.
+        raise HTTPException(status_code=500, detail="INTERNAL_API_KEY not configured on server")
+    if api_key != expected_api_key:
+        raise HTTPException(status_code=401, detail="Invalid or missing API Key")
+    return api_key
 
 
 @asynccontextmanager
@@ -44,21 +62,25 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Configure CORS: Restricted to development or specific production origins
+    # Configure CORS: Restricted to specific production origins or internal network
+    allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5000,http://localhost:5173")
+    allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",")]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
     # Include Routers: Modular API endpoints for generation and evaluation
+    # We apply the API key dependency to these routers so they are protected
     from app.api.speech import router as speech_router
 
-    app.include_router(interview_router, tags=["Interview"])
-    app.include_router(v2_resume_router)
-    app.include_router(speech_router, prefix="/speech", tags=["Speech"])
+    app.include_router(interview_router, tags=["Interview"], dependencies=[Depends(verify_api_key)])
+    app.include_router(v2_resume_router, dependencies=[Depends(verify_api_key)])
+    app.include_router(speech_router, prefix="/speech", tags=["Speech"], dependencies=[Depends(verify_api_key)])
 
     @app.get("/", tags=["Health"])
     async def root():

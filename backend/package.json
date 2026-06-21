@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@types/uuid": "^10.0.0",
-    "bcryptjs": "^3.0.3",
+    "bcrypt": "^6.0.0",
     "bullmq": "^5.76.8",
     "cloudinary": "^2.10.0",
     "cookie-parser": "^1.4.7",
@@ -43,7 +43,7 @@
     "winston": "^3.13.0"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.4",
+    "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
