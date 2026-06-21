@@ -14,7 +14,6 @@ import { toast } from "react-toastify";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import type { ResumeData, ParsedProfile } from "../types";
 import { ResumePDF } from "./ResumePDF";
-import apiClient from "../../../services/apiClient";
 
 interface EntityExtractionTabProps {
   resumeData: ResumeData;
@@ -53,9 +52,46 @@ export const EntityExtractionTab = ({
     try {
       setRewritingBullet({ bullet, expIndex, bulletIndex });
       setVariations(null);
-      const response = await apiClient.post(`/resume/${resumeData._id}/rewrite`, { bullet });
-      const data = response.data;
-      setVariations(data.variations);
+
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const response = await fetch(`${apiUrl}/resume/${resumeData._id}/rewrite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ bullet })
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error("Error rewriting bullet point");
+      }
+
+      setVariations([]); // Set to empty array to reveal UI
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      let done = false;
+      let text = "";
+
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (value) {
+          const chunk = decoder.decode(value, { stream: true });
+          text += chunk;
+
+          // Split by blank lines or standard markdown lists
+          const parsed = text
+            .replace(/^\d+\.\s*/gm, "") // remove "1. ", "2. "
+            .replace(/^-\s*/gm, "") // remove "- "
+            .replace(/^\*\s*/gm, "") // remove "* "
+            .split(/\n\s*\n/)
+            .map(s => s.trim())
+            .filter(Boolean);
+
+          setVariations(parsed.length > 0 ? parsed : [text]);
+        }
+      }
+
     } catch (error) {
       toast.error("Error rewriting bullet point");
       console.error(error);
@@ -474,6 +510,101 @@ export const EntityExtractionTab = ({
                   {!isEditing && exp.duration && (
                     <span className="text-[10px] font-black tracking-widest text-surface-400 uppercase bg-surface-800/50 rounded-full px-3 py-1.5 whitespace-nowrap shrink-0 border border-surface-600/30 order-1 sm:order-2 mb-2 sm:mb-0 shadow-inner shadow-black/20">
                       {exp.duration}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Projects */}
+      {editedProfile.projects && editedProfile.projects.length > 0 && (
+        <section>
+          <h3 className="text-xs font-black tracking-widest text-surface-400 uppercase mb-4 ml-1">Projects</h3>
+          <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[31px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-linear-to-b before:from-transparent before:via-surface-600 before:to-transparent z-10">
+            {editedProfile.projects.map((proj, i) => (
+              <div
+                key={i}
+                className="relative bg-surface-800/40 border border-emerald-500/20 rounded-3xl p-8 shadow-2xl shadow-black/40 backdrop-blur-md"
+              >
+                <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-4">
+                  <div className="min-w-0 flex-1 w-full order-2 sm:order-1">
+                    {isEditing ? (
+                      <div className="space-y-2 mb-3">
+                        <input
+                          type="text"
+                          className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm font-bold text-white"
+                          value={proj.title || ""}
+                          onChange={(e) => {
+                            const newProj = [...editedProfile.projects!];
+                            newProj[i] = { ...newProj[i], title: e.target.value };
+                            setEditedProfile(p => ({ ...p, projects: newProj }));
+                          }}
+                          placeholder="Project Title"
+                        />
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            className="flex-1 bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-emerald-400 font-bold"
+                            value={proj.link || ""}
+                            onChange={(e) => {
+                              const newProj = [...editedProfile.projects!];
+                              newProj[i] = { ...newProj[i], link: e.target.value };
+                              setEditedProfile(p => ({ ...p, projects: newProj }));
+                            }}
+                            placeholder="Link URL"
+                          />
+                          <input
+                            type="text"
+                            className="flex-1 bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-surface-400"
+                            value={proj.duration || ""}
+                            onChange={(e) => {
+                              const newProj = [...editedProfile.projects!];
+                              newProj[i] = { ...newProj[i], duration: e.target.value };
+                              setEditedProfile(p => ({ ...p, projects: newProj }));
+                            }}
+                            placeholder="Duration"
+                          />
+                        </div>
+                        <textarea
+                          className="w-full bg-surface-900/50 border border-surface-600/50 rounded-xl p-3 text-sm text-surface-300 min-h-[100px]"
+                          value={proj.description || ""}
+                          onChange={(e) => {
+                            const newProj = [...editedProfile.projects!];
+                            newProj[i] = { ...newProj[i], description: e.target.value };
+                            setEditedProfile(p => ({ ...p, projects: newProj }));
+                          }}
+                          placeholder="Project description / bullet points"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <h4 className="text-xl font-black text-white font-display">
+                          {proj.title || "Project"}
+                        </h4>
+                        {proj.link && (
+                          <a href={proj.link.startsWith('http') ? proj.link : `https://${proj.link}`} target="_blank" rel="noreferrer" className="text-[13px] text-emerald-400 font-bold mt-2 mb-1 block hover:underline truncate">
+                            {proj.link}
+                          </a>
+                        )}
+                        {proj.description && (
+                          <ul className="mt-6 space-y-3">
+                            {proj.description.split(/(?:\n|•)/).filter(b => b.trim().length > 3).map((bullet, idx) => (
+                              <li key={idx} className="group flex items-start gap-3 text-[14.5px] text-surface-300 font-medium leading-relaxed hover:text-surface-100 transition-colors">
+                                <Sparkles className="w-4 h-4 text-emerald-500 mt-1 shrink-0" />
+                                <span className="flex-1">{bullet.trim()}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  {!isEditing && proj.duration && (
+                    <span className="text-[10px] font-black tracking-widest text-surface-400 uppercase bg-surface-800/50 rounded-full px-3 py-1.5 whitespace-nowrap shrink-0 border border-surface-600/30 order-1 sm:order-2 mb-2 sm:mb-0 shadow-inner shadow-black/20">
+                      {proj.duration}
                     </span>
                   )}
                 </div>

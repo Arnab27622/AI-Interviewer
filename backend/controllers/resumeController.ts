@@ -265,7 +265,7 @@ export const rewriteBullet = asyncHandler(async (req: AuthenticatedRequest, res:
   const context = `Role: ${resume.analysisReport?._v2?.analysis?.role_summary || "Unknown Role"}`;
 
   const pythonServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
-  const response = await fetch(`${pythonServiceUrl}/resume/v2/rewrite-bullet`, {
+  const response = await fetch(`${pythonServiceUrl}/resume/v2/stream-bullet-rewrite`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ bullet, resume_context: context }),
@@ -276,8 +276,14 @@ export const rewriteBullet = asyncHandler(async (req: AuthenticatedRequest, res:
     throw new AppError("INTERNAL_ERROR", "Failed to rewrite bullet", { detail: errorText }, response.status);
   }
 
-  const data = await response.json();
-  res.status(200).json(data);
+  if (!response.body) {
+    throw new AppError("INTERNAL_ERROR", "No response body from AI service", {}, 500);
+  }
+
+  // Set proper headers for Server-Sent Events (or streaming text)
+  res.setHeader("Content-Type", "text/plain");
+  res.setHeader("Transfer-Encoding", "chunked");
+  response.body.pipe(res);
 });
 
 /**
@@ -301,7 +307,7 @@ export const generateCoverLetter = asyncHandler(async (req: AuthenticatedRequest
   }
 
   const pythonServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
-  const response = await fetch(`${pythonServiceUrl}/resume/v2/generate-cover-letter`, {
+  const response = await fetch(`${pythonServiceUrl}/resume/v2/stream-cover-letter`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ resume_text: resumeText, jd_text: jdText }),
@@ -312,6 +318,12 @@ export const generateCoverLetter = asyncHandler(async (req: AuthenticatedRequest
     throw new AppError("INTERNAL_ERROR", "Failed to generate cover letter", { detail: errorText }, response.status);
   }
 
-  const data = await response.json();
-  res.status(200).json(data);
+  if (!response.body) {
+    throw new AppError("INTERNAL_ERROR", "No response body from AI service", {}, 500);
+  }
+
+  // Set proper headers for Server-Sent Events (or streaming text)
+  res.setHeader("Content-Type", "text/plain");
+  res.setHeader("Transfer-Encoding", "chunked");
+  response.body.pipe(res);
 });

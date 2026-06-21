@@ -27,6 +27,14 @@ You MUST output a valid JSON object matching the exact structure below:
       "description": "string"
     }
   ],
+  "projects": [
+    {
+      "title": "string",
+      "duration": "string",
+      "link": "string",
+      "description": "string"
+    }
+  ],
   "education": [
     {
       "institution": "string",
@@ -36,7 +44,9 @@ You MUST output a valid JSON object matching the exact structure below:
   ]
 }
 Be precise. If some sections are missing, leave them empty or as empty arrays. Do not invent any facts.
+CRITICAL: If the candidate lists academic or personal projects but has no formal work experience, put those projects ONLY in the `projects` array and leave the `experience` array empty. Do not mistake projects for work experience.
 """
+
 
 class ResumeParsingService:
     @staticmethod
@@ -47,21 +57,21 @@ class ResumeParsingService:
             response_text = call_gemini(
                 system_prompt=PARSING_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
-                as_json=True
+                as_json=True,
             )
             parsed_data = parse_response(response_text)
-            
+
             # Ensure is_resume is interpreted as a boolean
             is_resume_flag = parsed_data.get("is_resume", True)
             if isinstance(is_resume_flag, str):
                 is_resume_flag = str(is_resume_flag).lower() == "true"
             parsed_data["is_resume"] = is_resume_flag
-            
+
             if not is_resume_flag:
                 logger.warning("Uploaded document is not a valid resume/CV")
                 # Do not raise an exception, return gracefully so the pipeline can halt cleanly
                 return parsed_data
-                
+
             logger.info("Resume parsed successfully")
             return parsed_data
         except Exception as e:

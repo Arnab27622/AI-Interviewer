@@ -1,11 +1,23 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Body
+from fastapi import (
+    APIRouter,
+    UploadFile,
+    File,
+    HTTPException,
+    Body,
+    BackgroundTasks,
+    Form,
+)
+from fastapi.responses import StreamingResponse
 import logging
+import requests
 from app.services.resume_orchestrator_service import ResumeOrchestratorService
 from app.services.generation.resume_generation_service import ResumeGenerationService
+from app.services.analysis.feedback_stream_service import FeedbackStreamService
 
 logger = logging.getLogger("ResumeRouterV2")
 
 router = APIRouter(prefix="/resume/v2", tags=["Resume (v2)"])
+
 
 @router.post("/process")
 async def process_resume_v2(file: UploadFile = File(...)):
@@ -31,7 +43,60 @@ async def process_resume_v2(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         logger.error(f"[v2/process] Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error processing resume: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error processing resume: {str(e)}"
+        )
+
+
+def _process_and_webhook(contents: bytes, filename: str, webhook_url: str):
+    try:
+        result = ResumeOrchestratorService.process_resume(contents, filename)
+        # Call the webhook
+        try:
+            requests.post(
+                webhook_url, json={"success": True, "data": result}, timeout=10
+            )
+        except Exception as we:
+            logger.error(f"Failed to call webhook {webhook_url}: {str(we)}")
+    except Exception as e:
+        logger.error(f"Async process error: {str(e)}")
+        try:
+            requests.post(
+                webhook_url, json={"success": False, "error": str(e)}, timeout=10
+            )
+        except Exception as we:
+            pass
+
+
+@router.post("/process-async")
+async def process_resume_async(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    webhook_url: str = Form(...),
+):
+    """
+    [SOA v2] Asynchronously process a resume and POST the results to a webhook_url.
+    Returns 202 Accepted immediately.
+    """
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
+
+    ext = file.filename.lower().split(".")[-1]
+    if ext not in ["pdf", "docx", "txt"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file format. Must be PDF, DOCX, or TXT.",
+        )
+
+    try:
+        contents = await file.read()
+        background_tasks.add_task(
+            _process_and_webhook, contents, file.filename, webhook_url
+        )
+        return {"status": "Processing started", "webhook": webhook_url}
+    except Exception as e:
+        logger.error(f"[v2/process-async] Error reading file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error reading file: {str(e)}")
 
 
 @router.post("/analyze")
@@ -66,10 +131,14 @@ async def match_resume_v2(payload: dict = Body(...)):
     jd_text = payload.get("jd_text")
 
     if not resume_text or not jd_text:
-        raise HTTPException(status_code=400, detail="resume_text and jd_text are required")
+        raise HTTPException(
+            status_code=400, detail="resume_text and jd_text are required"
+        )
 
     try:
-        return ResumeOrchestratorService.match_resume(resume_text, resume_skills, jd_text)
+        return ResumeOrchestratorService.match_resume(
+            resume_text, resume_skills, jd_text
+        )
     except Exception as e:
         logger.error(f"[v2/match] Error: {str(e)}")
         raise HTTPException(
@@ -106,7 +175,9 @@ async def generate_cover_letter(payload: dict = Body(...)):
     jd_text = payload.get("jd_text")
 
     if not resume_text or not jd_text:
-        raise HTTPException(status_code=400, detail="resume_text and jd_text are required")
+        raise HTTPException(
+            status_code=400, detail="resume_text and jd_text are required"
+        )
 
     try:
         return ResumeGenerationService.generate_cover_letter(resume_text, jd_text)
@@ -116,9 +187,6 @@ async def generate_cover_letter(payload: dict = Body(...)):
             status_code=500, detail=f"Error generating cover letter: {str(e)}"
         )
 
-
-from fastapi.responses import StreamingResponse
-from app.services.analysis.feedback_stream_service import FeedbackStreamService
 
 @router.post("/stream-feedback")
 async def stream_feedback_v2(payload: dict = Body(...)):
@@ -132,6 +200,46 @@ async def stream_feedback_v2(payload: dict = Body(...)):
 
     def generate():
         for chunk in FeedbackStreamService.stream_feedback(raw_text):
+            yield chunk
+
+    return StreamingResponse(generate(), media_type="text/plain")
+
+
+@router.post("/stream-cover-letter")
+async def stream_cover_letter_v2(payload: dict = Body(...)):
+    """
+    [SOA v2] Streams a tailored cover letter based on resume and JD.
+    """
+    resume_text = payload.get("resume_text")
+    jd_text = payload.get("jd_text")
+
+    if not resume_text or not jd_text:
+        raise HTTPException(
+            status_code=400, detail="resume_text and jd_text are required"
+        )
+
+    def generate():
+        for chunk in ResumeGenerationService.stream_cover_letter(resume_text, jd_text):
+            yield chunk
+
+    return StreamingResponse(generate(), media_type="text/plain")
+
+
+@router.post("/stream-bullet-rewrite")
+async def stream_bullet_rewrite_v2(payload: dict = Body(...)):
+    """
+    [SOA v2] Streams 3 STAR method variations for a single resume bullet point.
+    """
+    bullet = payload.get("bullet")
+    resume_context = payload.get("resume_context", "")
+
+    if not bullet:
+        raise HTTPException(status_code=400, detail="bullet is required")
+
+    def generate():
+        for chunk in ResumeGenerationService.stream_bullet_rewrite(
+            bullet, resume_context
+        ):
             yield chunk
 
     return StreamingResponse(generate(), media_type="text/plain")

@@ -3,7 +3,7 @@ import FormData from "form-data";
 import fetch from "node-fetch";
 import { createHash } from "crypto";
 import * as mammoth from "mammoth";
-import { getCachedResult, setCachedResult } from "../cacheService.js";
+import { getCachedResult } from "../cacheService.js";
 import { getAIServiceUrl } from "./utils.js";
 
 /**
@@ -18,7 +18,21 @@ export const stepProcess = async (resume: any): Promise<any> => {
   // Cache key = SHA-256 of the raw file bytes
   const fileHash = createHash("sha256").update(fileBuffer).digest("hex");
   const cached = await getCachedResult("process", fileHash);
-  if (cached) return cached;
+  if (cached) {
+    console.log(`[Worker] Cache HIT for process. Firing webhook locally...`);
+    const port = process.env.PORT || 5000;
+    const backendUrl = process.env.BACKEND_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+    const webhookUrl = `${backendUrl}/api/resume/webhook/process-resume/${resume._id}`;
+
+    // Fire webhook asynchronously without blocking
+    fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ success: true, data: cached })
+    }).catch(err => console.error("[Worker] Failed to fire local cache webhook:", err));
+
+    return { success: true, status: "async_dispatched_via_cache" };
+  }
 
   let finalBuffer = fileBuffer;
   let finalFilename = resume.originalFilename;
@@ -39,13 +53,18 @@ export const stepProcess = async (resume: any): Promise<any> => {
     contentType: finalContentType,
   });
 
+  const port = process.env.PORT || 5000;
+  const backendUrl = process.env.BACKEND_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+  const webhookUrl = `${backendUrl}/api/resume/webhook/process-resume/${resume._id}`;
+  formData.append("webhook_url", webhookUrl);
+
   const headers: any = typeof formData.getHeaders === "function" ? formData.getHeaders() : {};
   if (typeof formData.getLengthSync === "function") {
     headers["Content-Length"] = formData.getLengthSync().toString();
   }
 
-  console.log(`[Worker] STEP 1/4: Sending resume ${resume._id} for processing + parsing...`);
-  const response = await fetch(`${AI_SERVICE_URL}/resume/v2/process`, {
+  console.log(`[Worker] STEP 1/4: Sending resume ${resume._id} for async processing + parsing... Webhook: ${webhookUrl}`);
+  const response = await fetch(`${AI_SERVICE_URL}/resume/v2/process-async`, {
     method: "POST",
     body: formData,
     headers,
@@ -56,7 +75,5 @@ export const stepProcess = async (resume: any): Promise<any> => {
     throw new Error(`Processing service failed (${response.status}): ${errText}`);
   }
 
-  const data = (await response.json()) as any;
-  await setCachedResult("process", fileHash, data);
-  return data;
+  return { success: true, status: "async_dispatched" };
 };

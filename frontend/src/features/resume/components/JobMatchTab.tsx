@@ -9,7 +9,6 @@ import { createSession } from "../../session/sessionSlice";
 import type { ResumeData } from "../types";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { CoverLetterPDF } from "./CoverLetterPDF";
-import apiClient from "../../../services/apiClient";
 
 interface JobMatchTabProps {
   resumeData: ResumeData;
@@ -28,9 +27,35 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
     if (!resumeData._id) return;
     try {
       setIsGeneratingCL(true);
-      const response = await apiClient.post(`/resume/${resumeData._id}/cover-letter`);
-      const data = response.data;
-      setCoverLetter(data.cover_letter);
+      setCoverLetter(""); // Start with empty string for typing effect
+
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const response = await fetch(`${apiUrl}/resume/${resumeData._id}/cover-letter`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // For cookies
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error("Error generating cover letter");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      let done = false;
+      let text = "";
+
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (value) {
+          const chunk = decoder.decode(value, { stream: true });
+          text += chunk;
+          setCoverLetter(text);
+        }
+      }
+
       toast.success("Cover letter generated!");
     } catch (error) {
       toast.error("Error generating cover letter");
@@ -303,6 +328,7 @@ export const JobMatchTab = ({ resumeData }: JobMatchTabProps) => {
                 </div>
                 <div className="prose prose-invert max-w-none text-surface-300 text-sm leading-relaxed whitespace-pre-wrap">
                   {coverLetter}
+                  {isGeneratingCL && <span className="animate-pulse font-bold text-primary-400">|</span>}
                 </div>
               </motion.div>
             )}

@@ -55,6 +55,17 @@ export const addResumeJob = async (resumeId: string): Promise<Job<ResumeJobData>
   return job;
 };
 
+export const addResumeAnalyzeJob = async (resumeId: string): Promise<Job<ResumeJobData>> => {
+  const job = await resumeQueue.add("analyze-resume" as any, { resumeId }, {
+    attempts: 3,
+    backoff: {
+      type: "exponential",
+      delay: 2000,
+    },
+  });
+  return job;
+};
+
 /**
  * Get queue metrics
  */

@@ -225,6 +225,31 @@ export const ResumePDF = ({ profile }: ResumePDFProps) => {
           </View>
         )}
 
+        {/* Projects */}
+        {profile.projects && profile.projects.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Projects</Text>
+            {profile.projects.map((proj, idx) => (
+              <View key={idx} style={styles.experienceItem}>
+                <View style={styles.experienceHeader}>
+                  <Text style={styles.experienceTitle}>
+                    {proj.title || "Project"}
+                    {proj.link && <Text style={styles.experienceCompany}> | {proj.link}</Text>}
+                  </Text>
+                  <Text style={styles.experienceDate}>{proj.duration || ""}</Text>
+                </View>
+                
+                {proj.description && proj.description.split(/(?:\n|•)/).filter(b => b.trim().length > 3).map((bullet, bIdx) => (
+                  <View key={bIdx} style={styles.bulletPoint}>
+                    <Text style={styles.bullet}>•</Text>
+                    <Text style={styles.bulletText}>{bullet.trim()}</Text>
+                  </View>
+                ))}
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Education */}
         {education && education.length > 0 && (
           <View style={styles.section}>

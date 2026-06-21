@@ -2,6 +2,7 @@ import { motion, AnimatePresence, animate } from "framer-motion";
 import { useSelector } from "react-redux";
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import { CloudUpload, FileCheck, AlertTriangle, ArrowLeft } from "lucide-react";
 import type { RootState } from "../app/store";
 
 import { useResumeUpload } from "../features/resume/hooks/useResumeUpload";
@@ -290,18 +291,14 @@ const ResumeAnalyzer = () => {
                   {file ? (
                     <>
                       <div className="w-12 h-12 rounded-full bg-primary-400/20 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(45,212,191,0.2)]">
-                        <svg className="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                        </svg>
+                        <FileCheck className="w-6 h-6 text-primary-400" strokeWidth={2.5} />
                       </div>
                       <span className="text-sm font-black text-white">{file.name}</span>
                       <span className="text-[11px] text-surface-400 font-medium tracking-wide mt-1">Click or drop to replace</span>
                     </>
                   ) : (
                     <>
-                      <svg className="w-10 h-10 text-surface-500 group-hover:text-primary-400/80 transition-colors duration-300 mb-3 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
+                      <CloudUpload className="w-10 h-10 text-surface-500 group-hover:text-primary-400/80 transition-colors duration-300 mb-3 drop-shadow-md" strokeWidth={1.5} />
                       <span className="text-[13px] font-bold text-surface-300 tracking-wide">
                         Drop your resume here or{" "}
                         <span className="text-primary-400 underline underline-offset-4 decoration-primary-400/30 group-hover:decoration-primary-400 transition-colors">browse</span>
@@ -395,9 +392,7 @@ const ResumeAnalyzer = () => {
           {status === "invalid_document" ? (
             <div className="py-16 text-center space-y-6">
               <div className="w-24 h-24 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
-                <svg className="w-12 h-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+                <AlertTriangle className="w-12 h-12 text-red-400" strokeWidth={2} />
               </div>
               <h3 className="text-3xl font-black text-white">This doesn't look like a resume</h3>
               <p className="text-surface-400 max-w-lg mx-auto text-sm leading-relaxed">
@@ -407,9 +402,7 @@ const ResumeAnalyzer = () => {
                 onClick={handleResetAll}
                 className="mt-8 px-8 py-4 bg-primary-600 hover:bg-primary-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-primary-900/40 active:scale-95 cursor-pointer inline-flex items-center gap-2"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
+                <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
                 Upload Another Document
               </button>
             </div>

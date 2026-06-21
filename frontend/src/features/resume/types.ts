@@ -22,6 +22,12 @@ export interface ParsedProfile {
     field?: string;
     year?: string;
   }>;
+  projects?: Array<{
+    title?: string;
+    duration?: string;
+    link?: string;
+    description?: string;
+  }>;
 }
 
 export interface AIAnalysisReport {

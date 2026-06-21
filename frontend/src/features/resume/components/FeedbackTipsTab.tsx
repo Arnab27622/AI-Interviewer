@@ -14,12 +14,13 @@ interface FeedbackTipsTabProps {
 
 export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "", isStreaming = false }: FeedbackTipsTabProps) => {
   const hasLegacyData = issues.length > 0 || strengths.length > 0;
+  const showStreamingView = isStreaming || (streamingText && !hasLegacyData);
 
   let issuesText = "";
   let strengthsText = "";
   let parts: string[] = [];
 
-  if (streamingText || isStreaming) {
+  if (showStreamingView) {
     parts = streamingText.split(/##?\s*(?:🌟\s*)?Strengths/i);
     issuesText = parts[0].replace(/##?\s*(?:🚨\s*)?Issues\s*(?:Found)?/iu, "").replace(/[🚨🌟💡]/gu, "").trim();
     if (parts.length > 1) {
@@ -53,7 +54,7 @@ export const FeedbackTipsTab = ({ issues = [], strengths = [], streamingText = "
       transition={{ duration: 0.2 }}
       className="space-y-10"
     >
-      {streamingText || isStreaming ? (
+      {showStreamingView ? (
         <div className="space-y-8">
           <section className="bg-surface-800/40 border border-rose-500/30 rounded-3xl p-6 sm:p-10 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden">
             <div className="absolute inset-0 bg-linear-to-b from-rose-500/5 to-transparent pointer-events-none" />

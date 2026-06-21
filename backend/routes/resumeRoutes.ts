@@ -16,11 +16,15 @@ import {
   deleteResume,
 } from "../controllers/resumeController.js";
 
+import { processResumeWebhook } from "../controllers/webhookController.js";
+
 const router: Router = express.Router();
 
 router.route("/").get(protect, getUserResumes);
 
 router.route("/upload").post(protect, uploadSingleResume, uploadResume);
+
+router.route("/webhook/process-resume/:id").post(processResumeWebhook);
 
 router.route("/:id").get(protect, getResume).delete(protect, deleteResume);
 

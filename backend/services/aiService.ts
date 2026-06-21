@@ -31,8 +31,8 @@ const fetchWithRetry = async (
   for (let i = 0; i < retries; i++) {
     try {
       const response = await fetch(url, options);
-      // Don't retry 5xx - let the AI service handle its own retries
-      if (response.ok || response.status >= 400) {
+      // Retry on 429 (Rate Limit) and 50x (Server Errors)
+      if (response.ok || (response.status >= 400 && ![429, 502, 503, 504].includes(response.status))) {
         return response;
       }
       const errBody = await response.text();
