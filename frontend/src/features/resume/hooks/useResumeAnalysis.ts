@@ -70,7 +70,20 @@ export const useResumeAnalysis = ({ userId }: UseResumeAnalysisProps) => {
       }
     });
 
+    socket.on("disconnect", (reason) => {
+      console.log("Disconnected from resume processing socket:", reason);
+    });
+
+    const handleTokenRefresh = () => {
+      if (socket.disconnected) {
+        console.log("Token refreshed, attempting to reconnect resume socket...");
+        socket.connect();
+      }
+    };
+    window.addEventListener("auth_token_refreshed", handleTokenRefresh);
+
     return () => {
+      window.removeEventListener("auth_token_refreshed", handleTokenRefresh);
       socket.disconnect();
       socketRef.current = null;
     };

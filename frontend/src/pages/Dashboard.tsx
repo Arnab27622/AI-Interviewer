@@ -144,17 +144,17 @@ const Dashboard = () => {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 lg:flex items-center gap-4">
-                    <div className="bg-surface-800/40 border border-surface-600/30 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 sm:col-span-2 lg:col-span-1 min-w-[140px]">
+                <div className="flex flex-wrap lg:flex-nowrap items-center gap-4 w-full lg:w-auto">
+                    <div className="bg-surface-800/40 border border-surface-600/30 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 flex-1 min-w-[140px]">
                         <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">Total Pulse</p>
                         <p className="text-3xl font-black text-white font-display">{totalSessions}</p>
                     </div>
-                    <div className="bg-surface-800/40 border border-surface-600/30 border-l-primary-500/50 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 min-w-[140px]">
+                    <div className="bg-surface-800/40 border border-surface-600/30 border-l-primary-500/50 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 flex-1 min-w-[140px]">
                         <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">Completed</p>
                         <p className="text-3xl font-black text-emerald-400 font-display">{completedSessions}</p>
                     </div>
                     {activeSessions > 0 && (
-                        <div className="bg-surface-800/40 border border-surface-600/30 border-l-indigo-500/50 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 animate-pulse min-w-[140px]">
+                        <div className="bg-surface-800/40 border border-surface-600/30 border-l-indigo-500/50 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 animate-pulse flex-1 min-w-[140px]">
                             <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">In Queue</p>
                             <p className="text-3xl font-black text-indigo-400 font-display">{activeSessions}</p>
                         </div>

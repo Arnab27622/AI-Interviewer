@@ -175,7 +175,7 @@ const AnalyticsDashboard: React.FC = () => {
       </div>
 
       {/* Top 3 Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Professional Development */}
         <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 flex flex-col justify-between shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden group">
           <div className="absolute inset-0 bg-linear-to-br from-primary-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
@@ -244,7 +244,7 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
 
         {/* Performance Consistency */}
-        <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 flex flex-col justify-between shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden group">
+        <div className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 flex flex-col justify-between shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden group md:col-span-2 lg:col-span-1">
           <div className="absolute inset-0 bg-linear-to-br from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           <div className="flex justify-between items-start mb-8 relative z-10">
             <h3 className="text-[10px] font-black tracking-widest text-surface-400 uppercase">Current Streak</h3>

@@ -51,56 +51,70 @@ export const GamificationWidget = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
       {/* 1. Professional Development */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col">
-        <h3 className="text-white font-bold text-lg mb-6 leading-tight">Professional<br />Development</h3>
-        <div>
-          <div className="text-[#2ECA8B] text-xs font-bold mb-2">{profile.title}</div>
-          <div className="w-full bg-[#1E2530] rounded-full h-4 overflow-hidden border border-white/5 mb-3 shadow-inner">
-            <div
-              className="bg-linear-to-r from-[#20b2aa] to-[#2ECA8B] h-full rounded-full transition-all duration-1000 ease-out"
-              style={{ width: `${calculateXpProgress()}%` }}
-            ></div>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col justify-between">
+        <h3 className="text-white font-bold text-lg mb-4 leading-tight">Professional<br />Development</h3>
+        <div className="bg-surface-900/40 p-5 rounded-2xl border border-white/5">
+          <div className="flex justify-between items-end mb-4">
+            <div>
+              <div className="text-surface-400 text-[10px] uppercase tracking-wider mb-1">Current Tier</div>
+              <div className="text-[#2ECA8B] text-sm font-bold">{profile.title}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-white font-bold text-xl">Level {profile.level}</div>
+            </div>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-white font-medium">Level {profile.level}</span>
-            <span className="text-[#a1a1aa] text-xs mt-1">{profile.xp} / {nextLevelXp || "MAX"} XP</span>
+          
+          <div className="w-full bg-[#1E2530] rounded-full h-3 overflow-hidden border border-white/5 mb-3 shadow-inner">
+            <div
+              className="bg-linear-to-r from-[#20b2aa] to-[#2ECA8B] h-full rounded-full transition-all duration-1000 ease-out relative"
+              style={{ width: `${calculateXpProgress()}%` }}
+            >
+              <div className="absolute inset-0 bg-white/20 w-full h-full" style={{ animation: 'shimmer 2s infinite' }}></div>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-surface-500 text-[10px] font-medium">Progress to next level</span>
+            <span className="text-[#a1a1aa] text-[11px] font-bold tracking-wide">{profile.xp} / {nextLevelXp || "MAX"} XP</span>
           </div>
         </div>
       </motion.div>
 
       {/* 2. Consistency */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col justify-between">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col">
         <h3 className="text-white font-bold text-lg mb-4">Consistency</h3>
 
-        <div className="mb-4">
-          <div className="flex justify-between text-[10px] text-surface-400 mb-2 px-1">
-            <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 flex-1">
+          <div className="flex-1">
+            <div className="flex justify-between text-[10px] text-surface-400 mb-2 px-1 w-full md:max-w-[260px]">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+            <div className="grid grid-cols-7 gap-2 w-full md:max-w-[260px]">
+              {Array.from({ length: 21 }).map((_, i) => {
+                const daysAgo = 20 - i;
+                const isActive = daysAgo < profile.currentStreak;
+                const isHighActivity = isActive && i % 2 === 0;
+                return (
+                  <div key={i} className={`w-full aspect-square rounded-full flex items-center justify-center ${isActive ? 'bg-[#2ECA8B]/20' : 'bg-[#1E2530]'}`}>
+                    {isActive && <div className={`w-2 h-2 rounded-full ${isHighActivity ? 'bg-[#2ECA8B]' : 'bg-[#2ECA8B]/60'}`}></div>}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: 21 }).map((_, i) => {
-              const daysAgo = 20 - i;
-              const isActive = daysAgo < profile.currentStreak;
-              const isHighActivity = isActive && i % 2 === 0;
-              return (
-                <div key={i} className={`w-full aspect-square rounded-full flex items-center justify-center ${isActive ? 'bg-[#2ECA8B]/20' : 'bg-[#1E2530]'}`}>
-                  {isActive && <div className={`w-2 h-2 rounded-full ${isHighActivity ? 'bg-[#2ECA8B]' : 'bg-[#2ECA8B]/60'}`}></div>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#2ECA8B]/10 flex items-center justify-center text-[#2ECA8B]">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div>
-            <div className="text-xl font-bold text-[#2ECA8B]">{profile.currentStreak} Days</div>
-            <div className="text-[10px] text-surface-400 uppercase tracking-wider">Current Active Streak</div>
+          <div className="flex items-center gap-4 lg:flex-col lg:items-start lg:justify-center bg-surface-900/40 p-4 rounded-2xl border border-white/5 lg:min-w-[140px] h-full">
+            <div className="w-10 h-10 rounded-xl bg-[#2ECA8B]/10 flex items-center justify-center text-[#2ECA8B] shrink-0">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-[#2ECA8B] tracking-tight">{profile.currentStreak} Days</div>
+              <div className="text-[9px] text-surface-400 uppercase tracking-widest mt-1">Active Streak</div>
+            </div>
           </div>
         </div>
       </motion.div>

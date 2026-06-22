@@ -43,16 +43,19 @@ export const setupInterceptors = (apiInstance: AxiosInstance) => {
                 isRefreshing = true;
 
                 try {
+                    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
                     // Call the refresh endpoint. It will automatically use the refresh_jwt cookie
                     // and set the new jwt cookie on success.
                     await axios.post(
-                        `${import.meta.env.VITE_API_URL}/user/refresh`,
+                        `${apiUrl}/user/refresh`,
                         {},
                         { withCredentials: true }
                     );
 
                     isRefreshing = false;
                     processQueue(null, "success");
+                    // Notify sockets to reconnect since they might have disconnected due to auth error
+                    window.dispatchEvent(new Event("auth_token_refreshed"));
                     return apiInstance(originalRequest);
                 } catch (refreshError) {
                     isRefreshing = false;

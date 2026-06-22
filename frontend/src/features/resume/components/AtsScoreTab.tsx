@@ -230,19 +230,21 @@ export const AtsScoreTab = ({ resumeData, isLoading = false }: AtsScoreTabProps)
           <h3 className="text-xs font-black tracking-widest text-surface-400 uppercase mb-8">Score Breakdown</h3>
           <div className="space-y-5 relative z-10">
             {scoreBreakdown.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-4">
-                <span className="w-40 text-[13px] font-bold text-surface-300">
+              <div key={idx} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                <span className="w-full md:w-40 text-[13px] font-bold text-surface-300">
                   {item.label}
                 </span>
-                <div className="flex-1 h-2 bg-surface-900/60 rounded-full overflow-hidden shadow-inner shadow-black/40">
-                  <div
-                    className={`h-full ${item.color} rounded-full transition-all duration-1000`}
-                    style={{ width: `${(item.score / item.max) * 100}%` }}
-                  />
+                <div className="flex items-center gap-4 flex-1 w-full">
+                  <div className="flex-1 h-2 bg-surface-900/60 rounded-full overflow-hidden shadow-inner shadow-black/40">
+                    <div
+                      className={`h-full ${item.color} rounded-full transition-all duration-1000`}
+                      style={{ width: `${(item.score / item.max) * 100}%` }}
+                    />
+                  </div>
+                  <span className="w-12 text-right text-xs font-black text-surface-300">
+                    {item.score}/{item.max}
+                  </span>
                 </div>
-                <span className="w-12 text-right text-xs font-black text-surface-300">
-                  {item.score}/{item.max}
-                </span>
               </div>
             ))}
           </div>

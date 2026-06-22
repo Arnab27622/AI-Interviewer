@@ -52,6 +52,14 @@ const useSocket = () => {
             console.log('Disconnected from socket:', reason);
         });
 
+        const handleTokenRefresh = () => {
+            if (socket.disconnected) {
+                console.log('Token refreshed, attempting to reconnect socket...');
+                socket.connect();
+            }
+        };
+        window.addEventListener('auth_token_refreshed', handleTokenRefresh);
+
         socket.on('sessionUpdate', (data: SocketUpdatePayload) => {
             console.log('Session updated', data);
             dispatchRef.current(socketUpdateSession(data));
@@ -65,6 +73,7 @@ const useSocket = () => {
         });
 
         return () => {
+            window.removeEventListener('auth_token_refreshed', handleTokenRefresh);
             socket.disconnect();
             socketRef.current = null;
         };
