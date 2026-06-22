@@ -64,7 +64,7 @@ const InterviewRunner = () => {
     };
 
     if (!activeSession || !activeSession.questions || activeSession.questions.length === 0 || isFinishing) {
-        return <InterviewLoading sessionMessage={isFinishing ? "Uploading recording and finalizing interview..." : sessionMessage} />;
+        return <InterviewLoading sessionMessage={isFinishing ? "Finalizing Interview..." : sessionMessage} />;
     }
 
     const currentDraft = drafts[currentQuestionIndex] || {};

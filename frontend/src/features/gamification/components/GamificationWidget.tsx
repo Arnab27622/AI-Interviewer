@@ -25,7 +25,7 @@ export const GamificationWidget = () => {
 
   useEffect(() => {
     dispatch(fetchGamificationProfile());
-    dispatch(fetchLeaderboard(3));
+    dispatch(fetchLeaderboard(10));
   }, [dispatch]);
 
   if (isLoading) {
@@ -156,8 +156,8 @@ export const GamificationWidget = () => {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col gap-2">
-          {leaderboard?.slice(0, 3).map((entry, idx) => {
+        <div className="flex-1 flex flex-col gap-2 overflow-y-auto max-h-[140px] pr-2 custom-scrollbar">
+          {leaderboard?.slice(0, 10).map((entry, idx) => {
             const isCurrentUser = entry.userId ? (entry.userId === user?._id || entry.userId === user?.id) : (entry.name === user?.name);
             return (
               <div key={idx} className={`p-2 flex items-center gap-3 rounded-xl ${isCurrentUser ? 'bg-[#2ECA8B]/10 border border-[#2ECA8B]/20' : ''}`}>
