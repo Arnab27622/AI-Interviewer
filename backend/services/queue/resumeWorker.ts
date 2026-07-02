@@ -165,21 +165,27 @@ const processJob = async (job: Job<ResumeJobData>): Promise<any> => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`[Worker] Pipeline FAILED for resume ${resumeId}:`, errorMessage);
 
-    // Handle failure — update DB and emit socket event
+    // Handle failure — update DB and emit socket event only on the final attempt
     try {
-      const resume = await Resume.findById(resumeId).populate("user", "_id");
-      if (resume) {
-        resume.status = "failed";
-        resume.error = errorMessage;
-        await resume.save();
+      const isLastAttempt = job.attemptsMade === (job.opts.attempts || 1) - 1;
+      
+      if (isLastAttempt) {
+        const resume = await Resume.findById(resumeId).populate("user", "_id");
+        if (resume) {
+          resume.status = "failed";
+          resume.error = errorMessage;
+          await resume.save();
 
-        if (ioInstance) {
-          emitResumeStatus(ioInstance, resume.user._id.toString(), {
-            resumeId,
-            status: "failed",
-            error: errorMessage,
-          });
+          if (ioInstance) {
+            emitResumeStatus(ioInstance, resume.user._id.toString(), {
+              resumeId,
+              status: "failed",
+              error: errorMessage,
+            });
+          }
         }
+      } else {
+        console.log(`[Worker] Attempt ${job.attemptsMade + 1} failed for resume ${resumeId}. Retrying...`);
       }
     } catch (dbError) {
       console.error("[Worker] Failed to update resume status after pipeline error", dbError);

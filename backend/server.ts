@@ -65,6 +65,7 @@ if (!fs.existsSync(resumesDir)) {
 connectDB();
 
 const app: Express = express();
+app.set("trust proxy", 1);
 const server = http.createServer(app);
 const allowOrigin = process.env.FRONTEND_URL || "";
 const io = new SocketIOServer(server, {
