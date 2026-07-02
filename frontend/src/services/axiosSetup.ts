@@ -26,7 +26,13 @@ export const setupInterceptors = (apiInstance: AxiosInstance) => {
         async (error) => {
             const originalRequest = error.config;
 
-            if (error.response?.status === 401 && !originalRequest._retry) {
+            const isAuthRoute = originalRequest.url?.includes("user/refresh") || 
+                               originalRequest.url?.includes("user/logout") ||
+                               originalRequest.url?.includes("user/login") ||
+                               originalRequest.url?.includes("user/register") ||
+                               originalRequest.url?.includes("user/google");
+
+            if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
                 if (isRefreshing) {
                     return new Promise(function (resolve, reject) {
                         failedQueue.push({ resolve, reject });
@@ -63,9 +69,7 @@ export const setupInterceptors = (apiInstance: AxiosInstance) => {
 
                     // Refresh failed (token expired/invalid) -> Logout
                     localStorage.removeItem("user");
-                    if (window.location.pathname !== "/login") {
-                        window.location.href = "/login";
-                    }
+                    window.dispatchEvent(new Event("auth_unauthorized"));
                     return Promise.reject(refreshError);
                 }
             }

@@ -196,6 +196,8 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload ?? "An error occurred";
+                state.user = null;
+                state.isAuthenticated = false;
             });
     },
 });

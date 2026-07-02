@@ -27,6 +27,12 @@ const NewInterviewForm: React.FC<NewInterviewFormProps> = ({
                 setResumes(data.filter((r: ResumeData) => r.status === 'completed' || r.parsedData));
             } catch (error) {
                 console.error("Failed to fetch resumes:", error);
+                if (error && typeof error === 'object' && 'response' in error) {
+                    const axiosError = error as { response?: { status?: number } };
+                    if (axiosError.response?.status === 401) {
+                        return;
+                    }
+                }
                 toast.error("Failed to load your resumes. Please try again later.");
             }
         };

@@ -1,6 +1,10 @@
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { Routes, Route } from "react-router-dom";
 import useSocket from "./hooks/useSocket";
-import { ToastContainer } from 'react-toastify';
+import { logout } from "./features/auth/authSlice";
+import type { AppDispatch } from "./app/store";
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from "./components/Header";
 import Login from "./pages/Login";
@@ -20,6 +24,16 @@ import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 function App() {
   useSocket();
   const location = useLocation();
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      toast.dismiss();
+      dispatch(logout());
+    };
+    window.addEventListener("auth_unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("auth_unauthorized", handleUnauthorized);
+  }, [dispatch]);
 
   return (
     <>
