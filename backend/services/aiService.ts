@@ -24,8 +24,8 @@ const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(
 const fetchWithRetry = async (
   url: string,
   options: any = {},
-  retries: number = 2,
-  backoff: number = 2000
+  retries: number = 3,
+  backoff: number = 5000
 ): Promise<any> => {
   let lastError: any;
   for (let i = 0; i < retries; i++) {

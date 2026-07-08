@@ -24,7 +24,7 @@ const router: Router = express.Router();
 
 const createSessionLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 5,
+  limit: 10,
   message: { message: "Too many sessions created from this IP, please try again after 15 minutes" },
 });
 

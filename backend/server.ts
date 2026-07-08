@@ -112,9 +112,9 @@ app.use(
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: process.env.NODE_ENV === "production" ? 100 : 500, // Limit each IP to 100 requests per window in prod, 500 in dev
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
+  limit: process.env.NODE_ENV === "production" ? 300 : 500, // Limit each IP
+  standardHeaders: "draft-7", // draft-6: `RateLimit-*` headers; draft-7: combined `RateLimit` header
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 app.use("/api", globalLimiter);
 

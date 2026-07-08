@@ -18,7 +18,7 @@ _rate_lock = threading.Lock()
 _last_call_time: float = 0.0
 # Minimum seconds between consecutive Gemini API calls.
 # 15 RPM ≈ 1 call every 4 seconds; use 4s as the default floor.
-MIN_CALL_INTERVAL = float(os.getenv("GEMINI_MIN_CALL_INTERVAL", "4"))
+MIN_CALL_INTERVAL = float(os.getenv("GEMINI_MIN_CALL_INTERVAL", "5"))
 
 
 def _wait_for_rate_limit() -> None:
@@ -89,7 +89,7 @@ def call_gemini(
 
     # Retry logic for Rate Limiting (429) and Server Errors (500, 503, 504)
     max_retries = 5
-    retry_delay = 10  # Start with a 10s delay for rate limits
+    retry_delay = 15  # Start with a 15s delay for rate limits
 
     resp = None  # ensure resp is defined for the post-loop code
 

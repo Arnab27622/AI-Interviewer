@@ -46,22 +46,26 @@ const resumeQueue = new Queue<ResumeJobData>("resume-processing", {
  */
 export const addResumeJob = async (resumeId: string): Promise<Job<ResumeJobData>> => {
   const job = await resumeQueue.add("parse-resume" as any, { resumeId }, {
-    attempts: 3,
+    attempts: 2,
     backoff: {
       type: "exponential",
-      delay: 2000,
+      delay: 30000,
     },
+    removeOnFail: true,
+    removeOnComplete: true,
   });
   return job;
 };
 
 export const addResumeAnalyzeJob = async (resumeId: string): Promise<Job<ResumeJobData>> => {
   const job = await resumeQueue.add("analyze-resume" as any, { resumeId }, {
-    attempts: 3,
+    attempts: 2,
     backoff: {
       type: "exponential",
-      delay: 2000,
+      delay: 30000,
     },
+    removeOnFail: true,
+    removeOnComplete: true,
   });
   return job;
 };
