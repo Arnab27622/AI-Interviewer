@@ -65,15 +65,30 @@ export const stepProcess = async (resume: any): Promise<any> => {
   headers["X-API-Key"] = process.env.INTERNAL_API_KEY || "";
 
   console.log(`[Worker] STEP 1/4: Sending resume ${resume._id} for async processing + parsing... Webhook: ${webhookUrl}`);
-  const response = await fetch(`${AI_SERVICE_URL}/resume/v2/process-async`, {
-    method: "POST",
-    body: formData,
-    headers,
-  });
+  
+  let response;
+  const retries = 5;
+  let backoff = 5000;
+  
+  for (let i = 0; i < retries; i++) {
+    response = await fetch(`${AI_SERVICE_URL}/resume/v2/process-async`, {
+      method: "POST",
+      body: formData,
+      headers,
+    });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Processing service failed (${response.status}): ${errText}`);
+    if (response.ok || (response.status >= 400 && response.status !== 429)) {
+      break;
+    }
+    
+    console.warn(`[Worker] Attempt ${i + 1} got 429 from Render NAT. Retrying in ${backoff}ms...`);
+    await new Promise(res => setTimeout(res, backoff));
+    backoff += 5000; // Increase wait time: 5s, 10s, 15s, 20s...
+  }
+
+  if (!response || !response.ok) {
+    const errText = await (response ? response.text() : Promise.resolve("No response"));
+    throw new Error(`Processing service failed (${response?.status}): ${errText}`);
   }
 
   return { success: true, status: "async_dispatched" };

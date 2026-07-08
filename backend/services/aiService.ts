@@ -16,38 +16,39 @@ const API_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
 /**
  * Utility for asynchronous delayed execution.
  */
-const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+// const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * Enhanced fetch with retry logic and exponential backoff.
+ * Helper: robust fetch with retry logic, specifically designed to bypass
+ * Render's free tier shared NAT IP Cloudflare 429 rate limit walls.
  */
-const fetchWithRetry = async (
+async function fetchWithRetry(
   url: string,
   options: any = {},
-  retries: number = 3,
+  retries: number = 6,
   backoff: number = 5000
-): Promise<any> => {
-  let lastError: any;
+): Promise<any> {
   for (let i = 0; i < retries; i++) {
     try {
       const response = await fetch(url, options);
-      // Retry on 429 (Rate Limit) and 50x (Server Errors)
-      if (response.ok || (response.status >= 400 && ![429, 502, 503, 504].includes(response.status))) {
+
+      // If it's a 429, we WANT to loop and retry.
+      if (response.ok || (response.status >= 400 && response.status !== 429)) {
         return response;
       }
-      const errBody = await response.text();
-      throw new Error(`Server returned status ${response.status}: ${errBody}`);
+
+      console.warn(`[AI Service] Attempt ${i + 1} got 429 from Render NAT. Retrying in ${backoff}ms...`);
     } catch (error) {
-      lastError = error;
-      if (i < retries - 1) {
-        console.warn(`Fetch attempt ${i + 1} failed for ${url}. Retrying in ${backoff}ms...`);
-        await wait(backoff);
-        backoff *= 2; // Exponential backoff
-      }
+      console.warn(`[AI Service] Fetch failed on attempt ${i + 1}: ${(error as Error).message}`);
+    }
+
+    if (i < retries - 1) {
+      await new Promise((res) => setTimeout(res, backoff));
+      backoff += 2000; // Increase backoff slightly: 5s, 7s, 9s...
     }
   }
-  throw lastError;
-};
+  throw new Error(`Failed after ${retries} retries`);
+}
 
 import {
   GenerateQuestionsParams,
