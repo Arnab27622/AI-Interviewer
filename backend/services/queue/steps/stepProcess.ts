@@ -47,22 +47,9 @@ export const stepProcess = async (resume: any): Promise<any> => {
     finalContentType = "text/plain";
   }
 
-  const formData = new FormData();
-  formData.append("file", finalBuffer, {
-    filename: finalFilename,
-    contentType: finalContentType,
-  });
-
   const port = process.env.PORT || 5000;
   const backendUrl = process.env.BACKEND_URL || process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
   const webhookUrl = `${backendUrl}/api/resume/webhook/process-resume/${resume._id}`;
-  formData.append("webhook_url", webhookUrl);
-
-  const headers: any = typeof formData.getHeaders === "function" ? formData.getHeaders() : {};
-  if (typeof formData.getLengthSync === "function") {
-    headers["Content-Length"] = formData.getLengthSync().toString();
-  }
-  headers["X-API-Key"] = process.env.INTERNAL_API_KEY || "";
 
   console.log(`[Worker] STEP 1/4: Sending resume ${resume._id} for async processing + parsing... Webhook: ${webhookUrl}`);
   
@@ -71,6 +58,22 @@ export const stepProcess = async (resume: any): Promise<any> => {
   let backoff = 5000;
   
   for (let i = 0; i < retries; i++) {
+    // CRITICAL: We MUST recreate the FormData object on every retry attempt!
+    // Node.js fetch() consumes the stream on the first request.
+    // Re-sending the exact same formData object causes a "socket hang up".
+    const formData = new FormData();
+    formData.append("file", finalBuffer, {
+      filename: finalFilename,
+      contentType: finalContentType,
+    });
+    formData.append("webhook_url", webhookUrl);
+
+    const headers: any = typeof formData.getHeaders === "function" ? formData.getHeaders() : {};
+    if (typeof formData.getLengthSync === "function") {
+      headers["Content-Length"] = formData.getLengthSync().toString();
+    }
+    headers["X-API-Key"] = process.env.INTERNAL_API_KEY || "";
+
     response = await fetch(`${AI_SERVICE_URL}/resume/v2/process-async`, {
       method: "POST",
       body: formData,
