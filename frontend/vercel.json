@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/ai-proxy/:path*",
+      "destination": "https://ai-interviewer-ai-service-zyr6.onrender.com/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
