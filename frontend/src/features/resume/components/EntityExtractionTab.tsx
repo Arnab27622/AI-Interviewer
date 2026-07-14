@@ -122,38 +122,45 @@ export const EntityExtractionTab = ({
     toast.success("Copied to clipboard!");
   };
 
-  // Generate dynamic industry scores based on raw text keyword matching
-  const allText = (resumeData.parsedData?.rawText || "").toLowerCase();
-  const industries = [
-    { name: "Software Engineering", keywords: ["react", "node", "software", "developer", "python", "java", "code", "engineering", "api", "database", "sql"] },
-    { name: "UI/UX Design", keywords: ["design", "figma", "ui", "ux", "user interface", "user experience", "wireframe", "prototype"] },
-    { name: "Product Management", keywords: ["product", "agile", "scrum", "roadmap", "strategy", "stakeholder", "management", "lifecycle"] },
-    { name: "Data Science", keywords: ["data", "machine learning", "ai", "analysis", "sql", "model", "python", "statistics"] },
-    { name: "Cloud / DevOps", keywords: ["aws", "docker", "kubernetes", "ci/cd", "cloud", "azure", "deployment", "infrastructure", "devops"] },
-    { name: "Cybersecurity", keywords: ["security", "penetration", "vulnerability", "firewall", "auth", "encryption", "threat"] },
-  ];
+  const analysisData = resumeData.analysisReport?._v2?.analysis;
 
-  const industryScores = industries.map(ind => ({
-    name: ind.name,
-    score: ind.keywords.reduce((count, kw) => count + (allText.match(new RegExp(`\\b${kw}\\b`, 'g'))?.length || 0), 0)
-  })).filter(ind => ind.score > 0).sort((a, b) => b.score - a.score);
-
+  // Try to use AI-generated industry scores first
+  let industryScores = analysisData?.industry_scores || [];
+  
+  // Fallback for older resumes processed before AI industry scores were added
   if (industryScores.length === 0) {
-    industryScores.push({ name: "General/Other", score: 1 });
+    const allText = (resumeData.parsedData?.rawText || "").toLowerCase();
+    const fallbackIndustries = [
+      { name: "Software Engineering", keywords: ["react", "node", "typescript", "javascript", "software", "developer", "python", "java", "code", "engineering", "api", "database", "sql", "frontend", "backend"] },
+      { name: "UI/UX Design", keywords: ["design", "figma", "ui", "ux", "wireframe", "prototype"] },
+      { name: "Product Management", keywords: ["product", "agile", "scrum", "roadmap", "stakeholder"] },
+      { name: "Data Science", keywords: ["data", "machine learning", "ai", "analysis", "analytics", "model", "statistics", "pandas"] },
+      { name: "Cloud / DevOps", keywords: ["aws", "docker", "kubernetes", "ci/cd", "cloud", "azure", "deployment", "devops"] },
+      { name: "Cybersecurity", keywords: ["security", "penetration", "firewall", "auth", "encryption", "threat"] },
+    ];
+    
+    industryScores = fallbackIndustries.map(ind => ({
+      name: ind.name,
+      score: Math.min(100, ind.keywords.reduce((count, kw) => count + (allText.match(new RegExp(`\\b${kw}\\b`, 'g'))?.length || 0), 0) * 10) // Scale legacy scores to roughly 0-100
+    })).filter(ind => ind.score > 0).sort((a, b) => b.score - a.score);
+
+    if (industryScores.length === 0) {
+      industryScores.push({ name: "General/Other", score: 50 });
+    }
   }
 
-  const primaryIndustry = industryScores[0];
-  const secondaryIndustry = industryScores.length > 1 ? industryScores[1] : null;
-  const maxIndScore = Math.max(...industryScores.map(i => i.score));
+  const primaryIndustry = analysisData?.primary_industry ? { name: analysisData.primary_industry, score: 100 } : industryScores[0];
+  const secondaryIndustry = analysisData?.secondary_industry ? { name: analysisData.secondary_industry, score: 80 } : (industryScores.length > 1 ? industryScores[1] : null);
+  const maxIndScore = Math.max(...industryScores.map(i => i.score), 100); // Base off 100 for AI scores
 
   return (
     <motion.div
-      key="extraction"
+      key="entities"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="space-y-8"
+      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+      className="space-y-6"
     >
       {/* Top Actions */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-surface-800/40 p-5 rounded-3xl border border-surface-600/30 shadow-2xl shadow-black/40 backdrop-blur-md">

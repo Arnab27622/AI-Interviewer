@@ -275,12 +275,53 @@ export const sessionService = {
         };
       }
 
-      // Stage 3: Atomic Update
-      const updatedSession = await Session.findOneAndUpdate(
-        { _id: sessionId },
-        { $set: updateFields },
-        { returnDocument: "after" }
-      );
+      // Stage 3: Handle follow-up generation
+      let hasNewFollowUp = false;
+      if (evaluation.follow_up_question && !question.isFollowUp && question.questionType === "oral") {
+        const followUpQ = {
+          questionText: evaluation.follow_up_question,
+          idealAnswer: "Candidate should elaborate further.",
+          questionType: "oral" as const,
+          isEvaluated: false,
+          isSubmitted: false,
+          isFollowUp: true,
+          parentQuestionIndex: questionIdx,
+        };
+        
+        // Push the follow up to the questions array right after the current question using MongoDB $push with $position
+        const insertUpdate = {
+           $push: {
+             questions: {
+               $each: [followUpQ],
+               $position: questionIdx + 1
+             }
+           }
+        };
+
+        // We first need to apply the updateFields, then the push
+        await Session.updateOne({ _id: sessionId }, { $set: updateFields });
+        const updatedSession = await Session.findOneAndUpdate(
+          { _id: sessionId },
+          insertUpdate,
+          { returnDocument: "after" }
+        );
+        if (!updatedSession) throw new Error("Failed to insert follow-up question");
+        
+        hasNewFollowUp = true;
+      }
+
+      // Stage 4: Atomic Update (if no follow-up was inserted)
+      let updatedSession;
+      if (!hasNewFollowUp) {
+         updatedSession = await Session.findOneAndUpdate(
+           { _id: sessionId },
+           { $set: updateFields },
+           { returnDocument: "after" }
+         );
+      } else {
+         // Re-fetch to make sure we have the latest
+         updatedSession = await Session.findById(sessionId);
+      }
 
       if (!updatedSession) throw new Error("Failed to update session during evaluation");
 

@@ -155,8 +155,8 @@ const ResumeCard = ({ resume, index, onDelete, isDeleting }: ResumeCardProps) =>
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
-      className={`bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden group transition-all duration-500 ${isCompleted ? "cursor-pointer hover:border-primary-500/30" : ""
+      transition={{ delay: index * 0.05, type: "spring", stiffness: 260, damping: 20 }}
+      className={`bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden group transition-all duration-500 ${isCompleted ? "cursor-pointer hover:border-primary-500/30 hover:-translate-y-1" : ""
         }`}
       onClick={handleClick}
     >

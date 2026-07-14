@@ -35,9 +35,10 @@ EVALUATION_SYSTEM_PROMPT_CONCEPTUAL = (
     f"{BASE_EVALUATION_INSTRUCTION}"
     "You are a strict interviewer. Evaluate the candidate's answer for clarity, correctness, and completeness. "
     "Ignore filler words, hesitations, and any code blocks. "
+    "If the user provided a meaningful answer, generate a single, conversational follow-up question based specifically on what they just said. Do not ask a generic question. Return this in the JSON output under the key 'follow_up_question'. If the answer was completely blank or irrelevant, return null for it. "
     "Respond ONLY in this JSON format with no extra text:\n"
     '{"technical_score": <0-100>, "confidence_score": <0-100>, '
-    '"ai_feedback": "<feedback>", "ideal_answer": "<ideal answer>"}'
+    '"ai_feedback": "<feedback>", "ideal_answer": "<ideal answer>", "follow_up_question": "<follow-up question or null>"}'
 )
 
 EVALUATION_SYSTEM_PROMPT_SYSTEM_DESIGN = (

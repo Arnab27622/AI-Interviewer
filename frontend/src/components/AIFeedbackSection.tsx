@@ -8,9 +8,10 @@ interface AIFeedbackSectionProps {
     feedback: string;
     score: number;
     speechMetrics?: SpeechMetrics;
+    hasFollowUp?: boolean;
 }
 
-const AIFeedbackSection: React.FC<AIFeedbackSectionProps> = ({ isEvaluated, feedback, score, speechMetrics }) => {
+const AIFeedbackSection: React.FC<AIFeedbackSectionProps> = ({ isEvaluated, feedback, score, speechMetrics, hasFollowUp }) => {
     const [activeTab, setActiveTab] = useState<'feedback' | 'speech'>('feedback');
 
     if (!isEvaluated) return null;
@@ -24,6 +25,18 @@ const AIFeedbackSection: React.FC<AIFeedbackSectionProps> = ({ isEvaluated, feed
                     <path d="M2 12h20" />
                 </svg>
             </div>
+
+            {hasFollowUp && (
+                <div className="mb-6 bg-primary-500/10 border border-primary-500/20 text-primary-400 p-4 rounded-2xl flex items-center gap-3 relative z-10">
+                    <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <div>
+                        <h4 className="font-black text-sm uppercase tracking-widest">Follow-up Generated</h4>
+                        <p className="text-xs mt-1 text-primary-200">The interviewer has a dynamic follow-up question based on your answer. Click Next to continue.</p>
+                    </div>
+                </div>
+            )}
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 relative z-10">
                 <div className="flex gap-2">

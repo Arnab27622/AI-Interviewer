@@ -35,5 +35,6 @@ export interface EvaluateAnswerResponse {
   technical_score: number;
   confidence_score: number;
   ai_feedback: string;
+  follow_up_question?: string;
 }
 

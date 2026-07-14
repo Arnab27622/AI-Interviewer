@@ -57,6 +57,18 @@ export interface AIAnalysisReport {
       tone_assessment?: string;
       strengths?: string[];
       weaknesses?: string[];
+      primary_industry?: string;
+      secondary_industry?: string;
+      industry_scores?: {
+        name: string;
+        score: number;
+      }[];
+      content_balance?: {
+        action_verbs_percent: number;
+        keywords_percent: number;
+        metrics_percent: number;
+        filler_percent: number;
+      };
     };
     scores?: { ats_score?: number; overall_quality?: number };
     recommendations?: {

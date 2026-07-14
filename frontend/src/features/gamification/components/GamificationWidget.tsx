@@ -53,7 +53,7 @@ export const GamificationWidget = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
       {/* 1. Professional Development */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col justify-between">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, type: "spring", stiffness: 260, damping: 20 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col justify-between">
         <h3 className="text-white font-bold text-lg mb-4 leading-tight">Professional<br />Development</h3>
         <div className="bg-surface-900/40 p-5 rounded-2xl border border-white/5">
           <div className="flex justify-between items-end mb-4">
@@ -83,7 +83,7 @@ export const GamificationWidget = () => {
       </motion.div>
 
       {/* 2. Consistency */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, type: "spring", stiffness: 260, damping: 20 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col">
         <h3 className="text-white font-bold text-lg mb-4">Consistency</h3>
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 flex-1">
@@ -120,7 +120,7 @@ export const GamificationWidget = () => {
       </motion.div>
 
       {/* 3. Skills Verified */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 20 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col">
         <div className="flex justify-between items-start mb-6">
           <h3 className="text-white font-bold text-lg">Skills Verified</h3>
           <span className="text-[#2ECA8B] text-xs font-bold">{profile?.badges?.length || 0} Verified</span>
@@ -143,7 +143,7 @@ export const GamificationWidget = () => {
       </motion.div>
 
       {/* 4. Global Rank */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25, type: "spring", stiffness: 260, damping: 20 }} className="bg-surface-800/40 border border-surface-600/30 rounded-3xl p-6 shadow-2xl shadow-black/40 backdrop-blur-md flex flex-col">
         <div className="flex items-start gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-[#2ECA8B]/20 flex items-center justify-center text-[#2ECA8B] shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

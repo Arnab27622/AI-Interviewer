@@ -69,6 +69,8 @@ const InterviewRunner = () => {
 
     const currentDraft = drafts[currentQuestionIndex] || {};
     const isCodingQuestion = currentQuestion?.questionType === 'coding';
+    const nextQuestion = activeSession.questions[currentQuestionIndex + 1];
+    const hasFollowUp = nextQuestion?.isFollowUp && nextQuestion?.parentQuestionIndex === currentQuestionIndex;
 
     return (
         <div className="max-w-7xl mx-auto px-4 pb-32">
@@ -148,6 +150,7 @@ const InterviewRunner = () => {
                 feedback={currentQuestion?.aiFeedback || ""}
                 score={currentQuestion?.technicalScore || 0}
                 speechMetrics={currentQuestion?.speechMetrics}
+                hasFollowUp={hasFollowUp}
             />
 
             <div className="fixed bottom-0 left-0 right-0 glass-card border-x-0 border-b-0 p-5 px-6 md:px-12 flex justify-between items-center z-50">

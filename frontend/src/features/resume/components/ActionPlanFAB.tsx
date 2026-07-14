@@ -33,7 +33,7 @@ export const ActionPlanFAB = ({ issues }: ActionPlanFABProps) => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
             className="mb-4 w-80 bg-surface-800 border border-primary-500/30 shadow-2xl shadow-primary-500/10 rounded-2xl overflow-hidden origin-bottom-right"
           >
             <div className="bg-primary-500/10 px-4 py-3 border-b border-primary-500/20">

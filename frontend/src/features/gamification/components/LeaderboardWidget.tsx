@@ -39,7 +39,7 @@ export const LeaderboardWidget = () => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
+      transition={{ delay: 0.3, type: "spring", stiffness: 260, damping: 20 }}
       className="glass-card p-6 rounded-3xl border-white/5 h-full bg-linear-to-br from-indigo-500/5 to-transparent"
     >
       <div className="flex items-center gap-3 mb-6">

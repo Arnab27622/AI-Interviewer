@@ -86,7 +86,7 @@ const AnimatedStat = ({ value, label }: { value: string; label: string }) => {
       <span ref={nodeRef} className="block text-3xl font-black text-white font-display group-hover:text-primary-400 transition-colors duration-500">
         {value}
       </span>
-      <span className="text-[10px] text-surface-500 uppercase tracking-[0.2em] font-bold mt-1 block">
+      <span className="text-sm text-surface-400 font-medium mt-1 block">
         {label}
       </span>
     </div>
@@ -205,7 +205,7 @@ const ResumeAnalyzer = () => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.1, type: "spring", stiffness: 260, damping: 20 }}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary-500/20 bg-surface-800/80 backdrop-blur-sm text-[10px] font-black tracking-widest text-primary-400 uppercase shadow-[0_0_15px_rgba(45,212,191,0.1)]"
             >
               <span className="relative flex h-2 w-2 mr-1">
@@ -218,7 +218,7 @@ const ResumeAnalyzer = () => {
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, type: "spring" }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 20 }}
               className="text-5xl md:text-6xl font-black text-white leading-[1.1] tracking-tighter"
             >
               Know exactly how your
@@ -229,7 +229,7 @@ const ResumeAnalyzer = () => {
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 260, damping: 20 }}
               className="text-surface-400 max-w-2xl mx-auto leading-relaxed text-[15px] font-medium"
             >
               Upload your resume for an instant ATS score, skill extraction, work
@@ -240,7 +240,7 @@ const ResumeAnalyzer = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 260, damping: 20 }}
               className="flex items-center justify-center gap-8 pt-6"
             >
               {[
@@ -262,7 +262,7 @@ const ResumeAnalyzer = () => {
             <div className="lg:col-span-3 bg-surface-800/40 border border-surface-600/30 rounded-3xl p-8 space-y-6 shadow-2xl shadow-black/40 backdrop-blur-md relative overflow-hidden">
               <div className="flex items-center justify-between relative z-10">
                 <h2 className="text-lg font-black text-white tracking-tight">Upload Resume</h2>
-                <span className="px-3 py-1 bg-surface-900/50 rounded-full text-[10px] font-bold tracking-widest text-surface-400 uppercase border border-surface-700/50">PDF · DOCX · TXT · 5MB</span>
+                <span className="px-3 py-1 bg-surface-900/50 rounded-full text-xs font-medium text-surface-400 border border-surface-700/50">PDF · DOCX · TXT · 5MB</span>
               </div>
 
               {/* Drop Zone */}
@@ -311,8 +311,8 @@ const ResumeAnalyzer = () => {
               {/* JD Section */}
               <div className="space-y-2 relative z-10">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black tracking-widest text-surface-300 uppercase">Job Description</h3>
-                  <span className="text-[10px] text-primary-400/80 font-bold uppercase tracking-wider">Optional</span>
+                  <h3 className="text-sm font-bold text-surface-300">Job Description</h3>
+                  <span className="text-xs font-medium text-primary-400/80">Optional</span>
                 </div>
                 <textarea
                   className="w-full h-24 bg-surface-900/40 border border-surface-700/60 rounded-xl p-4 text-[13px] text-surface-200 focus:outline-none focus:border-primary-400/50 focus:bg-surface-900/60 transition-all placeholder:text-surface-600 resize-none shadow-inner shadow-black/20"
@@ -326,8 +326,8 @@ const ResumeAnalyzer = () => {
               <button
                 onClick={handleUpload}
                 disabled={!file}
-                className={`relative z-10 w-full py-4 rounded-xl font-black text-sm tracking-widest uppercase transition-all duration-300 overflow-hidden ${file
-                  ? "bg-primary-500 text-surface-900 hover:bg-primary-400 active:scale-[0.98] shadow-[0_0_20px_rgba(45,212,191,0.3)] cursor-pointer"
+                className={`relative z-10 w-full py-4 rounded-xl font-bold text-base transition-all duration-300 overflow-hidden ${file
+                  ? "bg-primary-600 text-surface-950 hover:bg-primary-500 hover:-translate-y-px active:scale-[0.98] shadow-[0_0_20px_rgba(45,212,191,0.3)] cursor-pointer"
                   : "bg-surface-800 text-surface-600 border border-surface-700/50 cursor-not-allowed!"
                   }`}
               >
@@ -338,7 +338,7 @@ const ResumeAnalyzer = () => {
 
             {/* Tips Card (Bento Box) */}
             <div className="lg:col-span-2 flex flex-col h-full space-y-4">
-              <h3 className="text-xs font-black tracking-widest text-surface-400 uppercase pt-2">How to score higher</h3>
+              <h3 className="text-sm font-bold text-surface-400 pt-2">How to score higher</h3>
               <div className="grid grid-cols-1 gap-3 flex-1">
                 {SCORING_TIPS.map((tip, i) => (
                   <div key={i} className="group relative bg-surface-800/30 border border-surface-700/40 rounded-2xl p-4 overflow-hidden hover:-translate-y-1 hover:bg-surface-800/60 hover:border-surface-600/50 transition-all duration-300 cursor-default shadow-lg shadow-black/20">
@@ -369,7 +369,7 @@ const ResumeAnalyzer = () => {
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-6">
             <div>
-              <p className="text-[11px] text-surface-500 uppercase tracking-wider mb-1">
+              <p className="text-xs font-medium text-surface-400 mb-1">
                 FILE&nbsp;&nbsp;{resumeData?.originalFilename || file?.name || "Processing..."}
               </p>
               <h2 className="text-2xl font-black text-white">
@@ -400,7 +400,7 @@ const ResumeAnalyzer = () => {
               </p>
               <button
                 onClick={handleResetAll}
-                className="mt-8 px-8 py-4 bg-primary-600 hover:bg-primary-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-primary-900/40 active:scale-95 cursor-pointer inline-flex items-center gap-2"
+                className="mt-8 btn-primary px-8! py-4! text-base! rounded-xl inline-flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
                 Upload Another Document

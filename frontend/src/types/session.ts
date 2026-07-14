@@ -21,6 +21,8 @@ export interface Question {
     confidenceScore?: number;
     aiFeedback?: string;
     speechMetrics?: SpeechMetrics;
+    isFollowUp?: boolean;
+    parentQuestionIndex?: number;
 }
 
 export interface Session {

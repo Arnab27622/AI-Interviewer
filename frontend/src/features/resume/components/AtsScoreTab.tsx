@@ -100,7 +100,20 @@ export const AtsScoreTab = ({ resumeData, isLoading = false }: AtsScoreTabProps)
     ];
   };
 
+  const analysisData = resumeData?.analysisReport?._v2?.analysis;
+  
   const getContentBalance = () => {
+    if (analysisData?.content_balance) {
+      const { action_verbs_percent, keywords_percent, metrics_percent, filler_percent } = analysisData.content_balance;
+      return [
+        action_verbs_percent || 35,
+        keywords_percent || 45,
+        metrics_percent || 15,
+        filler_percent || 5
+      ];
+    }
+    
+    // Legacy fallback for old resumes
     const text = resumeData?.parsedData?.rawText?.toLowerCase() || "";
     if (!text) return [35, 45, 15, 5];
 
@@ -137,8 +150,12 @@ export const AtsScoreTab = ({ resumeData, isLoading = false }: AtsScoreTabProps)
   const skillsScore = (resumeData?.analysisReport?._v2?.skills?.technical?.length || 0) > 0 ? 20 : 10;
   const eduScore = (resumeData?.parsedData?.parsedProfile?.education?.length || 0) > 0 ? 20 : 0;
   const expScore = (resumeData?.parsedData?.parsedProfile?.experience?.length || 0) > 0 ? 20 : 0;
-  const actionVerbsMatch = text.toLowerCase().match(/\b(led|managed|developed|created|improved|increased|designed|built|optimized|implemented|reduced|resolved|spearheaded|architected)\b/g);
-  const actionVerbsCount = actionVerbsMatch ? actionVerbsMatch.length : 5;
+  
+  // Use AI content balance for action verbs count if available, otherwise fallback
+  const actionVerbsCount = analysisData?.content_balance 
+    ? Math.round((analysisData.content_balance.action_verbs_percent / 100) * totalSentences)
+    : (text.toLowerCase().match(/\b(led|managed|developed|created|improved|increased|designed|built|optimized|implemented|reduced|resolved|spearheaded|architected)\b/g)?.length || 5);
+  
   const actionVerbsScoreCalculated = Math.min(20, actionVerbsCount * 2);
   const lengthScore = rawTextLength > 200 && rawTextLength < 800 ? 20 : 10;
 
@@ -175,7 +192,7 @@ export const AtsScoreTab = ({ resumeData, isLoading = false }: AtsScoreTabProps)
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ type: "spring", stiffness: 260, damping: 20 }}
       className="space-y-6"
     >
       {/* Top Section: Score & Breakdown */}

@@ -64,7 +64,11 @@ export const errorHandler = (
 
   // Add stack trace only in development
   if (process.env.NODE_ENV === "development") {
-    console.error("Error Stack:", err.stack);
+    if (err instanceof AppError && (err.statusCode === 401 || err.statusCode === 404)) {
+      console.warn(`[${err.statusCode}] ${err.message}`);
+    } else {
+      console.error("Error Stack:", err.stack);
+    }
   }
 
   res.json({

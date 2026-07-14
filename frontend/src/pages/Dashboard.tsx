@@ -134,10 +134,10 @@ const Dashboard = () => {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
                         </span>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-primary-400">Terminal Active</span>
+                        <span className="text-sm font-bold text-primary-400">Terminal Active</span>
                     </div>
                     <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-none font-display">
-                        Welcome, <span className="text-transparent bg-clip-text bg-linear-to-r from-primary-400 to-indigo-400 pr-4">{user?.name?.split(' ')[0]}</span>
+                        Welcome, <span className="text-primary-400 pr-4">{user?.name?.split(' ')[0]}</span>
                     </h1>
                     <p className="text-surface-400 text-base sm:text-lg font-medium max-w-md leading-relaxed">
                         Precision practice for high-stakes interviews. Level up your performance today.
@@ -146,16 +146,16 @@ const Dashboard = () => {
 
                 <div className="flex flex-wrap lg:flex-nowrap items-center gap-4 w-full lg:w-auto">
                     <div className="bg-surface-800/40 border border-surface-600/30 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 flex-1 min-w-[140px]">
-                        <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">Total Pulse</p>
+                        <p className="text-sm text-surface-400 font-medium whitespace-nowrap">Total Pulse</p>
                         <p className="text-3xl font-black text-white font-display">{totalSessions}</p>
                     </div>
                     <div className="bg-surface-800/40 border border-surface-600/30 border-l-primary-500/50 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 flex-1 min-w-[140px]">
-                        <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">Completed</p>
+                        <p className="text-sm text-surface-400 font-medium whitespace-nowrap">Completed</p>
                         <p className="text-3xl font-black text-emerald-400 font-display">{completedSessions}</p>
                     </div>
                     {activeSessions > 0 && (
                         <div className="bg-surface-800/40 border border-surface-600/30 border-l-indigo-500/50 shadow-2xl shadow-black/40 backdrop-blur-md px-6 py-5 rounded-3xl flex flex-col gap-1 animate-pulse flex-1 min-w-[140px]">
-                            <p className="text-[9px] text-surface-500 font-black uppercase tracking-[0.2em] whitespace-nowrap">In Queue</p>
+                            <p className="text-sm text-surface-400 font-medium whitespace-nowrap">In Queue</p>
                             <p className="text-3xl font-black text-indigo-400 font-display">{activeSessions}</p>
                         </div>
                     )}
@@ -237,9 +237,9 @@ const Dashboard = () => {
                                 <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 border border-white/5 group-hover/empty:scale-110 transition-transform duration-500">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-surface-600"><circle cx="12" cy="12" r="10" /><path d="M8 12h8" /><path d="M12 8v8" /></svg>
                                 </div>
-                                <h3 className="text-xl font-black uppercase tracking-widest text-surface-400">Archive Clear</h3>
-                                <p className="text-surface-500 mt-2 font-medium">Initialize your first session to populate this database.</p>
-                                <button className="mt-8 btn-secondary py-2! px-8! text-[10px] uppercase tracking-widest font-black">Open Guidebook</button>
+                                <h3 className="text-2xl font-black text-white">Archive Clear</h3>
+                                <p className="text-surface-400 mt-2 font-medium max-w-sm mx-auto">Initialize your first session to populate this database.</p>
+                                <button className="mt-8 btn-secondary">Open Guidebook</button>
                             </motion.div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -90,22 +90,26 @@
     isolation: isolate;
   }
 
+  .glass-card-hover {
+    @apply bg-surface-900/30 backdrop-blur-xl border border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] transition-all duration-300 hover:-translate-y-1 hover:border-primary-500/30 hover:shadow-[0_12px_40px_0_rgba(20,184,166,0.15)] cursor-pointer;
+  }
+
   .glass-input {
     @apply w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500/30 transition-all duration-300 text-surface-100 placeholder:text-surface-600;
   }
 
   .btn-primary {
-    @apply relative overflow-hidden bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-300 active:scale-[0.98] shadow-lg shadow-black/20 cursor-pointer;
+    @apply relative overflow-hidden bg-primary-600 hover:bg-primary-500 text-surface-950 font-bold py-3 px-6 rounded-2xl transition-all duration-300 active:scale-[0.98] hover:-translate-y-px hover:shadow-[0_0_20px_rgba(20,184,166,0.4)] cursor-pointer;
   }
 
   .btn-secondary {
-    @apply relative overflow-hidden bg-white/5 hover:bg-white/10 text-surface-200 border border-white/10 font-bold py-3 px-6 rounded-2xl transition-all duration-300 active:scale-[0.98] cursor-pointer;
+    @apply relative overflow-hidden bg-white/5 hover:bg-white/10 text-surface-200 border border-white/10 font-bold py-3 px-6 rounded-2xl transition-all duration-300 active:scale-95 hover:border-primary-500/30 hover:text-white cursor-pointer;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-linear-to-r from-primary-400/90 to-indigo-400/90;
+    @apply bg-clip-text text-transparent bg-linear-to-r from-primary-300 to-primary-500;
   }
 
   .bg-glow {

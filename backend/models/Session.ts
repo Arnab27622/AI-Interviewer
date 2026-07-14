@@ -30,6 +30,8 @@ export interface IQuestion {
     pauseCount: number;
     clarityScore: number;
   };
+  isFollowUp?: boolean;
+  parentQuestionIndex?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -131,6 +133,14 @@ const questionSchema = new Schema<IQuestion & mongoose.Document>(
       totalPauseDurationMs: { type: Number, default: 0 },
       pauseCount: { type: Number, default: 0 },
       clarityScore: { type: Number, default: 0 },
+    },
+    isFollowUp: {
+      type: Boolean,
+      default: false,
+    },
+    parentQuestionIndex: {
+      type: Number,
+      default: null,
     },
   },
   { timestamps: true }

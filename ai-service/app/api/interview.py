@@ -60,6 +60,7 @@ class EvaluationResponse(BaseModel):
     confidence_score: float
     ai_feedback: str
     ideal_answer: str
+    follow_up_question: Optional[str] = None
 
 
 @router.post("/generate-questions", response_model=QuestionResponse)
@@ -206,6 +207,7 @@ def evaluate_answer(req: EvaluationRequest):
             ideal_answer=parsed.get(
                 "ideal_answer", "Missing ideal answer. Format error."
             ),
+            follow_up_question=parsed.get("follow_up_question"),
         )
     except HTTPException:
         raise

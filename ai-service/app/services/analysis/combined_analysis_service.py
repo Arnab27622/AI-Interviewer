@@ -25,7 +25,21 @@ You MUST output a valid JSON object matching this EXACT structure:
     "readability_score": number (0-100),
     "tone_assessment": "string (e.g., Professional, Academic, Passive)",
     "strengths": ["string (key career accomplishments, strong verbs, clear impacts)"],
-    "weaknesses": ["string (lack of quantitative results, weak verbs, passive bullets)"]
+    "weaknesses": ["string (lack of quantitative results, weak verbs, passive bullets)"],
+    "primary_industry": "string (Identify the primary industry or domain based on the candidate's core expertise, e.g., 'Software Engineering', 'Data Science', 'Finance', 'Healthcare', 'Cybersecurity')",
+    "secondary_industry": "string (Optional. Identify a secondary industry or domain, e.g., 'Cloud / DevOps', 'Product Management'. If none, leave empty)",
+    "industry_scores": [
+      {
+        "name": "string (e.g. Software Engineering, Data Science, Product Management, UI/UX Design, Cloud/DevOps, Cybersecurity)",
+        "score": number (0-100 score indicating how well the candidate's skills match this industry. Provide the top 3-5 industries.)
+      }
+    ],
+    "content_balance": {
+      "action_verbs_percent": number (0-100 percentage of bullet points starting with strong action verbs),
+      "keywords_percent": number (0-100 percentage of industry-specific keywords density),
+      "metrics_percent": number (0-100 percentage of bullet points containing quantitative metrics/numbers),
+      "filler_percent": number (0-100 percentage of weak/filler words like 'helped', 'worked on', 'responsible for')
+    }
   }
 }
 
